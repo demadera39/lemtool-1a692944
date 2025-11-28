@@ -307,44 +307,39 @@ serve(async (req) => {
       { text: MULTIMODAL_MASTER_PROMPT.replace(/{URL}/g, url) }
     ];
     
-    // STRATEGY: Use highest quality for hero section (most important)
-    // Priority: Gemini 3 Pro (via Lovable AI) > Gemini Flash (stable) > Fallback
+    // STRATEGY: Prioritize user's Gemini key to save Lovable AI credits
+    // Priority: User's Gemini 2.5 Flash > Lovable AI as fallback
     
-    if (LOVABLE_API_KEY) {
-      // Try Gemini 3 Pro first (best quality for hero section)
+    if (GEMINI_API_KEY) {
+      // Use user's Gemini key first (saves Lovable AI credits)
       try {
-        console.log("Analyzing hero with Gemini 3 Pro (highest quality)");
-        masterResponse = await callLovableAI(parts, MULTIMODAL_MASTER_PROMPT, "google/gemini-3-pro-preview");
-        usedModel = 'Gemini 3 Pro';
+        console.log("Analyzing hero with user's Gemini 2.5 Flash");
+        masterResponse = await callGeminiAPI(GEMINI_API_KEY, parts, MULTIMODAL_MASTER_PROMPT, 4096, "gemini-2.5-flash-latest");
+        usedModel = 'Gemini 2.5 Flash (User Key)';
       } catch (error) {
-        console.log("Gemini 3 Pro unavailable, trying alternatives:", error);
+        console.log("User's Gemini failed, trying Lovable AI:", error);
         
-        // Fallback to user's Gemini key with stable flash
-        if (GEMINI_API_KEY) {
+        // Fallback to Lovable AI if user's key fails
+        if (LOVABLE_API_KEY) {
           try {
-            console.log("Falling back to Gemini 2.0 Flash (stable)");
-            masterResponse = await callGeminiAPI(GEMINI_API_KEY, parts, MULTIMODAL_MASTER_PROMPT, 4096, "gemini-2.0-flash");
-            usedModel = 'Gemini 2.0 Flash';
-          } catch (geminiError) {
-            console.log("Gemini Flash failed, using Lovable AI Flash:", geminiError);
+            console.log("Falling back to Lovable AI Flash");
             masterResponse = await callLovableAI(parts, MULTIMODAL_MASTER_PROMPT, "google/gemini-2.5-flash");
             usedModel = 'Gemini 2.5 Flash (Lovable AI)';
+          } catch (lovableError) {
+            throw new Error(`Both Gemini and Lovable AI failed: ${error}, ${lovableError}`);
           }
         } else {
-          // No Gemini key, use Lovable AI Flash
-          console.log("Using Lovable AI Flash");
-          masterResponse = await callLovableAI(parts, MULTIMODAL_MASTER_PROMPT, "google/gemini-2.5-flash");
-          usedModel = 'Gemini 2.5 Flash (Lovable AI)';
+          throw error;
         }
       }
-    } else if (GEMINI_API_KEY) {
-      // Only Gemini key available, use stable flash
+    } else if (LOVABLE_API_KEY) {
+      // Only use Lovable AI if no user Gemini key exists
       try {
-        console.log("Using Gemini 2.0 Flash (stable) for hero");
-        masterResponse = await callGeminiAPI(GEMINI_API_KEY, parts, MULTIMODAL_MASTER_PROMPT, 4096, "gemini-2.0-flash");
-        usedModel = 'Gemini 2.0 Flash';
+        console.log("Using Lovable AI Flash");
+        masterResponse = await callLovableAI(parts, MULTIMODAL_MASTER_PROMPT, "google/gemini-2.5-flash");
+        usedModel = 'Gemini 2.5 Flash (Lovable AI)';
       } catch (error) {
-        throw new Error(`No fallback available: ${error}`);
+        throw new Error(`Lovable AI failed: ${error}`);
       }
     } else {
       throw new Error("No AI API key configured");
@@ -369,14 +364,14 @@ serve(async (req) => {
       try {
         let response;
         
-        // STRATEGY: Use fast Flash for body sections (speed + efficiency)
+        // STRATEGY: Prioritize user's Gemini key for body sections (saves Lovable AI credits)
         if (GEMINI_API_KEY) {
           try {
-            response = await callGeminiAPI(GEMINI_API_KEY, sliceParts, MARKER_ONLY_PROMPT, 2048, "gemini-2.0-flash");
+            response = await callGeminiAPI(GEMINI_API_KEY, sliceParts, MARKER_ONLY_PROMPT, 2048, "gemini-2.5-flash-latest");
           } catch (error) {
-            // Fallback to Lovable AI if Gemini fails
+            // Fallback to Lovable AI if user's Gemini fails
             if (LOVABLE_API_KEY) {
-              console.log("Gemini failed on body slice, using Lovable AI Flash");
+              console.log("User's Gemini failed on body slice, using Lovable AI Flash");
               response = await callLovableAI(sliceParts, MARKER_ONLY_PROMPT, "google/gemini-2.5-flash");
             } else {
               throw error;

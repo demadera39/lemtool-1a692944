@@ -138,6 +138,10 @@ export type Database = {
           analyses_used: number
           created_at: string | null
           id: string
+          last_monthly_reset: string | null
+          monthly_analyses_limit: number
+          monthly_analyses_used: number
+          pack_analyses_remaining: number
           role: Database["public"]["Enums"]["app_role"]
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -152,6 +156,10 @@ export type Database = {
           analyses_used?: number
           created_at?: string | null
           id?: string
+          last_monthly_reset?: string | null
+          monthly_analyses_limit?: number
+          monthly_analyses_used?: number
+          pack_analyses_remaining?: number
           role?: Database["public"]["Enums"]["app_role"]
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -166,6 +174,10 @@ export type Database = {
           analyses_used?: number
           created_at?: string | null
           id?: string
+          last_monthly_reset?: string | null
+          monthly_analyses_limit?: number
+          monthly_analyses_used?: number
+          pack_analyses_remaining?: number
           role?: Database["public"]["Enums"]["app_role"]
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -191,6 +203,10 @@ export type Database = {
         Returns: boolean
       }
       increment_analysis_count: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      reset_monthly_analyses_if_needed: {
         Args: { _user_id: string }
         Returns: undefined
       }

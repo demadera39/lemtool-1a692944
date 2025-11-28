@@ -23,7 +23,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [activeLayer, setActiveLayer] = useState<'emotions' | 'needs' | 'strategy'>('emotions');
   const [showAI, setShowAI] = useState(true);
   const [showHumans, setShowHumans] = useState(true);
-  const [remainingAnalyses, setRemainingAnalyses] = useState<number>(-1);
+  const [remainingAnalyses, setRemainingAnalyses] = useState<{ monthly: number; pack: number }>({ monthly: 0, pack: 0 });
 
   useEffect(() => {
     loadProjects();
@@ -164,15 +164,16 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
               <h1 className="text-xl font-black text-gray-900">LEMtool Dashboard</h1>
               <div className="flex items-center gap-2">
                 <p className="text-sm text-gray-600">{user.email}</p>
-                {remainingAnalyses === -1 ? (
+                {remainingAnalyses.monthly > 0 ? (
                   <span className="flex items-center gap-1 text-xs font-bold text-lem-orange bg-orange-50 px-2 py-0.5 rounded-full">
-                    <Crown size={12} />Premium
+                    <Crown size={12} />{remainingAnalyses.monthly} monthly
                   </span>
-                ) : (
+                ) : null}
+                {remainingAnalyses.pack > 0 ? (
                   <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
-                    {remainingAnalyses} analyses left
+                    {remainingAnalyses.pack} pack
                   </span>
-                )}
+                ) : null}
               </div>
             </div>
           </div>

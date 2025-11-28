@@ -80,35 +80,57 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      subscriptionEnd = subscription.current_period_end * 1000;
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
-      
-      // Upsert user role to premium
-      await supabaseClient
-        .from('user_roles')
-        .upsert({ 
-          user_id: user.id,
-          role: 'premium',
-          stripe_customer_id: customerId,
-          stripe_subscription_id: subscription.id,
-          subscription_status: subscription.status,
-          subscription_start: new Date(subscription.current_period_start * 1000).toISOString(),
-          subscription_end: subscriptionEnd
-        }, { onConflict: 'user_id' });
     } else {
       logStep("No active subscription found");
-      // Upsert user role to free
-      await supabaseClient
-        .from('user_roles')
-        .upsert({ 
-          user_id: user.id,
-          role: 'free',
-          stripe_customer_id: customerId,
-          stripe_subscription_id: null,
-          subscription_status: null,
-          subscription_start: null,
-          subscription_end: null
-        }, { onConflict: 'user_id' });
+    }
+
+    // Check for one-time analysis pack purchases
+    const charges = await stripe.charges.list({
+      customer: customerId,
+      limit: 100,
+    });
+    
+    let totalPackAnalyses = 0;
+    for (const charge of charges.data) {
+      if (charge.paid && charge.metadata?.type === "analysis_pack") {
+        totalPackAnalyses += 5; // Each pack is 5 analyses
+      }
+    }
+    
+    if (totalPackAnalyses > 0) {
+      logStep("Found analysis pack purchases", { totalAnalyses: totalPackAnalyses });
+    }
+
+    // Get current pack analyses from DB to avoid overwriting
+    const { data: currentRole } = await supabaseClient
+      .from('user_roles')
+      .select('pack_analyses_remaining')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    const currentPackAnalyses = currentRole?.pack_analyses_remaining || 0;
+    
+    // Only update pack analyses if we found new purchases (total from Stripe > current in DB)
+    const newPackAnalyses = totalPackAnalyses > currentPackAnalyses ? totalPackAnalyses : currentPackAnalyses;
+
+    const { error: updateError } = await supabaseClient
+      .from('user_roles')
+      .upsert({
+        user_id: user.id,
+        role: hasActiveSub ? 'premium' : 'free',
+        stripe_customer_id: customerId,
+        stripe_subscription_id: hasActiveSub ? subscriptions.data[0].id : null,
+        subscription_status: hasActiveSub ? 'active' : null,
+        subscription_start: hasActiveSub ? new Date(subscriptions.data[0].current_period_start * 1000).toISOString() : null,
+        subscription_end: subscriptionEnd ? new Date(subscriptionEnd).toISOString() : null,
+        monthly_analyses_limit: hasActiveSub ? 10 : 0,
+        pack_analyses_remaining: newPackAnalyses,
+      }, { onConflict: 'user_id' });
+    
+    if (updateError) {
+      logStep("ERROR updating user role", { error: updateError });
     }
 
     return new Response(JSON.stringify({

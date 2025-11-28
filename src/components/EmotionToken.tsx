@@ -16,6 +16,13 @@ const EmotionToken = ({
   onClick,
 }: EmotionTokenProps) => {
   const def = EMOTIONS[emotion];
+  
+  // Safety check for undefined emotion
+  if (!def) {
+    console.warn(`Unknown emotion type: ${emotion}`);
+    return null;
+  }
+  
   const Icon = def.icon;
   const [imgError, setImgError] = useState(false);
 

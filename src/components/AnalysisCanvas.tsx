@@ -197,11 +197,11 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
 
   // Switch to snapshot/scroll mode automatically when a screenshot becomes available
   useEffect(() => {
-    if (screenshot && !isAnalyzing) {
+    if (screenshot) {
         // Default to snapshot (scrollable) for both read and place_marker modes
         setViewMode('snapshot');
     }
-  }, [screenshot, isAnalyzing]);
+  }, [screenshot]);
 
   // Auto-scroll logic for "Scan" effect in Live/Snapshot (Scroll) mode
   useEffect(() => {

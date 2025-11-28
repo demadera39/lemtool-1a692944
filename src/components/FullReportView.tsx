@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Project, TestSession } from '@/types';
+import { Project, TestSession, Marker, LayerType } from '@/types';
 import { Button } from './ui/button';
-import { ArrowLeft, Download, Share2, Users, Heart, Brain, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Users, Heart, Brain, Lightbulb, Grid3x3, MapPin, Map } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { EMOTIONS } from '@/constants';
 import EmotionToken from './EmotionToken';
 import jsPDF from 'jspdf';
@@ -23,6 +24,43 @@ const FullReportView = ({
   onCopyParticipantLink
 }: FullReportViewProps) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [areaViewLayer, setAreaViewLayer] = useState<LayerType>('emotions');
+  const [areaViewSource, setAreaViewSource] = useState<'all' | 'ai' | 'human'>('all');
+  const [areaViewMode, setAreaViewMode] = useState<'heatmap' | 'points'>('heatmap');
+  const [selectedSession, setSelectedSession] = useState<string>('all');
+  
+  const allMarkers = [...project.markers, ...sessions.flatMap(s => s.markers)];
+  const areaMarkers = allMarkers.filter(m => m.isArea);
+  const uniqueSessions = Array.from(new Set(sessions.map(s => s.id)));
+  
+  const getFilteredMarkers = () => {
+    let filtered = allMarkers.filter(m => m.layer === areaViewLayer);
+    
+    if (areaViewMode === 'heatmap') {
+      filtered = filtered.filter(m => m.isArea);
+    } else {
+      filtered = filtered.filter(m => !m.isArea);
+    }
+    
+    if (areaViewSource === 'ai') {
+      filtered = filtered.filter(m => m.source === 'AI');
+    } else if (areaViewSource === 'human') {
+      filtered = filtered.filter(m => m.source === 'HUMAN');
+    }
+    
+    if (selectedSession !== 'all') {
+      if (selectedSession === 'ai') {
+        filtered = filtered.filter(m => m.source === 'AI');
+      } else {
+        filtered = filtered.filter(m => m.sessionId === selectedSession);
+      }
+    }
+    
+    return filtered;
+  };
+  
+  const filteredMarkers = getFilteredMarkers();
+  
   const exportToPDF = async () => {
     setIsExporting(true);
     toast.info('Generating PDF...', {
@@ -84,7 +122,7 @@ const FullReportView = ({
       setIsExporting(false);
     }
   };
-  const allMarkers = [...project.markers, ...sessions.flatMap(s => s.markers)];
+  
   const emotionCounts = allMarkers.reduce((acc, m) => {
     if (m.emotion) {
       acc[m.emotion] = (acc[m.emotion] || 0) + 1;
@@ -210,8 +248,106 @@ const FullReportView = ({
         {/* Visual Overview with Markers */}
         {project.screenshot && <Card className="mb-6 pdf-no-break">
             <CardHeader>
-              <CardTitle className="text-xl">Visual Analysis Overview</CardTitle>
-              <p className="text-sm text-gray-500">Complete page with emotional markers and legend</p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <CardTitle className="text-xl">Visual Analysis Overview</CardTitle>
+                  <p className="text-sm text-gray-500">Complete page with emotional markers and legend</p>
+                </div>
+              </div>
+              
+              {/* Filter Controls */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+                {/* Layer Filter */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-2 block">Layer</label>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant={areaViewLayer === 'emotions' ? 'default' : 'outline'}
+                      onClick={() => setAreaViewLayer('emotions')}
+                      className={`flex-1 text-xs ${areaViewLayer === 'emotions' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
+                    >
+                      <Heart size={12} className="mr-1" />
+                      Emotions
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Source Filter */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-2 block">Source</label>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant={areaViewSource === 'all' ? 'default' : 'outline'}
+                      onClick={() => setAreaViewSource('all')}
+                      className={`flex-1 text-xs ${areaViewSource === 'all' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
+                    >
+                      All
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={areaViewSource === 'ai' ? 'default' : 'outline'}
+                      onClick={() => setAreaViewSource('ai')}
+                      className={`flex-1 text-xs ${areaViewSource === 'ai' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
+                    >
+                      AI
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={areaViewSource === 'human' ? 'default' : 'outline'}
+                      onClick={() => setAreaViewSource('human')}
+                      className={`flex-1 text-xs ${areaViewSource === 'human' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
+                    >
+                      Human
+                    </Button>
+                  </div>
+                </div>
+
+                {/* View Mode Toggle */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-2 block">View</label>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant={areaViewMode === 'heatmap' ? 'default' : 'outline'}
+                      onClick={() => setAreaViewMode('heatmap')}
+                      className={`flex-1 text-xs ${areaViewMode === 'heatmap' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
+                    >
+                      <Grid3x3 size={12} className="mr-1" />
+                      Areas
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={areaViewMode === 'points' ? 'default' : 'outline'}
+                      onClick={() => setAreaViewMode('points')}
+                      className={`flex-1 text-xs ${areaViewMode === 'points' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
+                    >
+                      <MapPin size={12} className="mr-1" />
+                      Points
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Participant Filter */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-2 block">Participant</label>
+                  <Select value={selectedSession} onValueChange={setSelectedSession}>
+                    <SelectTrigger className="h-8 text-xs bg-white">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      <SelectItem value="all">All participants</SelectItem>
+                      <SelectItem value="ai">AI only</SelectItem>
+                      {uniqueSessions.map((sessionId) => (
+                        <SelectItem key={sessionId} value={sessionId}>
+                          Session {sessionId.slice(-6)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -223,33 +359,75 @@ const FullReportView = ({
                     </div>)}
                 </div>
                 
-                {/* Screenshot with Markers */}
-                <div className="relative border border-gray-200 rounded-lg overflow-hidden">
+                {/* Screenshot with Filtered Markers */}
+                <div className="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-100">
                   <img src={project.screenshot} alt="Analysis overview" className="w-full h-auto" />
                   <div className="absolute inset-0">
-                    {allMarkers.filter(m => m.layer === 'emotions' && m.emotion).map(marker => <div key={marker.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 opacity-90" style={{
-                  left: `${marker.x}%`,
-                  top: `${marker.y}%`
-                }}>
-                        <EmotionToken emotion={marker.emotion!} size="sm" />
-                      </div>)}
+                    {areaViewMode === 'heatmap' ? (
+                      filteredMarkers.map((marker, idx) => {
+                        const isPositive = marker.emotion && ['Joy', 'Desire', 'Fascination', 'Satisfaction'].includes(marker.emotion);
+                        const isNegative = marker.emotion && ['Sadness', 'Disgust', 'Boredom', 'Dissatisfaction'].includes(marker.emotion);
+                        
+                        return (
+                          <div
+                            key={idx}
+                            style={{
+                              position: 'absolute',
+                              left: `${marker.x}%`,
+                              top: `${marker.y}%`,
+                              width: `${marker.width}%`,
+                              height: `${marker.height}%`,
+                              backgroundColor: isPositive 
+                                ? 'rgba(34, 197, 94, 0.2)' 
+                                : isNegative 
+                                ? 'rgba(239, 68, 68, 0.2)' 
+                                : 'rgba(59, 130, 246, 0.2)',
+                              border: isPositive 
+                                ? '2px solid rgba(34, 197, 94, 0.5)' 
+                                : isNegative 
+                                ? '2px solid rgba(239, 68, 68, 0.5)' 
+                                : '2px solid rgba(59, 130, 246, 0.5)',
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        );
+                      })
+                    ) : (
+                      filteredMarkers.map((marker, idx) => (
+                        <div
+                          key={idx}
+                          className="absolute transform -translate-x-1/2 -translate-y-1/2 opacity-90" 
+                          style={{
+                            left: `${marker.x}%`,
+                            top: `${marker.y}%`
+                          }}
+                        >
+                          {marker.emotion && <EmotionToken emotion={marker.emotion} size="sm" />}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
                 
                 {/* Metrics Summary */}
-                <div className="grid grid-cols-3 gap-4 p-4 bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-lg">
-                  <div className="text-center">
-                    <p className="text-3xl font-black text-lem-orange">{allMarkers.length}</p>
-                    <p className="text-xs text-gray-400 uppercase mt-1">Total Markers</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-3xl font-black text-lem-orange">{project.markers.length}</p>
-                    <p className="text-xs text-gray-400 uppercase mt-1">AI Analysis</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-3xl font-black text-lem-orange">{sessions.reduce((sum, s) => sum + s.markers.length, 0)}</p>
-                    <p className="text-xs text-gray-400 uppercase mt-1">Human Input</p>
-                  </div>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg text-sm">
+                  <span className="text-gray-600">
+                    Showing <strong>{filteredMarkers.length}</strong> {areaViewMode === 'heatmap' ? 'area' : 'point'}
+                    {filteredMarkers.length !== 1 ? 's' : ''} for <strong>{areaViewLayer}</strong> layer
+                    {areaViewSource !== 'all' && ` from ${areaViewSource === 'ai' ? 'AI' : 'Human'} sources`}
+                  </span>
+                  {areaViewMode === 'heatmap' && areaViewLayer === 'emotions' && (
+                    <div className="flex gap-3 text-xs">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-green-500 bg-opacity-30 border border-green-500 rounded"></div>
+                        <span>Positive</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-red-500 bg-opacity-30 border border-red-500 rounded"></div>
+                        <span>Negative</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

@@ -478,9 +478,9 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                         <button
                             onClick={() => setViewMode('snapshot')}
                             className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1 transition-all ${viewMode === 'snapshot' ? 'bg-white text-lem-orange shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                            title="View precise AI analysis on static screenshot"
+                            title="View full-page screenshot with all markers"
                         >
-                            <Camera size={14}/> Scroll
+                            <Camera size={14}/> Fullpage
                         </button>
                         <button
                             onClick={() => setViewMode('live')}

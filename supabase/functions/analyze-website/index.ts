@@ -353,15 +353,25 @@ serve(async (req) => {
       'DISSATISFACTION': 'Dissatisfaction'
     };
 
-    let allMarkers = (parsedMaster.markers || []).map((m: any) => ({
-      x: Math.max(1, Math.min(99, m.x || 50)),
-      y: Math.max(0, Math.min(100, m.y || 50)),
-      layer: m.layer || 'emotions',
-      emotion: emotionTypeMap[m.emotion?.toUpperCase()] || 'Neutral',
-      need: m.need,
-      brief_type: m.brief_type,
-      comment: m.comment || '',
-    }));
+    let allMarkers = (parsedMaster.markers || []).map((m: any) => {
+      // Infer layer from marker properties if not explicitly set or set incorrectly
+      let layer = m.layer || 'emotions';
+      if (m.need && !m.emotion) {
+        layer = 'needs';
+      } else if (m.brief_type && !m.emotion && !m.need) {
+        layer = 'strategy';
+      }
+      
+      return {
+        x: Math.max(1, Math.min(99, m.x || 50)),
+        y: Math.max(0, Math.min(100, m.y || 50)),
+        layer,
+        emotion: layer === 'emotions' ? (emotionTypeMap[m.emotion?.toUpperCase()] || 'Neutral') : undefined,
+        need: layer === 'needs' ? m.need : undefined,
+        brief_type: layer === 'strategy' ? m.brief_type : undefined,
+        comment: m.comment || '',
+      };
+    });
 
     // 4. Adjust master markers coordinates to global space
     const h0 = sliceHeights[0];
@@ -393,13 +403,21 @@ serve(async (req) => {
           // 3. Convert to global %
           const globalY = (globalYPx / totalHeight) * 100;
 
+          // Infer layer from marker properties if not explicitly set or set incorrectly
+          let layer = m.layer || 'emotions';
+          if (m.need && !m.emotion) {
+            layer = 'needs';
+          } else if (m.brief_type && !m.emotion && !m.need) {
+            layer = 'strategy';
+          }
+
           return {
             x: Math.max(1, Math.min(99, m.x || 50)),
             y: globalY,
-            layer: m.layer || 'emotions',
-            emotion: emotionTypeMap[m.emotion?.toUpperCase()] || 'Neutral',
-            need: m.need,
-            brief_type: m.brief_type,
+            layer,
+            emotion: layer === 'emotions' ? (emotionTypeMap[m.emotion?.toUpperCase()] || 'Neutral') : undefined,
+            need: layer === 'needs' ? m.need : undefined,
+            brief_type: layer === 'strategy' ? m.brief_type : undefined,
             comment: m.comment || '',
           };
         });

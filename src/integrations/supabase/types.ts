@@ -64,6 +64,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          archived: boolean
           created_at: string | null
           id: string
           markers: Json | null
@@ -73,6 +74,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived?: boolean
           created_at?: string | null
           id?: string
           markers?: Json | null
@@ -82,6 +84,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived?: boolean
           created_at?: string | null
           id?: string
           markers?: Json | null

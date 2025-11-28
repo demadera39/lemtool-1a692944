@@ -62,12 +62,18 @@ export const signOut = async () => {
   if (error) throw error;
 };
 
-export const getProjects = async (userId: string): Promise<Project[]> => {
-  const { data, error } = await supabase
+export async function getProjects(userId: string, includeArchived: boolean = false): Promise<Project[]> {
+  const query = supabase
     .from('projects')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
+  
+  if (!includeArchived) {
+    query.eq('archived', false);
+  }
+  
+  const { data, error } = await query;
   
   if (error) throw error;
   return (data || []).map(p => ({
@@ -75,7 +81,7 @@ export const getProjects = async (userId: string): Promise<Project[]> => {
     report: p.report as any as AnalysisReport,
     markers: p.markers as any as Marker[]
   }));
-};
+}
 
 export const createProject = async (
   userId: string,
@@ -155,4 +161,22 @@ export const submitTestSession = async (
     ...data,
     markers: data.markers as any as Marker[]
   };
+};
+
+export const deleteProject = async (projectId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', projectId);
+  
+  if (error) throw error;
+};
+
+export const archiveProject = async (projectId: string, archived: boolean = true): Promise<void> => {
+  const { error } = await supabase
+    .from('projects')
+    .update({ archived })
+    .eq('id', projectId);
+  
+  if (error) throw error;
 };

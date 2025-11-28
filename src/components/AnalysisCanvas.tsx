@@ -456,11 +456,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
               </div>
             )}
           </div>
-          {viewMode !== 'presentation' && activeMarkerId === marker.id && (
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50">
-              <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} allMarkers={filteredMarkers} />
-            </div>
-          )}
+          {/* Bubble rendered at top level for snapshot mode */}
         </div>
       );
     }
@@ -474,7 +470,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
         >
                 <div className="relative transform -translate-x-1/2 -translate-y-1/2">
                 <div className="animate-float">
-                    {viewMode !== 'presentation' && activeMarkerId === marker.id && (
+                    {viewMode !== 'presentation' && viewMode !== 'snapshot' && activeMarkerId === marker.id && (
                         <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} allMarkers={filteredMarkers} />
                     )}
                     <div className="transform scale-150 origin-center cursor-pointer pointer-events-auto">
@@ -673,14 +669,41 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                  </div>
             </div>
           ) : viewMode === 'snapshot' && screenshot ? (
-            <div className="relative w-full max-h-[80vh] overflow-y-auto border-4 border-gray-300 rounded-lg">
-                <div className="relative w-full">
-                  <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
-                  <div className="absolute inset-0 z-10 pointer-events-none">
-                    {filteredMarkers.map((marker) => renderMarker(marker))}
+            <>
+              <div className="relative w-full max-h-[80vh] overflow-y-auto border-4 border-gray-300 rounded-lg">
+                  <div className="relative w-full">
+                    <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
+                    <div className="absolute inset-0 z-10 pointer-events-none">
+                      {filteredMarkers.map((marker) => renderMarker(marker))}
+                    </div>
                   </div>
-                </div>
-            </div>
+              </div>
+              {/* Active bubble overlay - rendered outside clipping container */}
+              {activeMarkerId && (() => {
+                const activeMarker = filteredMarkers.find(m => m.id === activeMarkerId);
+                if (!activeMarker) return null;
+                
+                return (
+                  <div className="absolute inset-0 z-50 pointer-events-none overflow-visible">
+                    <div 
+                      style={{ 
+                        position: 'absolute', 
+                        left: `${activeMarker.x}%`, 
+                        top: `${activeMarker.y}%`,
+                        transform: 'translate(-50%, -50%)'
+                      }} 
+                      className="pointer-events-auto"
+                    >
+                      <SpeechBubble
+                        marker={activeMarker}
+                        onClose={() => setActiveMarkerId(null)}
+                        allMarkers={filteredMarkers}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
           ) : (
             <>
               <div className="absolute inset-0 z-0">

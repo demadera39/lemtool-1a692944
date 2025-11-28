@@ -19,10 +19,6 @@ interface AnalysisCanvasProps {
   interactionMode?: 'read_only' | 'place_marker' | 'select_area';
   onCanvasClick?: (x: number, y: number) => void;
   onAreaSelect?: (x: number, y: number, width: number, height: number) => void;
-  
-  // For external marker selection
-  activeMarkerId?: string | null;
-  onMarkerSelect?: (markerId: string | null) => void;
 }
 
 const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ layer, type }) => {
@@ -42,78 +38,28 @@ const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ laye
     return null;
 };
 
-// Smart SpeechBubble with container-aware positioning and collision detection
-const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 'up' | 'down'; allMarkers: Marker[] }> = ({ marker, onClose, direction, allMarkers }) => {
+// Smart SpeechBubble with viewport-aware positioning
+const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 'up' | 'down' }> = ({ marker, onClose, direction }) => {
     const bubbleRef = useRef<HTMLDivElement>(null);
     const [computedDirection, setComputedDirection] = useState<'up' | 'down'>(direction || 'up');
-    const [horizontalOffset, setHorizontalOffset] = useState<number>(0);
-    const [arrowOffset, setArrowOffset] = useState<number>(50);
-    const [maxWidth, setMaxWidth] = useState<number>(320); // w-80 default
-    const [verticalOffset, setVerticalOffset] = useState<number>(0);
 
     useEffect(() => {
-        if (!bubbleRef.current) return;
+        if (direction || !bubbleRef.current) return;
         
-        // Small delay to ensure bubble is rendered with correct size
-        const timeoutId = setTimeout(() => {
-            if (!bubbleRef.current) return;
-            
-            const bubble = bubbleRef.current;
-            const bubbleRect = bubble.getBoundingClientRect();
-            
-            // Find scrollable container
-            let container: HTMLElement | null = bubble.parentElement;
-            while (container && container !== document.body) {
-                const style = window.getComputedStyle(container);
-                if (style.overflow === 'auto' || style.overflow === 'scroll' || 
-                    style.overflowY === 'auto' || style.overflowY === 'scroll') {
-                    break;
-                }
-                container = container.parentElement;
-            }
-            
-            const containerRect = container && container !== document.body 
-                ? container.getBoundingClientRect() 
-                : { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth };
-            
-            const padding = 16;
-            const bubbleWidth = bubbleRect.width;
-            const bubbleLeft = bubbleRect.left;
-            const bubbleRight = bubbleRect.right;
-            
-            let adjustment = 0;
-            let newArrowOffset = 50;
-            
-            // Check if bubble extends beyond left boundary
-            if (bubbleLeft < containerRect.left + padding) {
-                adjustment = (containerRect.left + padding) - bubbleLeft;
-                // Arrow points to original position
-                newArrowOffset = Math.max(10, Math.min(90, 50 - (adjustment / bubbleWidth * 50)));
-            }
-            // Check if bubble extends beyond right boundary
-            else if (bubbleRight > containerRect.right - padding) {
-                adjustment = (containerRect.right - padding) - bubbleRight;
-                // Arrow points to original position
-                newArrowOffset = Math.max(10, Math.min(90, 50 + (Math.abs(adjustment) / bubbleWidth * 50)));
-            }
-            
-            setHorizontalOffset(adjustment);
-            setArrowOffset(newArrowOffset);
-            
-            // Vertical direction
-            if (!direction) {
-                const spaceAbove = bubbleRect.top - containerRect.top;
-                const spaceBelow = containerRect.bottom - bubbleRect.bottom;
-                
-                if (spaceAbove < 200 && spaceBelow > spaceAbove) {
-                    setComputedDirection('down');
-                } else {
-                    setComputedDirection('up');
-                }
-            }
-        }, 0);
+        const bubble = bubbleRef.current;
+        const rect = bubble.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
         
-        return () => clearTimeout(timeoutId);
+        // Check if bubble would be cut off at top or bottom
+        const spaceAbove = rect.top;
+        const spaceBelow = viewportHeight - rect.bottom;
+        
+        // Default to up, but flip to down if not enough space above
+        if (spaceAbove < 100 && spaceBelow > spaceAbove) {
+            setComputedDirection('down');
+        } else {
+            setComputedDirection('up');
+        }
     }, [direction, marker]);
 
     let title = 'Insight';
@@ -130,12 +76,7 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
     return (
       <div
         ref={bubbleRef}
-        className={`absolute bg-white rounded-lg shadow-2xl p-4 z-50 flex flex-col transform -translate-x-1/2 ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
-        style={{
-          left: `calc(50% + ${horizontalOffset}px)`,
-          width: `${maxWidth}px`,
-          maxWidth: `${maxWidth}px`
-        }}
+        className={`absolute w-80 bg-white rounded-lg shadow-2xl p-4 z-50 transform -translate-x-1/2 left-1/2 flex flex-col ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}
       >
@@ -144,7 +85,7 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
             {marker.source === 'HUMAN' ? <UserIcon size={14} className="text-blue-500" /> : <Bot size={14} className="text-lem-orange" />}
             {title}
           </h4>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition-colors bg-gray-50 rounded-full p-1 flex-shrink-0">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition-colors bg-gray-50 rounded-full p-1">
             <X size={14} />
           </button>
         </div>
@@ -152,10 +93,7 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
         <div className="text-sm text-gray-600 flex-grow pr-1 max-h-48 overflow-y-auto custom-scrollbar leading-relaxed">
            {marker.comment}
         </div>
-        <div 
-          className={`absolute w-4 h-4 bg-white border-gray-100 transform -translate-x-1/2 ${arrowClass}`}
-          style={{ left: `${arrowOffset}%` }}
-        ></div>
+        <div className={`absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-gray-100 ${arrowClass}`}></div>
       </div>
     );
 };
@@ -244,17 +182,12 @@ const AdaptiveWireframe = ({ structure }: { structure: LayoutSection[] }) => {
 
 const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
     imgUrl, markers, setMarkers, isAnalyzing, activeLayer, setActiveLayer, layoutStructure, screenshot, analysisProgress = 0,
-    interactionMode = 'read_only', onCanvasClick, onAreaSelect,
-    activeMarkerId: externalActiveMarkerId, onMarkerSelect
+    interactionMode = 'read_only', onCanvasClick, onAreaSelect
 }) => {
-  const [internalActiveMarkerId, setInternalActiveMarkerId] = useState<string | null>(null);
-  const activeMarkerId = externalActiveMarkerId !== undefined ? externalActiveMarkerId : internalActiveMarkerId;
-  const setActiveMarkerId = onMarkerSelect || setInternalActiveMarkerId;
-  
+  const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
   const [showSchematic, setShowSchematic] = useState(false);
   const [viewMode, setViewMode] = useState<'snapshot' | 'live' | 'presentation'>('live');
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
-  const imageScrollContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastScrollTopRef = useRef<number>(0);
@@ -386,34 +319,8 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
 
   const handleMarkerClick = (e: React.MouseEvent, markerId: string) => {
       e.stopPropagation();
-      // Force immediate update by setting to null first if clicking different marker
-      if (activeMarkerId && activeMarkerId !== markerId) {
-        setActiveMarkerId(null);
-        setTimeout(() => setActiveMarkerId(markerId), 0);
-      } else {
-        setActiveMarkerId(markerId);
-      }
+      setActiveMarkerId(markerId);
   };
-  
-  // Auto-scroll to marker when selected (especially from external list)
-  useEffect(() => {
-    if (activeMarkerId && viewMode === 'snapshot' && scrollWrapperRef.current && containerRef.current) {
-      const marker = markers.find(m => m.id === activeMarkerId);
-      if (!marker) return;
-      
-      const containerHeight = scrollWrapperRef.current.clientHeight;
-      const imageHeight = containerRef.current.clientHeight;
-      const markerPositionY = (marker.y / 100) * imageHeight;
-      
-      // Scroll so marker is in the middle of the viewport
-      const targetScroll = markerPositionY - (containerHeight / 2);
-      
-      scrollWrapperRef.current.scrollTo({
-        top: Math.max(0, targetScroll),
-        behavior: 'smooth'
-      });
-    }
-  }, [activeMarkerId, viewMode, markers]);
 
   const filteredMarkers = markers.filter(m => m.layer === activeLayer);
 
@@ -491,7 +398,11 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
               </div>
             )}
           </div>
-          {/* Bubble rendered at top level for snapshot mode */}
+          {viewMode !== 'presentation' && activeMarkerId === marker.id && (
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50">
+              <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} />
+            </div>
+          )}
         </div>
       );
     }
@@ -505,14 +416,11 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
         >
                 <div className="relative transform -translate-x-1/2 -translate-y-1/2">
                 <div className="animate-float">
-                    {viewMode !== 'presentation' && viewMode !== 'snapshot' && activeMarkerId === marker.id && (
-                        <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} allMarkers={filteredMarkers} />
+                    {viewMode !== 'presentation' && activeMarkerId === marker.id && (
+                        <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} />
                     )}
                     <div className="transform scale-150 origin-center cursor-pointer pointer-events-auto">
-                        <div 
-                          onClick={(e) => handleMarkerClick(e, marker.id)}
-                          className={`relative ${activeMarkerId === marker.id ? 'scale-125 ring-4 ring-lem-orange rounded-full shadow-2xl' : ''}`}
-                        >
+                        <div onClick={(e) => handleMarkerClick(e, marker.id)} className="relative">
                             {/* MARKER RENDERING */}
                             {marker.layer === 'emotions' ? (
                                 <div className="relative">
@@ -524,7 +432,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                                     )}
                                 </div>
                             ) : (
-                                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-all duration-200 ${activeMarkerId === marker.id ? 'ring-4 ring-lem-orange scale-125 z-10 shadow-2xl' : 'hover:scale-105'}`}>
+                                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-all duration-200 ${activeMarkerId === marker.id ? 'ring-4 ring-white ring-opacity-50 scale-110 z-10' : 'hover:scale-105'}`}>
                                     {marker.layer === 'needs' && (
                                         <div className={`absolute inset-0 rounded-full opacity-70 ${marker.need === 'Autonomy' ? 'bg-blue-400' : marker.need === 'Competence' ? 'bg-green-400' : marker.need === 'Relatedness' ? 'bg-pink-400' : 'bg-purple-400'}`}></div>
                                     )}
@@ -635,43 +543,6 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
             </div>
         )}
 
-        {/* Fixed speech bubble at top for snapshot view */}
-        {viewMode === 'snapshot' && activeMarkerId && (() => {
-          const activeMarker = markers.find(m => m.id === activeMarkerId && m.layer === activeLayer);
-          if (!activeMarker) return null;
-          
-          let title = 'Insight';
-          if (activeMarker.layer === 'emotions' && activeMarker.emotion) title = EMOTIONS[activeMarker.emotion].label;
-          if (activeMarker.layer === 'needs') title = activeMarker.need || 'Psych Need';
-          if (activeMarker.layer === 'strategy') title = activeMarker.brief_type || 'Strategic Point';
-          
-          return (
-            <div className="sticky top-0 z-50 w-full max-w-6xl mx-auto mb-4 bg-white rounded-lg shadow-xl p-4 border-2 border-lem-orange">
-              <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
-                <h4 className="font-bold text-base text-gray-900 flex items-center gap-2">
-                  {activeMarker.layer === 'emotions' && activeMarker.emotion ? (
-                    <EmotionToken emotion={activeMarker.emotion} size="sm" />
-                  ) : activeMarker.source === 'HUMAN' ? (
-                    <UserIcon size={16} className="text-blue-500" />
-                  ) : (
-                    <Bot size={16} className="text-lem-orange" />
-                  )}
-                  {title}
-                </h4>
-                <button 
-                  onClick={() => setActiveMarkerId(null)} 
-                  className="text-gray-400 hover:text-gray-700 transition-colors bg-gray-100 rounded-full p-1 hover:bg-gray-200"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <p className="text-sm text-gray-700 leading-relaxed max-h-24 overflow-y-auto">
-                {activeMarker.comment}
-              </p>
-            </div>
-          );
-        })()}
-
         <div
             ref={containerRef}
             className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl' : ''} ${interactionMode === 'select_area' ? 'cursor-crosshair' : ''}`}
@@ -716,7 +587,6 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                                 marker={activeMarker}
                                 onClose={() => setActiveMarkerId(null)}
                                 direction={isAtTop ? 'down' : 'up'}
-                                allMarkers={filteredMarkers}
                              />
                         </div>
                     </div>
@@ -744,10 +614,12 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                  </div>
             </div>
           ) : viewMode === 'snapshot' && screenshot ? (
-            <div ref={imageScrollContainerRef} className="relative w-full border-4 border-gray-300 rounded-lg">
-                <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
-                <div className="absolute inset-0 z-10 pointer-events-none">
-                  {filteredMarkers.map((marker) => renderMarker(marker))}
+            <div className="relative w-full max-h-[80vh] overflow-y-auto border-4 border-gray-300 rounded-lg">
+                <div className="relative w-full">
+                  <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
+                  <div className="absolute inset-0 z-10 pointer-events-none">
+                    {filteredMarkers.map((marker) => renderMarker(marker))}
+                  </div>
                 </div>
             </div>
           ) : (

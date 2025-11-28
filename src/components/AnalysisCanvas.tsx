@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Marker, EmotionType, LayerType } from '../types';
+import { Marker, EmotionType, LayerType, LayoutSection } from '../types';
 import EmotionToken from './EmotionToken';
 import { EMOTIONS } from '../constants';
 import { X, MonitorPlay, Presentation, ChevronLeft, ChevronRight, ExternalLink, Layers } from 'lucide-react';
@@ -13,6 +13,9 @@ interface AnalysisCanvasProps {
   activeLayer: LayerType;
   setActiveLayer: (layer: LayerType) => void;
   screenshot?: string;
+  layoutStructure?: LayoutSection[];
+  interactionMode?: 'read_only' | 'place_marker';
+  onCanvasClick?: (x: number, y: number) => void;
 }
 
 const LOADING_MESSAGES = [
@@ -71,7 +74,8 @@ const SpeechBubble = ({ marker, onClose }: { marker: Marker; onClose: () => void
 };
 
 const AnalysisCanvas = ({
-    imgUrl, markers, setMarkers, isAnalyzing, activeLayer, setActiveLayer, screenshot
+    imgUrl, markers, setMarkers, isAnalyzing, activeLayer, setActiveLayer, screenshot,
+    layoutStructure, interactionMode = 'read_only', onCanvasClick
 }: AnalysisCanvasProps) => {
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'live' | 'snapshot'>('live');

@@ -113,9 +113,17 @@ export interface User {
 export interface Project {
   id: string;
   created_at: string;
-  owner_id: string;
-  name: string;
+  user_id: string;
   url: string;
-  ai_report?: AnalysisReport;
-  ai_markers?: Marker[];
+  report: AnalysisReport;
+  markers: Marker[];
+  screenshot?: string;
+}
+
+export interface TestSession {
+  id: string;
+  created_at: string;
+  project_id: string;
+  participant_name: string;
+  markers: Marker[];
 }

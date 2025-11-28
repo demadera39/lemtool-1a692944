@@ -7,10 +7,16 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50 relative overflow-hidden">
-      {/* Decorative emotion stickers */}
-      <div className="absolute top-10 right-10 text-6xl opacity-20 rotate-12">😊</div>
-      <div className="absolute bottom-20 left-10 text-5xl opacity-15 -rotate-12">🎯</div>
-      <div className="absolute top-1/3 left-1/4 text-4xl opacity-10">✨</div>
+      {/* Decorative emotion stickers using real emotion images */}
+      <div className="absolute top-10 right-10 w-20 h-20 opacity-20 rotate-12">
+        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" alt="Joy" className="w-full h-full" />
+      </div>
+      <div className="absolute bottom-20 left-10 w-16 h-16 opacity-15 -rotate-12">
+        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" alt="Interest" className="w-full h-full" />
+      </div>
+      <div className="absolute top-1/3 left-1/4 w-12 h-12 opacity-10">
+        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/satisfaction.png" alt="Satisfaction" className="w-full h-full" />
+      </div>
       
       <header className="bg-white border-b border-gray-200 shadow-sm relative z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -66,7 +72,9 @@ const Pricing = () => {
             </ul>
 
             <div className="relative">
-              <div className="absolute -top-3 -right-3 text-4xl animate-bounce">😊</div>
+              <div className="absolute -top-3 -right-3 w-10 h-10 animate-bounce">
+                <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" alt="Joy" className="w-full h-full" />
+              </div>
               <Button 
                 onClick={() => navigate('/auth')}
                 variant="outline" 
@@ -120,7 +128,9 @@ const Pricing = () => {
             </ul>
 
             <div className="relative">
-              <div className="absolute -top-3 -right-3 text-4xl animate-pulse">✨</div>
+              <div className="absolute -top-3 -right-3 w-10 h-10 animate-pulse">
+                <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" alt="Interest" className="w-full h-full" />
+              </div>
               <Button 
                 onClick={() => navigate('/auth')}
                 className="w-full bg-white text-lem-orange hover:bg-gray-50"

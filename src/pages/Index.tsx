@@ -9,7 +9,7 @@ import { Marker, EmotionType, User, LayerType, Project } from '@/types';
 import { analyzeWebsite } from '@/services/geminiService';
 import { supabase, signOut, createProject, getProjectById } from '@/services/supabaseService';
 import { getUserRole, canCreateAnalysis, incrementAnalysisCount, getRemainingAnalyses } from '@/services/userRoleService';
-import { Search, Info, AlertCircle, X, Save, Lock, DollarSign } from 'lucide-react';
+import { Search, Info, AlertCircle, X, Save, Lock, DollarSign, User as UserIcon, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -199,12 +199,12 @@ const Index = () => {
 
       <div className="flex-1 flex flex-col h-full relative">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm z-10 justify-between flex-shrink-0">
-          <div className="w-32 flex justify-start gap-3">
-            <button onClick={() => navigate('/about')} className="text-xs font-medium text-gray-500 hover:text-lem-orange flex items-center gap-1 transition-colors">
-              <Info size={14} />About
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/about')} className="text-sm font-medium text-gray-600 hover:text-lem-orange transition-colors">
+              About
             </button>
-            <button onClick={() => navigate('/pricing')} className="text-xs font-medium text-gray-500 hover:text-lem-orange flex items-center gap-1 transition-colors">
-              <DollarSign size={14} />Pricing
+            <button onClick={() => navigate('/pricing')} className="text-sm font-medium text-gray-600 hover:text-lem-orange transition-colors">
+              Pricing
             </button>
           </div>
 
@@ -220,28 +220,55 @@ const Index = () => {
             </Button>
           </form>
 
-          <div className="w-32 flex justify-end gap-2 items-center">
+          <div className="flex items-center gap-3">
             {report && user && !report.isPreview && (
               <Button size="sm" variant="outline" onClick={handleSaveProject}>
-                <Save size={12} className="mr-1" />Save
+                <Save size={16} className="mr-1" />Save
               </Button>
             )}
             {user ? (
-              <div className="flex gap-3 items-center">
-                <button onClick={() => navigate('/settings')} className="text-xs font-medium text-gray-500 hover:text-lem-orange flex items-center gap-1">
-                  Settings
-                </button>
-                <button onClick={() => setCurrentView('dashboard')} className="text-xs font-bold text-gray-700 hover:text-lem-orange flex flex-col items-end">
-                  <span>Dashboard</span>
-                  <span className="text-[10px] text-gray-500">
-                    {remainingAnalyses === -1 ? '✨ Premium' : `${remainingAnalyses} left`}
-                  </span>
-                </button>
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-gray-600">
+                  {remainingAnalyses === -1 ? (
+                    <span className="font-bold text-lem-orange">Premium</span>
+                  ) : (
+                    <span>{remainingAnalyses} analyses left</span>
+                  )}
+                </div>
+                <div className="relative group">
+                  <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <UserIcon size={18} className="text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">{user.name || user.email.split('@')[0]}</span>
+                  </button>
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                    <button
+                      onClick={() => setCurrentView('dashboard')}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
+                    >
+                      <UserIcon size={16} />
+                      Dashboard
+                    </button>
+                    <button
+                      onClick={() => navigate('/settings')}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <SettingsIcon size={16} />
+                      Settings
+                    </button>
+                    <button
+                      onClick={async () => { await signOut(); setUser(null); setCurrentView('landing'); }}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-b-lg"
+                    >
+                      <LogOut size={16} />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
-              <button onClick={() => navigate('/auth')} className="text-xs font-bold text-gray-400 hover:text-lem-orange">
+              <Button onClick={() => navigate('/auth')} size="sm" className="bg-lem-orange hover:bg-lem-orange-dark">
                 Sign In
-              </button>
+              </Button>
             )}
           </div>
         </header>
@@ -260,7 +287,13 @@ const Index = () => {
           <div className="flex-1 bg-gray-100 relative flex flex-col overflow-hidden">
             {!hasStarted ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto text-gray-500">
-                <div className="w-24 h-24 bg-gray-200 rounded-full mb-6 flex items-center justify-center text-4xl grayscale opacity-50">😑</div>
+                <div className="w-24 h-24 bg-gray-200 rounded-full mb-6 flex items-center justify-center overflow-hidden">
+                  <img 
+                    src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/neutral.png" 
+                    alt="Neutral emotion" 
+                    className="w-full h-full opacity-50 grayscale"
+                  />
+                </div>
                 <h2 className="text-xl font-bold text-gray-800 mb-2">Ready to Measure Emotion?</h2>
                 <p className="mb-6">Enter a URL above. AI will analyze emotional triggers.</p>
               </div>

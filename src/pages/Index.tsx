@@ -143,7 +143,16 @@ const Index = () => {
       setReport(result.report);
       await incrementAnalysisCount(user.id);
       await loadUserRole(user.id);
-      toast.success('Analysis complete!');
+      
+      // Auto-save project for logged-in users
+      const savedProject = await createProject(user.id, targetUrl, result.report, result.markers);
+      toast.success('Analysis complete and saved!', {
+        description: 'You can now invite participants to test this design.',
+        action: {
+          label: 'View Dashboard',
+          onClick: () => setCurrentView('dashboard')
+        }
+      });
     } catch (error) {
       console.error("Analysis Error:", error);
       toast.error('Analysis failed.');
@@ -221,11 +230,6 @@ const Index = () => {
           </form>
 
           <div className="flex items-center gap-3">
-            {report && user && !report.isPreview && (
-              <Button size="sm" variant="outline" onClick={handleSaveProject}>
-                <Save size={16} className="mr-1" />Save
-              </Button>
-            )}
             {user ? (
               <div className="flex items-center gap-2">
                 <div className="text-xs text-gray-600 flex items-center gap-2">

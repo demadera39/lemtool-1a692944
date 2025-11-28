@@ -123,11 +123,23 @@ Return your analysis as a JSON object with this exact structure:
     }
 
     // Transform the Gemini response to our expected format
+    const emotionTypeMap: Record<string, string> = {
+      'JOY': 'Joy',
+      'DESIRE': 'Desire',
+      'FASCINATION': 'Fascination',
+      'SATISFACTION': 'Satisfaction',
+      'NEUTRAL': 'Neutral',
+      'SADNESS': 'Sadness',
+      'DISGUST': 'Disgust',
+      'BOREDOM': 'Boredom',
+      'DISSATISFACTION': 'Dissatisfaction'
+    };
+
     const markers = (parsedData.emotional_triggers || []).map((trigger: any) => ({
       x: trigger.x || 50,
       y: trigger.y || 50,
       layer: 'emotions',
-      emotion: trigger.emotion_type,
+      emotion: emotionTypeMap[trigger.emotion_type] || 'Neutral',
       comment: trigger.comment || '',
     }));
 

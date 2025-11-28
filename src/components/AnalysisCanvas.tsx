@@ -474,7 +474,10 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                         <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} allMarkers={filteredMarkers} />
                     )}
                     <div className="transform scale-150 origin-center cursor-pointer pointer-events-auto">
-                        <div onClick={(e) => handleMarkerClick(e, marker.id)} className="relative">
+                        <div 
+                          onClick={(e) => handleMarkerClick(e, marker.id)}
+                          className={`relative ${activeMarkerId === marker.id ? 'scale-125 ring-4 ring-lem-orange rounded-full shadow-2xl' : ''}`}
+                        >
                             {/* MARKER RENDERING */}
                             {marker.layer === 'emotions' ? (
                                 <div className="relative">
@@ -486,7 +489,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                                     )}
                                 </div>
                             ) : (
-                                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-all duration-200 ${activeMarkerId === marker.id ? 'ring-4 ring-white ring-opacity-50 scale-110 z-10' : 'hover:scale-105'}`}>
+                                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-all duration-200 ${activeMarkerId === marker.id ? 'ring-4 ring-lem-orange scale-125 z-10 shadow-2xl' : 'hover:scale-105'}`}>
                                     {marker.layer === 'needs' && (
                                         <div className={`absolute inset-0 rounded-full opacity-70 ${marker.need === 'Autonomy' ? 'bg-blue-400' : marker.need === 'Competence' ? 'bg-green-400' : marker.need === 'Relatedness' ? 'bg-pink-400' : 'bg-purple-400'}`}></div>
                                     )}
@@ -685,6 +688,35 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                 
                 return (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-visible">
+                    {/* Connection line from marker to bubble */}
+                    <svg 
+                      className="absolute inset-0 w-full h-full pointer-events-none"
+                      style={{ zIndex: 49 }}
+                    >
+                      <defs>
+                        <marker
+                          id="arrowhead"
+                          markerWidth="10"
+                          markerHeight="10"
+                          refX="5"
+                          refY="5"
+                          orient="auto"
+                        >
+                          <polygon points="0 0, 10 5, 0 10" fill="#F26522" />
+                        </marker>
+                      </defs>
+                      <line
+                        x1={`${activeMarker.x}%`}
+                        y1={`${activeMarker.y}%`}
+                        x2={`${activeMarker.x}%`}
+                        y2={`calc(${activeMarker.y}% - 80px)`}
+                        stroke="#F26522"
+                        strokeWidth="2"
+                        strokeDasharray="4 4"
+                        markerEnd="url(#arrowhead)"
+                      />
+                    </svg>
+                    
                     <div 
                       style={{ 
                         position: 'absolute', 

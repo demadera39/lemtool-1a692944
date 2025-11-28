@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Target, Users, Lightbulb, TrendingUp } from 'lucide-react';
+import { ArrowLeft, BookOpen, Sparkles, FileText } from 'lucide-react';
 
 const About = () => {
   const navigate = useNavigate();
@@ -18,66 +18,92 @@ const About = () => {
 
       <main className="max-w-4xl mx-auto px-6 py-16">
         <div className="text-center mb-16">
-          <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-6">
-            <path d="M50 10C27.9086 10 10 27.9086 10 50C10 72.0914 27.9086 90 50 90C72.0914 90 90 72.0914 90 50" stroke="#F26522" strokeWidth="12" strokeLinecap="round"/>
-            <path d="M50 25C36.1929 25 25 36.1929 25 50C25 63.8071 36.1929 75 50 75C63.8071 75 75 63.8071 75 50" stroke="#555555" strokeWidth="10" strokeLinecap="round"/>
-            <path d="M50 40C44.4772 40 40 44.4772 40 50C40 55.5228 44.4772 60 50 60" stroke="#F26522" strokeWidth="8" strokeLinecap="round"/>
-          </svg>
+          <div className="w-16 h-16 bg-lem-orange rounded-lg flex items-center justify-center mx-auto mb-6">
+            <BookOpen size={32} className="text-white" />
+          </div>
           <h1 className="text-5xl font-black text-gray-900 mb-4">About LEMtool</h1>
           <p className="text-xl text-gray-600">
-            Measure emotional impact in user interface design
+            Origins & Methodology
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-8 shadow-lg mb-12">
-          <h2 className="text-3xl font-black text-gray-900 mb-4">What is LEMtool?</h2>
-          <p className="text-gray-700 mb-4 leading-relaxed">
-            LEMtool is an innovative platform that combines AI-powered analysis with human emotional feedback to help designers and researchers understand the emotional impact of their user interfaces.
+        <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
+          <p className="text-gray-700 leading-relaxed text-lg">
+            The <strong>Layered Emotion Measurement (LEM) tool</strong> is a visual instrument designed to measure human emotions in interactive digital environments. Unlike traditional surveys that rely on text, LEM uses a visual language to capture immediate, intuitive emotional responses.
           </p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Sparkles size={20} className="text-lem-orange" />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900">ORIGINS & DEVELOPMENT</h2>
+          </div>
+          
+          <p className="text-gray-700 leading-relaxed mb-4">
+            The LEMtool was originally conceptualized and developed by researchers at <strong>SusaGroup</strong> (notably by Marco van Hout and colleagues) in the Netherlands. It emerged from the need to go beyond standard usability testing and understand the <em>emotional experience</em> of users on the web.
+          </p>
+          
           <p className="text-gray-700 leading-relaxed">
-            By analyzing websites through the lens of emotion theory and cognitive appraisal, LEMtool provides actionable insights into how users emotionally respond to different UI elements, helping you create more engaging and effective digital experiences.
+            Standard questionnaires often interrupt the user flow and force users to rationalize their feelings into words. The LEMtool was designed to be a "layer" over the interface, allowing users to simply drag and drop expressive cartoon characters onto the screen at the exact moment and place an emotion occurred.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-              <Target size={24} className="text-lem-orange" />
+        <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <FileText size={20} className="text-lem-orange" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">AI Analysis</h3>
-            <p className="text-gray-600">
-              Our AI evaluates your UI against emotion theory, identifying emotional triggers and providing detailed analysis of user experience patterns.
-            </p>
+            <h2 className="text-2xl font-black text-gray-900">SCIENTIFIC FOUNDATION</h2>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-              <Users size={24} className="text-lem-orange" />
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="border border-gray-200 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Visual Primitives</h3>
+              <p className="text-gray-700 text-sm leading-relaxed">
+                The tool utilizes caricatured expressions based on universal facial coding research (Ekman). By using a consistent cartoon character, it reduces bias related to gender, age, or race, focusing purely on the emotional signal.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Participant Testing</h3>
-            <p className="text-gray-600">
-              Invite real users to share their emotional responses by placing markers and providing context about their feelings while interacting with your UI.
-            </p>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-              <Lightbulb size={24} className="text-lem-orange" />
+            <div className="border border-gray-200 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Dimensional Model</h3>
+              <p className="text-gray-700 text-sm leading-relaxed">
+                The selected emotions cover key quadrants of the Circumplex Model of Affect (Valence vs. Arousal), ensuring a balanced measurement of both positive/negative and active/passive emotional states relevant to UX (e.g., Fascination vs. Boredom).
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Appraisal Theory</h3>
-            <p className="text-gray-600">
-              Based on cognitive appraisal theory, LEMtool helps understand the "why" behind emotions through goals, attitudes, and values.
-            </p>
           </div>
+        </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-              <TrendingUp size={24} className="text-lem-orange" />
+        <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
+          <h2 className="text-2xl font-black text-gray-900 mb-4">EVOLUTION TO AI</h2>
+          <p className="text-gray-700 leading-relaxed mb-4">
+            This modern iteration, <strong>LEM by METODIC</strong>, combines the validated visual methodology of the original LEMtool with advanced Generative AI. Instead of relying solely on live user panels, we use AI agents configured with deep psychological personas to simulate user reactions, allowing for instant, scalable emotional feedback during the design process.
+          </p>
+        </div>
+
+        <div className="bg-orange-50 rounded-2xl p-8 border border-orange-200 mb-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <FileText size={20} className="text-lem-orange" />
+            KEY REFERENCES
+          </h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">
+                <FileText size={14} className="text-lem-orange" />
+              </div>
+              <p className="text-gray-700 italic">
+                Huisman, G., & Van Hout, M. (2010). The development of a graphical emotion measurement instrument using caricatured expressions: the LEMtool.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Comparison Dashboard</h3>
-            <p className="text-gray-600">
-              Compare AI predictions with real user feedback side-by-side to validate assumptions and discover unexpected emotional responses.
-            </p>
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">
+                <FileText size={14} className="text-lem-orange" />
+              </div>
+              <p className="text-gray-700 italic">
+                Van Hout, M., et al. Measuring emotions in visual and interaction design. SusaGroup.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -94,13 +120,14 @@ const About = () => {
           </Button>
         </div>
 
-        <div className="mt-12 text-center text-gray-600">
-          <p className="mb-2">
-            Questions or feedback? We'd love to hear from you.
-          </p>
-          <a href="mailto:hello@lemtool.com" className="text-lem-orange font-bold hover:underline">
-            hello@lemtool.com
-          </a>
+        <div className="mt-12 text-center">
+          <Button 
+            variant="ghost"
+            onClick={() => navigate('/support')}
+            className="text-lem-orange hover:text-lem-orange-dark"
+          >
+            Questions? Contact Support
+          </Button>
         </div>
       </main>
     </div>

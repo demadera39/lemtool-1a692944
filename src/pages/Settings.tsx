@@ -40,10 +40,16 @@ const Settings = () => {
   const checkSubscriptionStatus = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.log('No active session, skipping subscription check');
+        return;
+      }
 
       const { data, error } = await supabase.functions.invoke('check-subscription');
-      if (error) throw error;
+      if (error) {
+        console.error('Subscription check error:', error);
+        return;
+      }
       
       await loadUserData();
     } catch (error) {

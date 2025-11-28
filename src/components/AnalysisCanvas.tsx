@@ -81,15 +81,27 @@ const AnalysisCanvas = ({
   const [viewMode, setViewMode] = useState<'live' | 'snapshot'>('live');
   const [currentSlide, setCurrentSlide] = useState(1);
   const [totalSlides] = useState(8);
-  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [scrollEnabled, setScrollEnabled] = useState(false);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const filteredMarkers = markers.filter(m => m.layer === activeLayer);
 
+  // Switch to snapshot view after analysis completes
+  useEffect(() => {
+    if (!isAnalyzing && markers.length > 0 && screenshot) {
+      setViewMode('snapshot');
+      setScrollEnabled(false);
+    }
+  }, [isAnalyzing, markers.length, screenshot]);
+
   // Auto-scroll effect during analysis
   useEffect(() => {
     if (!isAnalyzing || !scrollWrapperRef.current) return;
+
+    // Enable scroll and switch to live view during analysis
+    setScrollEnabled(false);
+    setViewMode('live');
 
     const wrapper = scrollWrapperRef.current;
     const scrollHeight = wrapper.scrollHeight - wrapper.clientHeight;
@@ -150,43 +162,45 @@ const AnalysisCanvas = ({
       </div>
 
       <div className="absolute top-4 right-4 z-30 flex gap-2">
-        <button
-          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2"
-          title="Slides"
-        >
-          <Layers size={14} />
-          Slides
-        </button>
         {!isAnalyzing && (
-          <button
-            onClick={() => setScrollEnabled(!scrollEnabled)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${scrollEnabled ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-            title="Toggle Scroll"
-          >
-            Scroll
-          </button>
+          <>
+            <button
+              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2"
+              title="Slides"
+            >
+              <Layers size={14} />
+              Slides
+            </button>
+            <button
+              onClick={() => setScrollEnabled(!scrollEnabled)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${scrollEnabled ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+              title="Toggle Scroll"
+            >
+              Scroll
+            </button>
+            <button
+              onClick={() => setViewMode('live')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'live' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+              title="Live Site"
+            >
+              Live Site
+            </button>
+            <button
+              onClick={() => setViewMode('snapshot')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'snapshot' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+              title="Schematic View"
+            >
+              Schematic View
+            </button>
+            <button
+              onClick={() => window.open(imgUrl, '_blank')}
+              className="p-2 rounded-lg text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 transition-all"
+              title="Open in New Tab"
+            >
+              <ExternalLink size={16} />
+            </button>
+          </>
         )}
-        <button
-          onClick={() => setViewMode('live')}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'live' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-          title="Live Site"
-        >
-          Live Site
-        </button>
-        <button
-          onClick={() => setViewMode('snapshot')}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'snapshot' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-          title="Schematic View"
-        >
-          Schematic View
-        </button>
-        <button
-          onClick={() => window.open(imgUrl, '_blank')}
-          className="p-2 rounded-lg text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 transition-all"
-          title="Open in New Tab"
-        >
-          <ExternalLink size={16} />
-        </button>
       </div>
 
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex items-center gap-4 pointer-events-none">

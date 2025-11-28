@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Marker, EmotionType, LayerType, LayoutSection } from '../types';
 import EmotionToken from './EmotionToken';
 import { EMOTIONS } from '../constants';
@@ -83,8 +83,37 @@ const AnalysisCanvas = ({
   const [totalSlides] = useState(8);
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const filteredMarkers = markers.filter(m => m.layer === activeLayer);
+
+  // Auto-scroll effect during analysis
+  useEffect(() => {
+    if (!isAnalyzing || !scrollWrapperRef.current) return;
+
+    const wrapper = scrollWrapperRef.current;
+    const scrollHeight = wrapper.scrollHeight - wrapper.clientHeight;
+    
+    if (scrollHeight <= 0) return;
+
+    let scrollProgress = 0;
+    const scrollDuration = 10000; // 10 seconds total scroll
+    const scrollStep = 50; // Update every 50ms
+    const totalSteps = scrollDuration / scrollStep;
+    const scrollIncrement = scrollHeight / totalSteps;
+
+    const scrollInterval = setInterval(() => {
+      scrollProgress += scrollIncrement;
+      
+      if (scrollProgress >= scrollHeight) {
+        scrollProgress = 0; // Loop back to top
+      }
+      
+      wrapper.scrollTop = scrollProgress;
+    }, scrollStep);
+
+    return () => clearInterval(scrollInterval);
+  }, [isAnalyzing]);
 
   const handleMarkerClick = (id: string) => {
     setActiveMarkerId(activeMarkerId === id ? null : id);
@@ -128,13 +157,15 @@ const AnalysisCanvas = ({
           <Layers size={14} />
           Slides
         </button>
-        <button
-          onClick={() => setScrollEnabled(!scrollEnabled)}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${scrollEnabled ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-          title="Toggle Scroll"
-        >
-          Scroll
-        </button>
+        {!isAnalyzing && (
+          <button
+            onClick={() => setScrollEnabled(!scrollEnabled)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${scrollEnabled ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+            title="Toggle Scroll"
+          >
+            Scroll
+          </button>
+        )}
         <button
           onClick={() => setViewMode('live')}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'live' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
@@ -178,13 +209,18 @@ const AnalysisCanvas = ({
         </button>
       </div>
 
-      <div ref={scrollWrapperRef} className={`flex-1 relative ${scrollEnabled ? 'overflow-auto' : 'overflow-hidden'}`}>
+      <div 
+        ref={scrollWrapperRef} 
+        className={`flex-1 relative ${(scrollEnabled && !isAnalyzing) ? 'overflow-auto' : 'overflow-hidden'}`}
+        style={{ pointerEvents: isAnalyzing ? 'none' : 'auto' }}
+      >
         {viewMode === 'live' ? (
           <iframe
+            ref={iframeRef}
             src={imgUrl}
             className="w-full h-full border-0 bg-white"
             title="Website Preview"
-            style={{ pointerEvents: scrollEnabled ? 'auto' : 'none' }}
+            style={{ pointerEvents: (scrollEnabled && !isAnalyzing) ? 'auto' : 'none' }}
           />
         ) : screenshot ? (
           <img src={screenshot} alt="Website Snapshot" className="w-full h-auto" />

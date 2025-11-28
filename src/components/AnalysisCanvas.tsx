@@ -155,22 +155,27 @@ const AdaptiveWireframe = ({ structure }: { structure: LayoutSection[] }) => {
     const totalHeight = structure.reduce((acc, section) => acc + section.estimatedHeight, 0) || 3000;
 
     return (
-        <div className="w-full min-h-screen bg-gray-100 p-6 space-y-4">
+        <div className="w-full min-h-screen bg-gray-100 relative">
             {structure.map((section, i) => {
                 const heightPx = section.estimatedHeight;
+                const prevHeight = structure.slice(0, i).reduce((acc, s) => acc + s.estimatedHeight, 0);
+                const topPosition = prevHeight;
+                
                 return (
                     <div 
                         key={i} 
-                        className="border-2 border-dashed border-gray-400 rounded-lg p-4 text-center flex items-center justify-center" 
+                        className="absolute left-0 right-0 border-2 border-dashed border-gray-400 flex items-center justify-center" 
                         style={{ 
-                            minHeight: `${heightPx}px`,
+                            top: `${topPosition}px`,
+                            height: `${heightPx}px`,
                             backgroundColor: section.backgroundColorHint === 'dark' ? '#6b7280' : section.backgroundColorHint === 'colorful' ? '#e5e7eb' : '#f9fafb'
                         }}
                     >
-                        <span className="text-lg font-bold text-gray-500 uppercase tracking-wider">{section.type}</span>
+                        <span className="text-lg font-bold text-gray-500 uppercase tracking-wider opacity-50">{section.type}</span>
                     </div>
                 )
             })}
+            <div style={{ height: `${totalHeight}px` }} />
         </div>
     )
 };
@@ -609,11 +614,13 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                  </div>
             </div>
           ) : viewMode === 'snapshot' && screenshot ? (
-            <div className="relative w-full">
-                <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
-                 <div className="absolute inset-0 z-10">
+            <div className="relative w-full max-h-[80vh] overflow-y-auto border-4 border-gray-300 rounded-lg">
+                <div className="relative w-full">
+                  <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
+                  <div className="absolute inset-0 z-10 pointer-events-none">
                     {filteredMarkers.map((marker) => renderMarker(marker))}
-                 </div>
+                  </div>
+                </div>
             </div>
           ) : (
             <>

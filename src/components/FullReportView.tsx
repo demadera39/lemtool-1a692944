@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Project, TestSession } from '@/types';
 import { Button } from './ui/button';
-import { ArrowLeft, Download, Share2, Users } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Users, Heart, Brain, Lightbulb } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
@@ -257,6 +257,105 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
                     <p className="text-xs text-gray-400 uppercase mt-1">Human Input</p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AI Highlighted Areas of Interest */}
+        {project.screenshot && (
+          <Card className="mb-6 border-2 border-lem-orange">
+            <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Lightbulb className="text-lem-orange" size={24} />
+                AI-Identified Areas of Interest
+              </CardTitle>
+              <p className="text-sm text-gray-600">In-depth analysis of key UX elements across emotions, needs, and strategy</p>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-6">
+                {/* Get top markers from each layer */}
+                {(() => {
+                  const emotionMarkers = project.markers.filter(m => m.layer === 'emotions').slice(0, 2);
+                  const needsMarkers = project.markers.filter(m => m.layer === 'needs').slice(0, 2);
+                  const strategyMarkers = project.markers.filter(m => m.layer === 'strategy').slice(0, 2);
+                  const highlightedMarkers = [...emotionMarkers, ...needsMarkers, ...strategyMarkers];
+
+                  return highlightedMarkers.map((marker, idx) => {
+                    let layerColor = 'bg-orange-500';
+                    let layerIcon = <Heart size={16} />;
+                    let layerLabel = 'Emotional';
+                    
+                    if (marker.layer === 'needs') {
+                      layerColor = 'bg-blue-500';
+                      layerIcon = <Brain size={16} />;
+                      layerLabel = 'Psychological Need';
+                    } else if (marker.layer === 'strategy') {
+                      layerColor = 'bg-green-500';
+                      layerIcon = <Lightbulb size={16} />;
+                      layerLabel = 'Strategic';
+                    }
+
+                    return (
+                      <div key={marker.id} className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg border-l-4 border-lem-orange">
+                        <div className="md:w-1/3 relative">
+                          <div className="relative border-2 border-gray-300 rounded-lg overflow-hidden shadow-md">
+                            <img 
+                              src={project.screenshot} 
+                              alt={`Area ${idx + 1}`}
+                              className="w-full h-auto"
+                              style={{
+                                clipPath: `inset(${Math.max(0, marker.y - 15)}% ${Math.max(0, 100 - marker.x - 15)}% ${Math.max(0, 100 - marker.y - 15)}% ${Math.max(0, marker.x - 15)}%)`
+                              }}
+                            />
+                            <div 
+                              className="absolute w-3 h-3 bg-lem-orange rounded-full border-2 border-white shadow-lg"
+                              style={{ 
+                                left: '50%', 
+                                top: '50%',
+                                transform: 'translate(-50%, -50%)'
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="md:w-2/3 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`${layerColor} text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1`}>
+                              {layerIcon}
+                              {layerLabel}
+                            </div>
+                            {marker.emotion && (
+                              <div className="flex items-center gap-2">
+                                <EmotionToken emotion={marker.emotion} size="sm" />
+                                <span className="text-sm font-bold text-gray-700">
+                                  {EMOTIONS[marker.emotion].label}
+                                </span>
+                              </div>
+                            )}
+                            {marker.need && (
+                              <Badge variant="outline" className="text-xs">
+                                {marker.need}
+                              </Badge>
+                            )}
+                            {marker.brief_type && (
+                              <Badge variant="outline" className="text-xs">
+                                {marker.brief_type}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="bg-white p-4 rounded-md border border-gray-200">
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {marker.comment}
+                            </p>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Position: {marker.x.toFixed(1)}% horizontal, {marker.y.toFixed(1)}% from top
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </CardContent>
           </Card>

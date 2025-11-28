@@ -3,6 +3,25 @@ import { User, Project, TestSession, Marker, AnalysisReport } from '../types';
 
 export { supabase };
 
+export const ensureProfile = async (userId: string, email: string, name?: string) => {
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (!existing) {
+    const { error } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        email,
+        name: name || email.split('@')[0]
+      });
+    if (error && error.code !== '23505') throw error; // Ignore duplicate key errors
+  }
+};
+
 export const signInWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',

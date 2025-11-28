@@ -32,12 +32,7 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
       <div className="p-6 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-black text-gray-900">Analysis</h2>
-          <Button size="sm" className="bg-lem-orange hover:bg-lem-orange-dark text-white">
-            Full Report
-          </Button>
-        </div>
+        <h2 className="text-2xl font-black text-gray-900 mb-4">Analysis</h2>
         {currentUrl && (
           <p className="text-xs text-gray-500 truncate mb-4">{currentUrl}</p>
         )}

@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { User, Project, TestSession } from '../types';
 import { getProjects, getProjectSessions } from '../services/supabaseService';
 import { getRemainingAnalyses } from '../services/userRoleService';
-import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown } from 'lucide-react';
+import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import AnalysisCanvas from './AnalysisCanvas';
 import ReportPanel from './ReportPanel';
+import FullReportView from './FullReportView';
 import { toast } from 'sonner';
 
 interface DashboardProps {
@@ -20,7 +21,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [sessions, setSessions] = useState<TestSession[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'detail' | 'fullreport'>('list');
   const [activeLayer, setActiveLayer] = useState<'emotions' | 'needs' | 'strategy'>('emotions');
   const [showAI, setShowAI] = useState(true);
   const [showHumans, setShowHumans] = useState(true);
@@ -71,6 +72,20 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
       description: 'Share this link with participants so they can provide emotional feedback on the same design.',
     });
   };
+
+  if (viewMode === 'fullreport' && selectedProject) {
+    return (
+      <FullReportView
+        project={selectedProject}
+        sessions={sessions}
+        onBack={() => {
+          setViewMode('list');
+          setSelectedProject(null);
+        }}
+        onCopyParticipantLink={() => copyTestLink(selectedProject.id)}
+      />
+    );
+  }
 
   if (viewMode === 'detail' && selectedProject) {
     return (
@@ -259,6 +274,18 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                     <Button
                       size="sm"
                       className="w-full bg-lem-orange hover:bg-lem-orange-dark"
+                      onClick={() => {
+                        setSelectedProject(project);
+                        setViewMode('fullreport');
+                      }}
+                    >
+                      <FileText size={14} className="mr-2" />
+                      Full Report & PDF
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
                       onClick={() => copyTestLink(project.id)}
                     >
                       <ExternalLink size={14} className="mr-2" />

@@ -7,7 +7,7 @@ import Dashboard from '@/components/Dashboard';
 import ParticipantView from '@/components/ParticipantView';
 import { Marker, EmotionType, User, LayerType, Project } from '@/types';
 import { analyzeWebsite } from '@/services/geminiService';
-import { supabase, signOut, createProject, getProjectById } from '@/services/supabaseService';
+import { supabase, signOut, createProject, getProjectById, ensureProfile } from '@/services/supabaseService';
 import { getUserRole, canCreateAnalysis, incrementAnalysisCount, getRemainingAnalyses } from '@/services/userRoleService';
 import { Search, Info, AlertCircle, X, Save, Lock, DollarSign, User as UserIcon, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -143,6 +143,9 @@ const Index = () => {
       setReport(result.report);
       await incrementAnalysisCount(user.id);
       await loadUserRole(user.id);
+      
+      // Ensure profile exists before saving project
+      await ensureProfile(user.id, user.email, user.name);
       
       // Auto-save project for logged-in users
       const savedProject = await createProject(user.id, targetUrl, result.report, result.markers);

@@ -152,15 +152,22 @@ const LoadingOverlay = ({ progress = 0 }: { progress?: number }) => {
 };
 
 const AdaptiveWireframe = ({ structure }: { structure: LayoutSection[] }) => {
-    const totalHeight = structure.reduce((acc, section) => acc + section.estimatedHeight, 0) || 12000;
+    const totalHeight = structure.reduce((acc, section) => acc + section.estimatedHeight, 0) || 3000;
 
     return (
-        <div className="w-full h-full bg-gray-50 border-r border-gray-200 p-4 space-y-4">
+        <div className="w-full min-h-screen bg-gray-100 p-6 space-y-4">
             {structure.map((section, i) => {
-                const height = (section.estimatedHeight / totalHeight) * 100;
+                const heightPx = section.estimatedHeight;
                 return (
-                    <div key={i} className="border border-dashed border-gray-300 rounded p-2 text-center bg-gray-100" style={{ minHeight: `${Math.max(5, height)}%`, backgroundColor: section.backgroundColorHint === 'dark' ? '#4a4a4a' : '#f0f0f0' }}>
-                        <span className="text-xs text-gray-400 font-mono uppercase">{section.type}</span>
+                    <div 
+                        key={i} 
+                        className="border-2 border-dashed border-gray-400 rounded-lg p-4 text-center flex items-center justify-center" 
+                        style={{ 
+                            minHeight: `${heightPx}px`,
+                            backgroundColor: section.backgroundColorHint === 'dark' ? '#6b7280' : section.backgroundColorHint === 'colorful' ? '#e5e7eb' : '#f9fafb'
+                        }}
+                    >
+                        <span className="text-lg font-bold text-gray-500 uppercase tracking-wider">{section.type}</span>
                     </div>
                 )
             })}
@@ -583,8 +590,11 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
           )}
 
           {showSchematic ? (
-             <div className="absolute inset-0 z-0 h-full">
+             <div className="w-full min-h-screen relative">
                 <AdaptiveWireframe structure={layoutStructure || []} />
+                <div className="absolute inset-0 z-10 pointer-events-none">
+                  {filteredMarkers.map((marker) => renderMarker(marker))}
+                </div>
              </div>
           ) : viewMode === 'presentation' && screenshot ? (
             <div className="w-full h-full relative">

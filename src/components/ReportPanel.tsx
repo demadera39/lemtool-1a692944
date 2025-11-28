@@ -149,18 +149,16 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
           >
             Strategy
           </button>
-          {areaMarkers.length > 0 && (
-            <button
-              onClick={() => setShowAreaView(true)}
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
-                showAreaView
-                  ? 'text-lem-orange border-b-2 border-lem-orange'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Area View
-            </button>
-          )}
+          <button
+            onClick={() => setShowAreaView(true)}
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
+              showAreaView
+                ? 'text-lem-orange border-b-2 border-lem-orange'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Area View
+          </button>
         </div>
       </div>
 
@@ -322,7 +320,7 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
               </Card>
             )}
             
-            {showAreaView && areaMarkers.length > 0 && (
+            {showAreaView && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -331,7 +329,14 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Layer Filter */}
+                  {areaMarkers.length === 0 && filteredPoints.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p className="font-medium mb-2">No area selections yet</p>
+                      <p className="text-sm">Participants can draw areas to highlight specific regions of interest</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Layer Filter */}
                   <div>
                     <label className="text-sm font-medium mb-2 block">Analysis Layer:</label>
                     <div className="flex gap-2">
@@ -516,6 +521,8 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                       </div>
                     )}
                   </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}

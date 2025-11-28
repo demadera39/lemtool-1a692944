@@ -195,18 +195,6 @@ const Support = () => {
               )}
             </Button>
           </form>
-
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
-              You can also reach us directly at{' '}
-              <a
-                href="mailto:demadera@marcovanhout.com"
-                className="text-lem-orange hover:underline"
-              >
-                demadera@marcovanhout.com
-              </a>
-            </p>
-          </div>
         </div>
       </div>
     </div>

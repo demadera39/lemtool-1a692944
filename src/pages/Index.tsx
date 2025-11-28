@@ -248,10 +248,12 @@ const Index = () => {
                   {(remainingAnalyses.monthly > 0 || remainingAnalyses.pack > 0) ? (
                     <>
                       {remainingAnalyses.monthly > 0 && (
-                        <span className="font-bold text-lem-orange">{remainingAnalyses.monthly}/{remainingAnalyses.monthlyLimit} monthly</span>
+                        <span className="font-bold text-lem-orange">
+                          {remainingAnalyses.monthly} {remainingAnalyses.monthly === 1 ? 'analysis' : 'analyses'} remaining
+                        </span>
                       )}
                       {remainingAnalyses.pack > 0 && (
-                        <span className="text-gray-600">{remainingAnalyses.pack} pack</span>
+                        <span className="text-gray-600">+ {remainingAnalyses.pack} pack</span>
                       )}
                     </>
                   ) : (

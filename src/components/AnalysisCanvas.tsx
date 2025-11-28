@@ -16,8 +16,9 @@ interface AnalysisCanvasProps {
   analysisProgress?: number;
 
   // New Props for Participant Mode
-  interactionMode?: 'read_only' | 'place_marker';
+  interactionMode?: 'read_only' | 'place_marker' | 'select_area';
   onCanvasClick?: (x: number, y: number) => void;
+  onAreaSelect?: (x: number, y: number, width: number, height: number) => void;
 }
 
 const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ layer, type }) => {
@@ -169,7 +170,7 @@ const AdaptiveWireframe = ({ structure }: { structure: LayoutSection[] }) => {
 
 const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
     imgUrl, markers, setMarkers, isAnalyzing, activeLayer, setActiveLayer, layoutStructure, screenshot, analysisProgress = 0,
-    interactionMode = 'read_only', onCanvasClick
+    interactionMode = 'read_only', onCanvasClick, onAreaSelect
 }) => {
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
   const [showSchematic, setShowSchematic] = useState(false);
@@ -179,6 +180,11 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   const scrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastScrollTopRef = useRef<number>(0);
   const stationaryFramesRef = useRef<number>(0);
+  
+  // Area selection state
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<{ x: number; y: number } | null>(null);
 
   // Presentation Mode State
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -260,6 +266,45 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
       }
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+      if (interactionMode === 'select_area' && containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          setIsSelecting(true);
+          setSelectionStart({ x, y });
+          setSelectionEnd({ x, y });
+      } else {
+          handleBackgroundClick(e);
+      }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+      if (isSelecting && selectionStart && containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          setSelectionEnd({ x, y });
+      }
+  };
+
+  const handleMouseUp = () => {
+      if (isSelecting && selectionStart && selectionEnd && onAreaSelect) {
+          const x = Math.min(selectionStart.x, selectionEnd.x);
+          const y = Math.min(selectionStart.y, selectionEnd.y);
+          const width = Math.abs(selectionEnd.x - selectionStart.x);
+          const height = Math.abs(selectionEnd.y - selectionStart.y);
+          
+          // Only create area if it's big enough (minimum 2% in both dimensions)
+          if (width > 2 && height > 2) {
+              onAreaSelect(x, y, width, height);
+          }
+      }
+      setIsSelecting(false);
+      setSelectionStart(null);
+      setSelectionEnd(null);
+  };
+
   const handleMarkerClick = (e: React.MouseEvent, markerId: string) => {
       e.stopPropagation();
       setActiveMarkerId(markerId);
@@ -291,7 +336,57 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   const prevSlide = () => setCurrentSlide(prev => Math.max(prev - 1, 0));
 
   // Helper to render a marker
-  const renderMarker = (marker: Marker) => (
+  const renderMarker = (marker: Marker) => {
+    if (marker.isArea && marker.width && marker.height) {
+      // Render area marker
+      return (
+        <div
+          key={marker.id}
+          className="absolute z-20 pointer-events-none"
+          style={{ 
+            left: `${marker.x}%`, 
+            top: `${marker.y}%`,
+            width: `${marker.width}%`,
+            height: `${marker.height}%`
+          }}
+        >
+          <div 
+            className={`w-full h-full border-4 rounded-lg transition-all cursor-pointer pointer-events-auto ${
+              activeMarkerId === marker.id 
+                ? 'border-lem-orange bg-lem-orange/20' 
+                : marker.source === 'HUMAN'
+                ? 'border-blue-500 bg-blue-500/10 hover:bg-blue-500/20'
+                : 'border-lem-orange bg-lem-orange/10 hover:bg-lem-orange/20'
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleMarkerClick(e, marker.id);
+            }}
+          >
+            {/* Emotion token in top-left corner */}
+            {marker.emotion && (
+              <div className="absolute -top-3 -left-3">
+                <EmotionToken emotion={marker.emotion} selected={activeMarkerId === marker.id} size="sm" />
+              </div>
+            )}
+            {/* Source indicator */}
+            {marker.source === 'HUMAN' && (
+              <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full p-0.5 border-2 border-white" title="Participant Feedback">
+                <UserIcon size={8} />
+              </div>
+            )}
+          </div>
+          {viewMode !== 'presentation' && activeMarkerId === marker.id && (
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50">
+              <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} />
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    // Render point marker (existing code)
+    return (
         <div
             key={marker.id}
             className="absolute z-20 pointer-events-none"
@@ -337,7 +432,8 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                 </div>
                 </div>
         </div>
-  );
+    );
+  };
 
   return (
     <div className="w-full h-full flex flex-col relative bg-gray-200">
@@ -428,12 +524,26 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
         <div
             ref={containerRef}
             className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl' : ''}`}
-            onClick={handleBackgroundClick}
+            onClick={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
             style={{
                 pointerEvents: isAnalyzing ? 'none' : 'auto',
-                cursor: interactionMode === 'place_marker' ? 'crosshair' : 'default'
+                cursor: interactionMode === 'place_marker' ? 'crosshair' : interactionMode === 'select_area' ? 'crosshair' : 'default'
             }}
         >
+          {/* Selection overlay */}
+          {isSelecting && selectionStart && selectionEnd && (
+            <div
+              className="absolute border-4 border-lem-orange bg-lem-orange/20 z-30 pointer-events-none"
+              style={{
+                left: `${Math.min(selectionStart.x, selectionEnd.x)}%`,
+                top: `${Math.min(selectionStart.y, selectionEnd.y)}%`,
+                width: `${Math.abs(selectionEnd.x - selectionStart.x)}%`,
+                height: `${Math.abs(selectionEnd.y - selectionStart.y)}%`,
+              }}
+            />
+          )}
           {/* Top-Level Tooltip Overlay for Presentation Mode - PREVENTS CLIPPING */}
           {viewMode === 'presentation' && activeMarkerId && (
               (() => {

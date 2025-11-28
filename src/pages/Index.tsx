@@ -27,7 +27,7 @@ const Index = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeLayer, setActiveLayer] = useState<LayerType>('emotions');
   const [showInfoBanner, setShowInfoBanner] = useState(true);
-  const [remainingAnalyses, setRemainingAnalyses] = useState<{ monthly: number; pack: number }>({ monthly: 0, pack: 0 });
+  const [remainingAnalyses, setRemainingAnalyses] = useState<{ monthly: number; pack: number; monthlyLimit: number }>({ monthly: 0, pack: 0, monthlyLimit: 10 });
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -43,7 +43,7 @@ const Index = () => {
         loadUserRole(session.user.id);
       } else {
         setUser(null);
-        setRemainingAnalyses({ monthly: 0, pack: 0 });
+        setRemainingAnalyses({ monthly: 0, pack: 0, monthlyLimit: 10 });
       }
     });
 
@@ -233,8 +233,8 @@ const Index = () => {
             {user ? (
               <div className="flex items-center gap-2">
                 <div className="text-xs text-gray-600 flex items-center gap-2">
-                  {remainingAnalyses.monthly > 0 && (
-                    <span className="font-bold text-lem-orange">{remainingAnalyses.monthly} monthly</span>
+                  {remainingAnalyses.monthly >= 0 && (
+                    <span className="font-bold text-lem-orange">{remainingAnalyses.monthly}/{remainingAnalyses.monthlyLimit} monthly</span>
                   )}
                   {remainingAnalyses.pack > 0 && (
                     <span className="text-gray-600">{remainingAnalyses.pack} pack</span>

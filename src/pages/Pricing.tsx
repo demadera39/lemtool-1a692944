@@ -115,7 +115,8 @@ const Pricing = () => {
           {/* Top-up Pack */}
           <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 mb-2">Top-up Pack (premium users)</h2>
+              <h2 className="text-2xl font-black text-gray-900 mb-2">Top-up Pack
+(Starter users)</h2>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black text-gray-900">€4.99</span>
               </div>

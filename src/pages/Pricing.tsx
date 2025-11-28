@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Check, ArrowLeft } from 'lucide-react';
 
 const Pricing = () => {
   const navigate = useNavigate();
+  const [isYearly, setIsYearly] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50 relative overflow-hidden">
@@ -32,9 +34,36 @@ const Pricing = () => {
           <h1 className="text-5xl font-black text-gray-900 mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-600 mb-8">
             Start free, upgrade when you need more analyses
           </p>
+          
+          {/* Billing Toggle */}
+          <div className="inline-flex items-center gap-3 bg-white rounded-full p-1 shadow-md border border-gray-200">
+            <button
+              onClick={() => setIsYearly(false)}
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
+                !isYearly
+                  ? 'bg-lem-orange text-white'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setIsYearly(true)}
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
+                isYearly
+                  ? 'bg-lem-orange text-white'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Yearly
+              <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                Save $11
+              </span>
+            </button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -93,11 +122,19 @@ const Pricing = () => {
 
             <div className="mb-6">
               <h2 className="text-2xl font-black text-white mb-2">Premium</h2>
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-5xl font-black text-white">$9.99</span>
-                <span className="text-orange-100">/month</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-black text-white">
+                  {isYearly ? '$109' : '$9.99'}
+                </span>
+                <span className="text-orange-100">
+                  /{isYearly ? 'year' : 'month'}
+                </span>
               </div>
-              <p className="text-orange-100 text-sm">or $109/year (save $11)</p>
+              {isYearly && (
+                <p className="text-orange-100 text-sm mt-2">
+                  $9.08/month billed annually
+                </p>
+              )}
             </div>
 
             <ul className="space-y-4 mb-8">

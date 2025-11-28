@@ -5,12 +5,11 @@ import AnalysisCanvas from '@/components/AnalysisCanvas';
 import ReportPanel from '@/components/ReportPanel';
 import Dashboard from '@/components/Dashboard';
 import ParticipantView from '@/components/ParticipantView';
-import AboutModal from '@/components/AboutModal';
 import { Marker, EmotionType, User, LayerType, Project } from '@/types';
 import { analyzeWebsite } from '@/services/geminiService';
 import { supabase, signOut, createProject, getProjectById } from '@/services/supabaseService';
 import { getUserRole, canCreateAnalysis, incrementAnalysisCount, getRemainingAnalyses } from '@/services/userRoleService';
-import { Search, Info, AlertCircle, X, Save, Lock } from 'lucide-react';
+import { Search, Info, AlertCircle, X, Save, Lock, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -26,7 +25,6 @@ const Index = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [validUrl, setValidUrl] = useState('');
   const [user, setUser] = useState<User | null>(null);
-  const [showAboutModal, setShowAboutModal] = useState(false);
   const [activeLayer, setActiveLayer] = useState<LayerType>('emotions');
   const [showInfoBanner, setShowInfoBanner] = useState(true);
   const [remainingAnalyses, setRemainingAnalyses] = useState<number>(-1);
@@ -187,14 +185,16 @@ const Index = () => {
 
   return (
     <div className="flex h-screen w-screen bg-gray-50 text-gray-900 overflow-hidden">
-      <AboutModal isOpen={showAboutModal} onClose={() => setShowAboutModal(false)} />
       <Toolbar onAddMarker={handleAddMarker} />
 
       <div className="flex-1 flex flex-col h-full relative">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm z-10 justify-between flex-shrink-0">
-          <div className="w-32 flex justify-start">
-            <button onClick={() => setShowAboutModal(true)} className="text-xs font-medium text-gray-500 hover:text-lem-orange flex items-center gap-1 transition-colors">
-              <Info size={14} />About LEMtool
+          <div className="w-32 flex justify-start gap-3">
+            <button onClick={() => navigate('/about')} className="text-xs font-medium text-gray-500 hover:text-lem-orange flex items-center gap-1 transition-colors">
+              <Info size={14} />About
+            </button>
+            <button onClick={() => navigate('/pricing')} className="text-xs font-medium text-gray-500 hover:text-lem-orange flex items-center gap-1 transition-colors">
+              <DollarSign size={14} />Pricing
             </button>
           </div>
 

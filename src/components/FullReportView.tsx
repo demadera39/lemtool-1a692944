@@ -34,6 +34,17 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
         useCORS: true,
         logging: false,
         allowTaint: true,
+        onclone: (clonedDoc) => {
+          // Add page break styles to cloned document
+          const style = clonedDoc.createElement('style');
+          style.innerHTML = `
+            .pdf-no-break {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        }
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -57,7 +68,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
 
       // Add subsequent pages
       while (heightLeft > 0) {
-        position -= pdfHeight; // Move position up by one page height
+        position -= pdfHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
@@ -147,7 +158,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
         </Card>
 
         {/* Summary */}
-        <Card className="mb-6">
+        <Card className="mb-6 pdf-no-break">
           <CardHeader>
             <CardTitle className="text-2xl">Executive Summary</CardTitle>
           </CardHeader>
@@ -158,7 +169,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
 
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           {/* Participant Data */}
-          <Card>
+          <Card className="pdf-no-break">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="text-lem-orange" size={20} />
@@ -188,7 +199,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
           </Card>
 
           {/* Audience Breakdown */}
-          <Card>
+          <Card className="pdf-no-break">
             <CardHeader>
               <CardTitle>Detected Brand Values</CardTitle>
             </CardHeader>
@@ -206,7 +217,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
 
         {/* Visual Overview with Markers */}
         {project.screenshot && (
-          <Card className="mb-6">
+          <Card className="mb-6 pdf-no-break">
             <CardHeader>
               <CardTitle className="text-xl">Visual Analysis Overview</CardTitle>
               <p className="text-sm text-gray-500">Complete page with emotional markers and legend</p>
@@ -264,7 +275,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
 
         {/* AI Highlighted Areas of Interest */}
         {project.screenshot && (
-          <Card className="mb-6 border-2 border-lem-orange">
+          <Card className="mb-6 border-2 border-lem-orange pdf-no-break">
             <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100">
               <CardTitle className="text-xl flex items-center gap-2">
                 <Lightbulb className="text-lem-orange" size={24} />
@@ -362,7 +373,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
         )}
 
         {/* Emotion Breakdown */}
-        <Card className="mb-6">
+        <Card className="mb-6 pdf-no-break">
           <CardHeader>
             <CardTitle className="text-xl">Emotional Response Analysis</CardTitle>
             <p className="text-sm text-gray-500">Distribution of emotional reactions across all markers</p>
@@ -393,7 +404,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
         </Card>
 
         {/* SDT Scores */}
-        <Card className="mb-6">
+        <Card className="mb-6 pdf-no-break">
           <CardHeader>
             <CardTitle className="text-xl">Self-Determination Theory Scores</CardTitle>
           </CardHeader>
@@ -426,13 +437,13 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
         </Card>
 
         {/* Key Findings */}
-        <Card className="mb-6">
+        <Card className="mb-6 pdf-no-break">
           <CardHeader>
             <CardTitle className="text-xl">Key Findings & Insights</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {project.report.keyFindings.map((finding, idx) => (
-              <div key={idx} className="border-l-4 border-lem-orange pl-4 py-2">
+              <div key={idx} className="border-l-4 border-lem-orange pl-4 py-2 pdf-no-break">
                 <h4 className="font-bold text-lg text-gray-900 mb-1">{finding.title}</h4>
                 <p className="text-gray-600">{finding.description}</p>
               </div>
@@ -441,7 +452,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
         </Card>
 
         {/* Strategic Recommendations */}
-        <Card className="mb-6">
+        <Card className="mb-6 pdf-no-break">
           <CardHeader>
             <CardTitle className="text-xl">Strategic Recommendations</CardTitle>
           </CardHeader>
@@ -461,7 +472,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
 
         {/* Participant Sessions */}
         {sessions.length > 0 && (
-          <Card className="mb-6">
+          <Card className="mb-6 pdf-no-break">
             <CardHeader>
               <CardTitle className="text-xl">Participant Feedback Sessions</CardTitle>
             </CardHeader>

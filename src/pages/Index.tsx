@@ -20,6 +20,7 @@ const Index = () => {
   const [testProject, setTestProject] = useState<Project | null>(null);
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [report, setReport] = useState<any>(null);
   const [hasStarted, setHasStarted] = useState(false);
@@ -101,12 +102,15 @@ const Index = () => {
       setValidUrl(targetUrl);
       setHasStarted(true);
       setIsAnalyzing(true);
+      setAnalysisProgress(0);
       setMarkers([]);
       setReport(null);
       setActiveLayer('emotions');
 
       try {
-        const result = await analyzeWebsite(targetUrl);
+        const result = await analyzeWebsite(targetUrl, (progress, message) => {
+          setAnalysisProgress(progress);
+        });
         // Limit markers for anonymous users
         const limitedMarkers = result.markers.slice(0, 4);
         setMarkers(limitedMarkers);
@@ -133,12 +137,15 @@ const Index = () => {
     setValidUrl(targetUrl);
     setHasStarted(true);
     setIsAnalyzing(true);
+    setAnalysisProgress(0);
     setMarkers([]);
     setReport(null);
     setActiveLayer('emotions');
 
     try {
-      const result = await analyzeWebsite(targetUrl);
+      const result = await analyzeWebsite(targetUrl, (progress, message) => {
+        setAnalysisProgress(progress);
+      });
       setMarkers(result.markers);
       setReport(result.report);
       await incrementAnalysisCount(user.id);
@@ -307,7 +314,16 @@ const Index = () => {
               </div>
             ) : (
               <div className="w-full h-full relative p-6">
-                <AnalysisCanvas imgUrl={validUrl} markers={markers} setMarkers={setMarkers} isAnalyzing={isAnalyzing} activeLayer={activeLayer} setActiveLayer={setActiveLayer} screenshot={report?.screenshot} />
+                <AnalysisCanvas 
+                  imgUrl={validUrl} 
+                  markers={markers} 
+                  setMarkers={setMarkers} 
+                  isAnalyzing={isAnalyzing} 
+                  activeLayer={activeLayer} 
+                  setActiveLayer={setActiveLayer} 
+                  screenshot={report?.screenshot}
+                  analysisProgress={analysisProgress}
+                />
               </div>
             )}
           </div>

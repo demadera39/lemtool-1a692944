@@ -13,17 +13,12 @@ interface AnalysisCanvasProps {
   setActiveLayer: (layer: LayerType) => void;
   layoutStructure?: LayoutSection[];
   screenshot?: string;
+  analysisProgress?: number;
 
   // New Props for Participant Mode
   interactionMode?: 'read_only' | 'place_marker';
   onCanvasClick?: (x: number, y: number) => void;
 }
-
-const LOADING_MESSAGES_SEQUENCE = [
-    "Step 1/3: Reading Emotions...",
-    "Step 2/3: Analyzing Needs...",
-    "Step 3/3: Strategizing Brief..."
-];
 
 const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ layer, type }) => {
     const iconProps = { size: 24, className: "text-white" };
@@ -102,31 +97,44 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
     );
 };
 
-const LoadingOverlay = () => {
+const LoadingOverlay = ({ progress = 0 }: { progress?: number }) => {
     const [currentEmotionIndex, setCurrentEmotionIndex] = useState(0);
-    const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
     const emotionKeys = Object.values(EMOTIONS).map(e => e.id);
 
     useEffect(() => {
-      const messageInterval = setInterval(() => {
-        setLoadingMessageIndex(prev => (prev + 1) % LOADING_MESSAGES_SEQUENCE.length);
-      }, 4000);
-
       const emotionInterval = setInterval(() => {
         setCurrentEmotionIndex(prev => (prev + 1) % emotionKeys.length);
       }, 800);
 
       return () => {
-        clearInterval(messageInterval);
         clearInterval(emotionInterval);
       };
     }, [emotionKeys.length]);
 
+    // Calculate circle progress (circumference = 2πr, r=40 so circumference ≈ 251.2)
+    const circumference = 251.2;
+    const progressOffset = circumference - (progress / 100) * circumference;
+
     return (
       <div className="absolute inset-0 bg-gray-100/80 backdrop-blur-sm z-40 flex flex-col items-center justify-center pointer-events-none">
         <div className="relative w-32 h-32 flex items-center justify-center">
-           <svg className="absolute inset-0 w-full h-full z-10" viewBox="0 0 100 100">
-             <circle cx="50" cy="50" r="40" stroke="#F26522" strokeWidth="6" fill="none" className="animate-progress-ring" style={{ strokeDasharray: 251.2, strokeDashoffset: 251.2 }}/>
+           <svg className="absolute inset-0 w-full h-full z-10 -rotate-90" viewBox="0 0 100 100">
+             {/* Background circle */}
+             <circle cx="50" cy="50" r="40" stroke="#E5E7EB" strokeWidth="6" fill="none" />
+             {/* Progress circle */}
+             <circle 
+               cx="50" 
+               cy="50" 
+               r="40" 
+               stroke="#F26522" 
+               strokeWidth="6" 
+               fill="none" 
+               style={{ 
+                 strokeDasharray: circumference, 
+                 strokeDashoffset: progressOffset,
+                 transition: 'stroke-dashoffset 0.3s ease'
+               }}
+             />
           </svg>
           <div className="relative z-20">
               <EmotionToken emotion={emotionKeys[currentEmotionIndex]} size="lg" />
@@ -135,7 +143,7 @@ const LoadingOverlay = () => {
         <div className="mt-8 bg-white/80 backdrop-blur-md rounded-full px-8 py-4 shadow-lg z-20">
           <p className="font-bold text-gray-800 flex items-center gap-3 text-lg">
             <span className="w-3 h-3 bg-lem-orange rounded-full animate-pulse"></span>
-            {LOADING_MESSAGES_SEQUENCE[loadingMessageIndex]}
+            <span>{progress}% Complete</span>
           </p>
         </div>
       </div>
@@ -160,7 +168,7 @@ const AdaptiveWireframe = ({ structure }: { structure: LayoutSection[] }) => {
 };
 
 const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
-    imgUrl, markers, setMarkers, isAnalyzing, activeLayer, setActiveLayer, layoutStructure, screenshot,
+    imgUrl, markers, setMarkers, isAnalyzing, activeLayer, setActiveLayer, layoutStructure, screenshot, analysisProgress = 0,
     interactionMode = 'read_only', onCanvasClick
 }) => {
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
@@ -187,16 +195,13 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
     return () => observer.disconnect();
   }, [viewMode]);
 
-  // Switch to presentation/snapshot mode automatically when a screenshot becomes available
+  // Switch to snapshot/scroll mode automatically when a screenshot becomes available
   useEffect(() => {
-    if (screenshot && !isAnalyzing && interactionMode === 'read_only') {
-        setViewMode('presentation');
-    }
-    // Force snapshot mode if interaction mode is active (easier to place markers)
-    if (interactionMode === 'place_marker' && screenshot) {
+    if (screenshot && !isAnalyzing) {
+        // Default to snapshot (scrollable) for both read and place_marker modes
         setViewMode('snapshot');
     }
-  }, [screenshot, isAnalyzing, interactionMode]);
+  }, [screenshot, isAnalyzing]);
 
   // Auto-scroll logic for "Scan" effect in Live/Snapshot (Scroll) mode
   useEffect(() => {
@@ -336,7 +341,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
 
   return (
     <div className="w-full h-full flex flex-col relative bg-gray-200">
-      {isAnalyzing && <LoadingOverlay />}
+      {isAnalyzing && <LoadingOverlay progress={analysisProgress} />}
 
       {/* HEADER BAR - Only show controls in View Mode */}
       {interactionMode === 'read_only' && (

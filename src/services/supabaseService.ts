@@ -58,8 +58,20 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  try {
+    const { error } = await supabase.auth.signOut();
+    // Ignore session_not_found errors - user is already signed out
+    if (error && error.message !== 'Auth session missing!') {
+      throw error;
+    }
+  } catch (error: any) {
+    // Gracefully handle session expiry errors
+    if (error?.message?.includes('session') || error?.message?.includes('Auth session missing')) {
+      console.log('Session already expired, signing out locally');
+      return;
+    }
+    throw error;
+  }
 };
 
 export async function getProjects(userId: string, includeArchived: boolean = false): Promise<Project[]> {

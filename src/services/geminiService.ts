@@ -33,14 +33,71 @@ async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
   }
 }
 
+// Slice image into 16:9 aspect ratio chunks
+async function sliceImageBase64(base64Full: string): Promise<{ slices: string[], sliceHeights: number[], totalHeight: number, totalWidth: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { reject("No canvas ctx"); return; }
+
+      const totalWidth = img.width;
+      const totalHeight = img.height;
+
+      // 16:9 aspect ratio slice height to match standard screens
+      const sliceHeight = Math.floor(totalWidth * (9/16));
+
+      const slices: string[] = [];
+      const sliceHeights: number[] = [];
+      const numSlices = Math.ceil(totalHeight / sliceHeight);
+
+      canvas.width = totalWidth;
+
+      for (let i = 0; i < numSlices; i++) {
+        const sourceY = i * sliceHeight;
+        const currentSliceHeight = Math.min(sliceHeight, totalHeight - sourceY);
+
+        canvas.height = currentSliceHeight;
+        ctx.clearRect(0, 0, totalWidth, currentSliceHeight);
+
+        ctx.drawImage(img, 0, sourceY, totalWidth, currentSliceHeight, 0, 0, totalWidth, currentSliceHeight);
+
+        const data = canvas.toDataURL('image/png').split(',')[1];
+        slices.push(data);
+        sliceHeights.push(currentSliceHeight);
+      }
+      resolve({ slices, sliceHeights, totalHeight, totalWidth });
+    };
+    img.onerror = reject;
+    img.src = base64Full;
+  });
+}
+
 export async function analyzeWebsite(url: string): Promise<GeminiAnalysisResult> {
   try {
     // Get screenshot first
     const screenshot = await getWebsiteScreenshotBase64(url);
     
-    // Call the edge function
+    if (!screenshot) {
+      return generateFallbackAnalysis(url, null);
+    }
+
+    console.log("Starting Slice & Conquer Analysis...");
+
+    // Slice the image into 16:9 chunks
+    const { slices, sliceHeights, totalHeight } = await sliceImageBase64(screenshot);
+    console.log(`Sliced into ${slices.length} chunks. Total Height: ${totalHeight}px`);
+
+    // Call the edge function with sliced data
     const { data, error } = await supabase.functions.invoke('analyze-website', {
-      body: { url, screenshot }
+      body: { 
+        url, 
+        slices,
+        sliceHeights,
+        totalHeight,
+        screenshot: screenshot.split(',')[1]
+      }
     });
 
     if (error) {

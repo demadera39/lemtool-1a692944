@@ -640,7 +640,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
           if (activeMarker.layer === 'strategy') title = activeMarker.brief_type || 'Strategic Point';
           
           return (
-            <div className="w-full max-w-6xl mx-auto mb-4 bg-white rounded-lg shadow-xl p-4 border-2 border-lem-orange animate-in fade-in slide-in-from-top-4 duration-300 flex-shrink-0">
+            <div key={activeMarkerId} className="w-full max-w-6xl mx-auto mb-4 bg-white rounded-lg shadow-xl p-4 border-2 border-lem-orange animate-in fade-in slide-in-from-top-4 duration-300 flex-shrink-0">
               <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
                 <h4 className="font-bold text-base text-gray-900 flex items-center gap-2">
                   {activeMarker.layer === 'emotions' && activeMarker.emotion ? (

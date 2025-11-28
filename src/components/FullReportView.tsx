@@ -430,10 +430,10 @@ const FullReportView = ({
                 )}
                 
                 {/* Screenshot with Filtered Markers */}
-                <div className="relative border border-gray-200 rounded-lg overflow-auto bg-gray-100 max-h-[800px]">
-                  <div className="relative w-full">
-                    <img src={project.screenshot} alt="Analysis overview" className="w-full h-auto" />
-                    <div className="absolute inset-0 pointer-events-none">
+                <div className="relative border border-gray-200 rounded-lg overflow-y-auto bg-gray-100 max-h-[70vh]">
+                  <div className="relative">
+                    <img src={project.screenshot} alt="Analysis overview" className="w-full h-auto block" />
+                    <div className="absolute inset-0 pointer-events-none w-full h-full">
                     {areaViewMode === 'heatmap' ? (
                       filteredMarkers.filter(m => m.isArea && m.width && m.height).map((marker, idx) => {
                         if (areaViewLayer === 'emotions') {

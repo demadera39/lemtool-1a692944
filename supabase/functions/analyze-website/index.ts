@@ -19,7 +19,15 @@ serve(async (req) => {
     }
 
     // Prepare the prompt for Gemini
-    const systemPrompt = `You are an expert UX researcher and emotional design analyst. Analyze the provided website screenshot and identify emotional triggers, user needs, and strategic insights.
+    const systemPrompt = `You are an expert UX researcher and emotional design analyst. Analyze the provided website screenshot section and identify emotional triggers.
+
+IMPORTANT COORDINATE INSTRUCTIONS:
+- The screenshot shows a full webpage from top to bottom
+- Y-coordinates (0-100) represent the ENTIRE page height
+- Y=0 is the top of the page, Y=100 is the bottom
+- Distribute markers throughout the ENTIRE vertical range (top, middle, and bottom sections)
+- Look at the full page structure: hero, features, testimonials, footer, etc.
+- Place markers accurately where visual elements trigger emotions
 
 Return your analysis as a JSON object with this exact structure:
 {
@@ -28,7 +36,7 @@ Return your analysis as a JSON object with this exact structure:
       "emotion_type": "JOY|DESIRE|FASCINATION|SATISFACTION|NEUTRAL|SADNESS|DISGUST|BOREDOM|DISSATISFACTION",
       "x": 0-100,
       "y": 0-100,
-      "comment": "Brief explanation"
+      "comment": "Brief explanation of what element triggers this emotion"
     }
   ],
   "overall_ux_emotion_score": 0-100,

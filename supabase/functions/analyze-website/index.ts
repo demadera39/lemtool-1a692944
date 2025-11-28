@@ -26,25 +26,22 @@ function cleanJson(text: string): string {
 
   let jsonStr = text.substring(firstBrace, lastBrace + 1).trim();
   
+  // CRITICAL FIX: Remove escaped quotes that shouldn't be escaped
+  // The AI sometimes returns \"x": instead of "x":
+  jsonStr = jsonStr.replace(/\\"([^"]+)":/g, '"$1":');
+  
+  // Also fix escaped quotes in string values
+  jsonStr = jsonStr.replace(/:\s*\\"([^"]*)\\"(?=\s*[,}\]])/g, ': "$1"');
+  
   // Advanced cleaning for common AI mistakes:
   
   // 1. Remove trailing commas before closing braces/brackets
   jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
   
-  // 2. Fix unescaped quotes in strings (basic attempt)
-  // This is tricky but we try to escape quotes that appear mid-string
-  jsonStr = jsonStr.replace(/"([^"]*)"([^,:}\]])/g, (match, p1, p2) => {
-    // If there's a character after the quote that's not JSON syntax, likely unescaped
-    if (p2 && p2.trim() && ![':', ',', '}', ']'].includes(p2.trim()[0])) {
-      return `"${p1}\\"${p2}`;
-    }
-    return match;
-  });
-  
-  // 3. Remove any non-printable or control characters except newlines/tabs
+  // 2. Remove any non-printable or control characters except newlines/tabs
   jsonStr = jsonStr.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
   
-  // 4. Ensure proper closing brackets (count and balance)
+  // 3. Ensure proper closing brackets (count and balance)
   const openBraces = (jsonStr.match(/{/g) || []).length;
   const closeBraces = (jsonStr.match(/}/g) || []).length;
   if (openBraces > closeBraces) {
@@ -421,13 +418,16 @@ serve(async (req) => {
     let parsedMaster;
     let cleanedMasterText = cleanJson(masterText);
     
+    console.log("Raw master text length:", masterText.length);
+    console.log("Cleaned master text (first 200 chars):", cleanedMasterText.substring(0, 200));
+    
     try {
       parsedMaster = JSON.parse(cleanedMasterText);
       console.log("✓ Master JSON parsed successfully");
     } catch (parseError) {
       const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
       console.error("JSON Parse Error:", errorMsg);
-      console.error("Problematic JSON (first 500 chars):", cleanedMasterText.substring(0, 500));
+      console.error("Problematic JSON (first 800 chars):", cleanedMasterText.substring(0, 800));
       
       // RETRY STRATEGY: Try again with a simpler, more reliable model
       if (LOVABLE_API_KEY) {
@@ -439,6 +439,7 @@ serve(async (req) => {
           
           if (retryText) {
             const retryCleanedText = cleanJson(retryText);
+            console.log("Retry cleaned text (first 200 chars):", retryCleanedText.substring(0, 200));
             parsedMaster = JSON.parse(retryCleanedText);
             console.log("✓ Retry successful with Flash Lite");
           } else {

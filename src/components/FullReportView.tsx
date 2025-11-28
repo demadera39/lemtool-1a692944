@@ -5,6 +5,8 @@ import { ArrowLeft, Download, Share2, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
+import { EMOTIONS } from '@/constants';
+import EmotionToken from './EmotionToken';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
@@ -31,6 +33,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
         scale: 2,
         useCORS: true,
         logging: false,
+        allowTaint: true,
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -48,11 +51,13 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
       let heightLeft = imgHeight;
       let position = 0;
 
+      // Add first page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
 
+      // Add subsequent pages
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
+        position -= pdfHeight; // Move position up by one page height
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
@@ -199,27 +204,86 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
           </Card>
         </div>
 
+        {/* Visual Overview with Markers */}
+        {project.screenshot && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-xl">Visual Analysis Overview</CardTitle>
+              <p className="text-sm text-gray-500">Complete page with emotional markers and legend</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Legend */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-lg">
+                  {Object.values(EMOTIONS).map((emotion) => (
+                    <div key={emotion.id} className="flex items-center gap-2">
+                      <EmotionToken emotion={emotion.id} size="sm" />
+                      <span className="text-xs font-medium text-gray-700">{emotion.label}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Screenshot with Markers */}
+                <div className="relative border border-gray-200 rounded-lg overflow-hidden">
+                  <img src={project.screenshot} alt="Analysis overview" className="w-full h-auto" />
+                  <div className="absolute inset-0">
+                    {allMarkers.filter(m => m.layer === 'emotions' && m.emotion).map((marker) => (
+                      <div
+                        key={marker.id}
+                        className="absolute transform -translate-x-1/2 -translate-y-1/2 opacity-90"
+                        style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                      >
+                        <EmotionToken 
+                          emotion={marker.emotion!} 
+                          size="sm"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Metrics Summary */}
+                <div className="grid grid-cols-3 gap-4 p-4 bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-lg">
+                  <div className="text-center">
+                    <p className="text-3xl font-black text-lem-orange">{allMarkers.length}</p>
+                    <p className="text-xs text-gray-400 uppercase mt-1">Total Markers</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-black text-lem-orange">{project.markers.length}</p>
+                    <p className="text-xs text-gray-400 uppercase mt-1">AI Analysis</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-black text-lem-orange">{sessions.reduce((sum, s) => sum + s.markers.length, 0)}</p>
+                    <p className="text-xs text-gray-400 uppercase mt-1">Human Input</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Emotion Breakdown */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-xl">Emotional Response Analysis</CardTitle>
+            <p className="text-sm text-gray-500">Distribution of emotional reactions across all markers</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {topEmotions.map(([emotion, count]) => {
                 const percentage = (count / allMarkers.length) * 100;
+                const emotionData = EMOTIONS[emotion as keyof typeof EMOTIONS];
                 return (
                   <div key={emotion}>
                     <div className="flex justify-between items-center mb-2">
-                      <div className="flex items-center gap-2">
-                        <img 
-                          src={`https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/${emotion}.png`}
-                          alt={emotion}
-                          className="w-6 h-6"
-                        />
-                        <span className="font-bold capitalize">{emotion}</span>
+                      <div className="flex items-center gap-3">
+                        <EmotionToken emotion={emotion as any} size="sm" />
+                        <div>
+                          <span className="font-bold capitalize block">{emotionData?.label || emotion}</span>
+                          <span className="text-xs text-gray-500">{emotionData?.description}</span>
+                        </div>
                       </div>
-                      <span className="text-sm text-gray-600">{count} markers ({percentage.toFixed(0)}%)</span>
+                      <span className="text-sm font-bold text-gray-900">{count} ({percentage.toFixed(0)}%)</span>
                     </div>
                     <Progress value={percentage} className="h-3" />
                   </div>

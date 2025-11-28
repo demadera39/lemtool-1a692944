@@ -76,9 +76,9 @@ export const incrementAnalysisCount = async (userId: string): Promise<void> => {
   }
 };
 
-export const getRemainingAnalyses = async (userId: string): Promise<{ monthly: number; pack: number }> => {
+export const getRemainingAnalyses = async (userId: string): Promise<{ monthly: number; pack: number; monthlyLimit: number }> => {
   const role = await getUserRole(userId);
-  if (!role) return { monthly: 0, pack: 0 };
+  if (!role) return { monthly: 0, pack: 0, monthlyLimit: 10 };
 
   const monthly = role.role === 'premium' 
     ? Math.max(0, role.monthly_analyses_limit - role.monthly_analyses_used)
@@ -86,6 +86,7 @@ export const getRemainingAnalyses = async (userId: string): Promise<{ monthly: n
   
   return {
     monthly,
-    pack: role.pack_analyses_remaining
+    pack: role.pack_analyses_remaining,
+    monthlyLimit: role.monthly_analyses_limit
   };
 };

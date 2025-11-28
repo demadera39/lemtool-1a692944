@@ -8,21 +8,56 @@ const corsHeaders = {
 function cleanJson(text: string): string {
   if (!text) return "{}";
 
+  // Remove markdown code blocks
   const markdownRegex = /```(?:json)?\s*([\s\S]*?)\s*```/i;
   const match = text.match(markdownRegex);
   if (match && match[1]) {
     text = match[1];
   }
 
+  // Find JSON boundaries
   const firstBrace = text.indexOf('{');
   const lastBrace = text.lastIndexOf('}');
 
   if (firstBrace === -1 || lastBrace === -1) {
-    console.warn("AI returned non-JSON response (no braces found):", text);
+    console.warn("AI returned non-JSON response (no braces found)");
     return "{}";
   }
 
-  return text.substring(firstBrace, lastBrace + 1).trim();
+  let jsonStr = text.substring(firstBrace, lastBrace + 1).trim();
+  
+  // Advanced cleaning for common AI mistakes:
+  
+  // 1. Remove trailing commas before closing braces/brackets
+  jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+  
+  // 2. Fix unescaped quotes in strings (basic attempt)
+  // This is tricky but we try to escape quotes that appear mid-string
+  jsonStr = jsonStr.replace(/"([^"]*)"([^,:}\]])/g, (match, p1, p2) => {
+    // If there's a character after the quote that's not JSON syntax, likely unescaped
+    if (p2 && p2.trim() && ![':', ',', '}', ']'].includes(p2.trim()[0])) {
+      return `"${p1}\\"${p2}`;
+    }
+    return match;
+  });
+  
+  // 3. Remove any non-printable or control characters except newlines/tabs
+  jsonStr = jsonStr.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+  
+  // 4. Ensure proper closing brackets (count and balance)
+  const openBraces = (jsonStr.match(/{/g) || []).length;
+  const closeBraces = (jsonStr.match(/}/g) || []).length;
+  if (openBraces > closeBraces) {
+    jsonStr += '}'.repeat(openBraces - closeBraces);
+  }
+  
+  const openBrackets = (jsonStr.match(/\[/g) || []).length;
+  const closeBrackets = (jsonStr.match(/\]/g) || []).length;
+  if (openBrackets > closeBrackets) {
+    jsonStr += ']'.repeat(openBrackets - closeBrackets);
+  }
+  
+  return jsonStr;
 }
 
 const MULTIMODAL_MASTER_PROMPT = `
@@ -55,7 +90,9 @@ Target URL: {URL}
 - **DO NOT** cluster markers. If you have 3 insights about one section, pick 3 distinct visual anchors within that section.
 
 **OUTPUT JSON STRUCTURE**
-Return ONLY a valid JSON object wrapped in \`\`\`json \`\`\`.
+**CRITICAL**: Return ONLY valid JSON. No trailing commas. No unescaped quotes. Properly closed brackets.
+Format: \`\`\`json followed by the JSON object followed by \`\`\`
+
 {
   "markers": [
     {
@@ -109,7 +146,9 @@ Identify specific UX/UI elements in this slice that trigger emotions, fulfill ps
 - **AVOID** placing markers at exactly 50,50 or 0,0. Be precise.
 
 **OUTPUT JSON STRUCTURE**
-Return ONLY a valid JSON object wrapped in \`\`\`json \`\`\`.
+**CRITICAL**: Return ONLY valid JSON. No trailing commas. No unescaped quotes. Properly closed brackets.
+Format: \`\`\`json followed by the JSON object followed by \`\`\`
+
 {
   "markers": [
     {
@@ -359,9 +398,42 @@ serve(async (req) => {
     const bodyResponses = await Promise.all(bodyPromises);
     console.log(`Received ${bodyResponses.length} body slice responses`);
 
-    // 3. Process master result
-    const cleanedMasterText = cleanJson(masterText);
-    const parsedMaster = JSON.parse(cleanedMasterText);
+    // 3. Process master result with retry logic
+    let parsedMaster;
+    let cleanedMasterText = cleanJson(masterText);
+    
+    try {
+      parsedMaster = JSON.parse(cleanedMasterText);
+      console.log("✓ Master JSON parsed successfully");
+    } catch (parseError) {
+      const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+      console.error("JSON Parse Error:", errorMsg);
+      console.error("Problematic JSON (first 500 chars):", cleanedMasterText.substring(0, 500));
+      
+      // RETRY STRATEGY: Try again with a simpler, more reliable model
+      if (LOVABLE_API_KEY) {
+        try {
+          console.log("Retrying with Gemini 2.5 Flash Lite (more reliable)...");
+          const retryResponse = await callLovableAI(parts, MULTIMODAL_MASTER_PROMPT, "google/gemini-2.5-flash-lite");
+          const retryData = await retryResponse.json();
+          const retryText = retryData.candidates?.[0]?.content?.parts?.[0]?.text;
+          
+          if (retryText) {
+            const retryCleanedText = cleanJson(retryText);
+            parsedMaster = JSON.parse(retryCleanedText);
+            console.log("✓ Retry successful with Flash Lite");
+          } else {
+            throw new Error("Retry produced no text");
+          }
+        } catch (retryError) {
+          const retryMsg = retryError instanceof Error ? retryError.message : String(retryError);
+          console.error("Retry also failed:", retryMsg);
+          throw new Error(`JSON parsing failed after retry: ${errorMsg}`);
+        }
+      } else {
+        throw new Error(`JSON parsing failed and no retry available: ${errorMsg}`);
+      }
+    }
 
     // Transform emotion types (handle Interest→Fascination and Aversion→Disgust)
     const emotionTypeMap: Record<string, string> = {

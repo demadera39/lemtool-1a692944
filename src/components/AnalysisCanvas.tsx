@@ -50,78 +50,67 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
     useEffect(() => {
         if (!bubbleRef.current) return;
         
-        const bubble = bubbleRef.current;
-        const markerElement = bubble.parentElement;
-        if (!markerElement) return;
-        
-        // Get marker position in viewport
-        const markerRect = markerElement.getBoundingClientRect();
-        const markerCenterX = markerRect.left + markerRect.width / 2;
-        
-        // Find the scrollable container or use viewport
-        let container = bubble.parentElement;
-        while (container && container !== document.body) {
-            const style = window.getComputedStyle(container);
-            if (style.overflow === 'auto' || style.overflow === 'scroll' || 
-                style.overflowY === 'auto' || style.overflowY === 'scroll') {
-                break;
-            }
-            container = container.parentElement;
-        }
-        
-        const containerRect = container && container !== document.body 
-            ? container.getBoundingClientRect() 
-            : { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth, width: window.innerWidth, height: window.innerHeight };
-        
-        // Calculate available width with padding
-        const padding = 16;
-        const availableWidth = containerRect.width - (padding * 2);
-        const bubbleWidth = Math.min(320, availableWidth);
-        setMaxWidth(bubbleWidth);
-        
-        // Calculate ideal centered position
-        const idealLeft = markerCenterX - bubbleWidth / 2;
-        const idealRight = markerCenterX + bubbleWidth / 2;
-        
-        // Check boundaries and adjust
-        let finalLeft = idealLeft;
-        let newArrowOffset = 50; // Default center (%)
-        
-        if (idealLeft < containerRect.left + padding) {
-            // Would overflow left - stick to left edge
-            finalLeft = containerRect.left + padding;
-            // Calculate arrow position to point at marker
-            const distanceFromLeft = markerCenterX - finalLeft;
-            newArrowOffset = (distanceFromLeft / bubbleWidth) * 100;
-            newArrowOffset = Math.max(10, Math.min(90, newArrowOffset));
-        } else if (idealRight > containerRect.right - padding) {
-            // Would overflow right - stick to right edge
-            finalLeft = containerRect.right - padding - bubbleWidth;
-            // Calculate arrow position to point at marker
-            const distanceFromLeft = markerCenterX - finalLeft;
-            newArrowOffset = (distanceFromLeft / bubbleWidth) * 100;
-            newArrowOffset = Math.max(10, Math.min(90, newArrowOffset));
-        }
-        
-        // Store the actual left position (in pixels relative to marker)
-        const leftOffset = finalLeft - markerCenterX;
-        setHorizontalOffset(leftOffset);
-        setArrowOffset(newArrowOffset);
-        
-        // Vertical positioning (up/down)
-        if (!direction) {
-            const spaceAbove = markerRect.top - containerRect.top;
-            const spaceBelow = containerRect.bottom - markerRect.bottom;
+        // Small delay to ensure bubble is rendered with correct size
+        const timeoutId = setTimeout(() => {
+            if (!bubbleRef.current) return;
             
-            if (spaceAbove < 200 && spaceBelow > spaceAbove) {
-                setComputedDirection('down');
-            } else {
-                setComputedDirection('up');
+            const bubble = bubbleRef.current;
+            const bubbleRect = bubble.getBoundingClientRect();
+            
+            // Find scrollable container
+            let container: HTMLElement | null = bubble.parentElement;
+            while (container && container !== document.body) {
+                const style = window.getComputedStyle(container);
+                if (style.overflow === 'auto' || style.overflow === 'scroll' || 
+                    style.overflowY === 'auto' || style.overflowY === 'scroll') {
+                    break;
+                }
+                container = container.parentElement;
             }
-        }
+            
+            const containerRect = container && container !== document.body 
+                ? container.getBoundingClientRect() 
+                : { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth };
+            
+            const padding = 16;
+            const bubbleWidth = bubbleRect.width;
+            const bubbleLeft = bubbleRect.left;
+            const bubbleRight = bubbleRect.right;
+            
+            let adjustment = 0;
+            let newArrowOffset = 50;
+            
+            // Check if bubble extends beyond left boundary
+            if (bubbleLeft < containerRect.left + padding) {
+                adjustment = (containerRect.left + padding) - bubbleLeft;
+                // Arrow points to original position
+                newArrowOffset = Math.max(10, Math.min(90, 50 - (adjustment / bubbleWidth * 50)));
+            }
+            // Check if bubble extends beyond right boundary
+            else if (bubbleRight > containerRect.right - padding) {
+                adjustment = (containerRect.right - padding) - bubbleRight;
+                // Arrow points to original position
+                newArrowOffset = Math.max(10, Math.min(90, 50 + (Math.abs(adjustment) / bubbleWidth * 50)));
+            }
+            
+            setHorizontalOffset(adjustment);
+            setArrowOffset(newArrowOffset);
+            
+            // Vertical direction
+            if (!direction) {
+                const spaceAbove = bubbleRect.top - containerRect.top;
+                const spaceBelow = containerRect.bottom - bubbleRect.bottom;
+                
+                if (spaceAbove < 200 && spaceBelow > spaceAbove) {
+                    setComputedDirection('down');
+                } else {
+                    setComputedDirection('up');
+                }
+            }
+        }, 0);
         
-        setVerticalOffset(0); // Simplified - remove collision for now to fix boundaries first
-    }, [direction, marker, allMarkers, computedDirection]);
+        return () => clearTimeout(timeoutId);
+    }, [direction, marker]);
 
     let title = 'Insight';
     if (marker.layer === 'emotions' && marker.emotion) title = EMOTIONS[marker.emotion].label;
@@ -137,9 +126,9 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
     return (
       <div
         ref={bubbleRef}
-        className={`absolute bg-white rounded-lg shadow-2xl p-4 z-50 flex flex-col ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
+        className={`absolute bg-white rounded-lg shadow-2xl p-4 z-50 flex flex-col transform -translate-x-1/2 ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
         style={{
-          left: `${horizontalOffset}px`,
+          left: `calc(50% + ${horizontalOffset}px)`,
           width: `${maxWidth}px`,
           maxWidth: `${maxWidth}px`
         }}

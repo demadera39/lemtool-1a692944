@@ -42,24 +42,54 @@ const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ laye
 const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 'up' | 'down' }> = ({ marker, onClose, direction }) => {
     const bubbleRef = useRef<HTMLDivElement>(null);
     const [computedDirection, setComputedDirection] = useState<'up' | 'down'>(direction || 'up');
+    const [horizontalOffset, setHorizontalOffset] = useState<number>(0);
+    const [arrowOffset, setArrowOffset] = useState<number>(50);
 
     useEffect(() => {
-        if (direction || !bubbleRef.current) return;
+        if (!bubbleRef.current) return;
         
         const bubble = bubbleRef.current;
         const rect = bubble.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
         
-        // Check if bubble would be cut off at top or bottom
-        const spaceAbove = rect.top;
-        const spaceBelow = viewportHeight - rect.bottom;
-        
-        // Default to up, but flip to down if not enough space above
-        if (spaceAbove < 100 && spaceBelow > spaceAbove) {
-            setComputedDirection('down');
-        } else {
-            setComputedDirection('up');
+        // Vertical positioning (up/down)
+        if (!direction) {
+            const spaceAbove = rect.top;
+            const spaceBelow = viewportHeight - rect.bottom;
+            
+            if (spaceAbove < 100 && spaceBelow > spaceAbove) {
+                setComputedDirection('down');
+            } else {
+                setComputedDirection('up');
+            }
         }
+        
+        // Horizontal boundary detection
+        const bubbleWidth = rect.width;
+        const bubbleCenter = rect.left + bubbleWidth / 2;
+        const padding = 16; // Minimum distance from edges
+        
+        let newHorizontalOffset = 0;
+        let newArrowOffset = 50; // Default center position (%)
+        
+        // Check if bubble extends beyond left edge
+        if (rect.left < padding) {
+            newHorizontalOffset = padding - rect.left;
+            // Calculate arrow position relative to bubble's new position
+            newArrowOffset = ((bubbleCenter - padding) / bubbleWidth) * 100;
+            newArrowOffset = Math.max(10, Math.min(90, newArrowOffset)); // Clamp between 10-90%
+        }
+        // Check if bubble extends beyond right edge
+        else if (rect.right > viewportWidth - padding) {
+            newHorizontalOffset = (viewportWidth - padding) - rect.right;
+            // Calculate arrow position relative to bubble's new position
+            newArrowOffset = ((bubbleCenter - (rect.left + newHorizontalOffset)) / bubbleWidth) * 100;
+            newArrowOffset = Math.max(10, Math.min(90, newArrowOffset)); // Clamp between 10-90%
+        }
+        
+        setHorizontalOffset(newHorizontalOffset);
+        setArrowOffset(newArrowOffset);
     }, [direction, marker]);
 
     let title = 'Insight';
@@ -76,7 +106,10 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
     return (
       <div
         ref={bubbleRef}
-        className={`absolute w-80 bg-white rounded-lg shadow-2xl p-4 z-50 transform -translate-x-1/2 left-1/2 flex flex-col ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
+        className={`absolute w-80 bg-white rounded-lg shadow-2xl p-4 z-50 transform -translate-x-1/2 flex flex-col ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
+        style={{
+          left: `calc(50% + ${horizontalOffset}px)`
+        }}
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}
       >
@@ -93,7 +126,10 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
         <div className="text-sm text-gray-600 flex-grow pr-1 max-h-48 overflow-y-auto custom-scrollbar leading-relaxed">
            {marker.comment}
         </div>
-        <div className={`absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-gray-100 ${arrowClass}`}></div>
+        <div 
+          className={`absolute w-4 h-4 bg-white border-gray-100 transform -translate-x-1/2 ${arrowClass}`}
+          style={{ left: `${arrowOffset}%` }}
+        ></div>
       </div>
     );
 };

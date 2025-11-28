@@ -26,7 +26,7 @@ const FullReportView = ({
   const [isExporting, setIsExporting] = useState(false);
   const [areaViewLayer, setAreaViewLayer] = useState<LayerType>('emotions');
   const [areaViewSource, setAreaViewSource] = useState<'all' | 'ai' | 'human'>('all');
-  const [areaViewMode, setAreaViewMode] = useState<'heatmap' | 'points'>('heatmap');
+  const [areaViewMode, setAreaViewMode] = useState<'heatmap' | 'points'>('points');
   const [selectedSession, setSelectedSession] = useState<string>('all');
   
   const allMarkers = [...project.markers, ...sessions.flatMap(s => s.markers)];
@@ -329,21 +329,21 @@ const FullReportView = ({
                     <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
-                        variant={areaViewMode === 'heatmap' ? 'default' : 'outline'}
-                        onClick={() => setAreaViewMode('heatmap')}
-                        className={`h-9 text-xs font-medium px-3 ${areaViewMode === 'heatmap' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
-                      >
-                        <Grid3x3 size={14} className="mr-1.5" />
-                        Areas
-                      </Button>
-                      <Button
-                        size="sm"
                         variant={areaViewMode === 'points' ? 'default' : 'outline'}
                         onClick={() => setAreaViewMode('points')}
                         className={`h-9 text-xs font-medium px-3 ${areaViewMode === 'points' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
                       >
                         <MapPin size={14} className="mr-1.5" />
                         Points
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewMode === 'heatmap' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewMode('heatmap')}
+                        className={`h-9 text-xs font-medium px-3 ${areaViewMode === 'heatmap' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        <Grid3x3 size={14} className="mr-1.5" />
+                        Areas
                       </Button>
                     </div>
                   </div>

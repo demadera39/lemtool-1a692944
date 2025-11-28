@@ -1,11 +1,12 @@
 import { AnalysisReport, Marker, LayerType } from '../types';
-import { Award, Users, Target, Lightbulb, TrendingUp, Brain, Lock, Map } from 'lucide-react';
+import { Award, Users, Target, Lightbulb, TrendingUp, Brain, Lock, Map, Grid3x3, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useState } from 'react';
+import EmotionToken from './EmotionToken';
 
 interface ReportPanelProps {
   report: AnalysisReport | null;
@@ -25,17 +26,55 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
   
   const [selectedSession, setSelectedSession] = useState<string>('all');
   const [showAreaView, setShowAreaView] = useState(false);
+  const [areaViewLayer, setAreaViewLayer] = useState<LayerType>('emotions');
+  const [areaViewSource, setAreaViewSource] = useState<'all' | 'ai' | 'human'>('all');
+  const [areaViewMode, setAreaViewMode] = useState<'heatmap' | 'points'>('heatmap');
   
   // Get unique sessions from markers
   const sessions = Array.from(new Set(markers.filter(m => m.sessionId).map(m => m.sessionId)));
   
   const getFilteredAreas = () => {
-    if (selectedSession === 'all') return areaMarkers;
-    if (selectedSession === 'ai') return areaMarkers.filter(m => m.source === 'AI');
-    return areaMarkers.filter(m => m.sessionId === selectedSession);
+    let filtered = areaMarkers.filter(m => m.layer === areaViewLayer);
+    
+    if (areaViewSource === 'ai') {
+      filtered = filtered.filter(m => m.source === 'AI');
+    } else if (areaViewSource === 'human') {
+      filtered = filtered.filter(m => m.source === 'HUMAN');
+    }
+    
+    if (selectedSession !== 'all') {
+      if (selectedSession === 'ai') {
+        filtered = filtered.filter(m => m.source === 'AI');
+      } else {
+        filtered = filtered.filter(m => m.sessionId === selectedSession);
+      }
+    }
+    
+    return filtered;
+  };
+  
+  const getFilteredPoints = () => {
+    let filtered = markers.filter(m => !m.isArea && m.layer === areaViewLayer);
+    
+    if (areaViewSource === 'ai') {
+      filtered = filtered.filter(m => m.source === 'AI');
+    } else if (areaViewSource === 'human') {
+      filtered = filtered.filter(m => m.source === 'HUMAN');
+    }
+    
+    if (selectedSession !== 'all') {
+      if (selectedSession === 'ai') {
+        filtered = filtered.filter(m => m.source === 'AI');
+      } else {
+        filtered = filtered.filter(m => m.sessionId === selectedSession);
+      }
+    }
+    
+    return filtered;
   };
   
   const filteredAreas = getFilteredAreas();
+  const filteredPoints = getFilteredPoints();
 
   if (isAnalyzing) {
     return (
@@ -288,12 +327,100 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Map className="text-lem-orange" size={18} />
-                    Area Heatmap
+                    Visual Analysis Overview
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <label className="text-sm font-medium mb-2 block">Filter by participant:</label>
+                <CardContent className="space-y-4">
+                  {/* Layer Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Analysis Layer:</label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={areaViewLayer === 'emotions' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewLayer('emotions')}
+                        className={areaViewLayer === 'emotions' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}
+                      >
+                        Emotions
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewLayer === 'needs' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewLayer('needs')}
+                        className={areaViewLayer === 'needs' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}
+                      >
+                        Needs
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewLayer === 'strategy' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewLayer('strategy')}
+                        className={areaViewLayer === 'strategy' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}
+                      >
+                        Strategy
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Source Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Source:</label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={areaViewSource === 'all' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewSource('all')}
+                        className={areaViewSource === 'all' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}
+                      >
+                        All
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewSource === 'ai' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewSource('ai')}
+                        className={areaViewSource === 'ai' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}
+                      >
+                        AI
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewSource === 'human' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewSource('human')}
+                        className={areaViewSource === 'human' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}
+                      >
+                        Humans
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* View Mode Toggle */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">View Mode:</label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={areaViewMode === 'heatmap' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewMode('heatmap')}
+                        className={areaViewMode === 'heatmap' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}
+                      >
+                        <Grid3x3 size={16} className="mr-1" />
+                        Areas
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewMode === 'points' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewMode('points')}
+                        className={areaViewMode === 'points' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}
+                      >
+                        <MapPin size={16} className="mr-1" />
+                        Points
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Participant Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Participant:</label>
                     <Select value={selectedSession} onValueChange={setSelectedSession}>
                       <SelectTrigger>
                         <SelectValue placeholder="All participants" />
@@ -311,56 +438,83 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                   </div>
                   
                   {screenshot && (
-                    <div className="relative w-full border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="relative w-full border border-gray-200 rounded-lg overflow-hidden bg-gray-100">
                       <img src={screenshot} alt="Screenshot" className="w-full" />
                       <div className="absolute inset-0">
-                        {filteredAreas.map((marker, idx) => {
-                          const isPositive = marker.emotion && ['Joy', 'Desire', 'Fascination', 'Satisfaction'].includes(marker.emotion);
-                          const isNegative = marker.emotion && ['Sadness', 'Disgust', 'Boredom', 'Dissatisfaction'].includes(marker.emotion);
-                          
-                          return (
+                        {areaViewMode === 'heatmap' ? (
+                          filteredAreas.map((marker, idx) => {
+                            const isPositive = marker.emotion && ['Joy', 'Desire', 'Fascination', 'Satisfaction'].includes(marker.emotion);
+                            const isNegative = marker.emotion && ['Sadness', 'Disgust', 'Boredom', 'Dissatisfaction'].includes(marker.emotion);
+                            
+                            return (
+                              <div
+                                key={idx}
+                                style={{
+                                  position: 'absolute',
+                                  left: `${marker.x}%`,
+                                  top: `${marker.y}%`,
+                                  width: `${marker.width}%`,
+                                  height: `${marker.height}%`,
+                                  backgroundColor: isPositive 
+                                    ? 'rgba(34, 197, 94, 0.2)' 
+                                    : isNegative 
+                                    ? 'rgba(239, 68, 68, 0.2)' 
+                                    : 'rgba(59, 130, 246, 0.2)',
+                                  border: isPositive 
+                                    ? '2px solid rgba(34, 197, 94, 0.5)' 
+                                    : isNegative 
+                                    ? '2px solid rgba(239, 68, 68, 0.5)' 
+                                    : '2px solid rgba(59, 130, 246, 0.5)',
+                                  pointerEvents: 'none'
+                                }}
+                              />
+                            );
+                          })
+                        ) : (
+                          filteredPoints.map((marker, idx) => (
                             <div
                               key={idx}
                               style={{
                                 position: 'absolute',
                                 left: `${marker.x}%`,
                                 top: `${marker.y}%`,
-                                width: `${marker.width}%`,
-                                height: `${marker.height}%`,
-                                backgroundColor: isPositive 
-                                  ? 'rgba(34, 197, 94, 0.2)' 
-                                  : isNegative 
-                                  ? 'rgba(239, 68, 68, 0.2)' 
-                                  : 'rgba(59, 130, 246, 0.2)',
-                                border: isPositive 
-                                  ? '2px solid rgba(34, 197, 94, 0.5)' 
-                                  : isNegative 
-                                  ? '2px solid rgba(239, 68, 68, 0.5)' 
-                                  : '2px solid rgba(59, 130, 246, 0.5)',
+                                transform: 'translate(-50%, -50%)',
                                 pointerEvents: 'none'
                               }}
-                            />
-                          );
-                        })}
+                            >
+                              {marker.layer === 'emotions' && marker.emotion && (
+                                <EmotionToken emotion={marker.emotion} size="sm" />
+                              )}
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   )}
                   
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm text-gray-600">
-                      Showing {filteredAreas.length} area{filteredAreas.length !== 1 ? 's' : ''} 
-                      {selectedSession !== 'all' && ` for ${selectedSession === 'ai' ? 'AI' : `Session ${selectedSession.slice(-6)}`}`}
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <p>
+                      Showing {areaViewMode === 'heatmap' ? filteredAreas.length : filteredPoints.length} {areaViewMode === 'heatmap' ? 'area' : 'point'}
+                      {(areaViewMode === 'heatmap' ? filteredAreas.length : filteredPoints.length) !== 1 ? 's' : ''} 
+                      {' '}for <strong>{areaViewLayer}</strong> layer
+                      {areaViewSource !== 'all' && ` from ${areaViewSource === 'ai' ? 'AI' : 'Human'} sources`}
                     </p>
-                    <div className="flex gap-4 text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-green-500 bg-opacity-30 border-2 border-green-500 border-opacity-50 rounded"></div>
-                        <span>Positive emotions</span>
+                    {areaViewMode === 'heatmap' && areaViewLayer === 'emotions' && (
+                      <div className="flex gap-4 text-xs pt-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 bg-green-500 bg-opacity-30 border-2 border-green-500 border-opacity-50 rounded"></div>
+                          <span>Positive</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 bg-red-500 bg-opacity-30 border-2 border-red-500 border-opacity-50 rounded"></div>
+                          <span>Negative</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 bg-blue-500 bg-opacity-30 border-2 border-blue-500 border-opacity-50 rounded"></div>
+                          <span>Neutral</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-red-500 bg-opacity-30 border-2 border-red-500 border-opacity-50 rounded"></div>
-                        <span>Negative emotions</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -218,9 +218,13 @@ const AnalysisCanvas = ({
           <iframe
             ref={iframeRef}
             src={imgUrl}
-            className="w-full h-full border-0 bg-white"
+            className="w-full border-0 bg-white"
             title="Website Preview"
-            style={{ pointerEvents: (scrollEnabled && !isAnalyzing) ? 'auto' : 'none' }}
+            style={{ 
+              height: '500vh',
+              minHeight: '500vh',
+              pointerEvents: (scrollEnabled && !isAnalyzing) ? 'auto' : 'none' 
+            }}
           />
         ) : screenshot ? (
           <img src={screenshot} alt="Website Snapshot" className="w-full h-auto" />

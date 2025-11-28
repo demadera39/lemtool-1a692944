@@ -57,8 +57,8 @@ export const canCreateAnalysis = async (userId: string): Promise<boolean> => {
   const role = await getUserRole(userId);
   if (!role) return false;
 
-  // Premium users can use monthly analyses
-  if (role.role === 'premium' && role.monthly_analyses_used < role.monthly_analyses_limit) {
+  // Both free and premium users can use monthly analyses
+  if (role.monthly_analyses_used < role.monthly_analyses_limit) {
     return true;
   }
 
@@ -80,9 +80,8 @@ export const getRemainingAnalyses = async (userId: string): Promise<{ monthly: n
   const role = await getUserRole(userId);
   if (!role) return { monthly: 0, pack: 0, monthlyLimit: 10 };
 
-  const monthly = role.role === 'premium' 
-    ? Math.max(0, role.monthly_analyses_limit - role.monthly_analyses_used)
-    : 0;
+  // Calculate remaining monthly analyses for both free and premium users
+  const monthly = Math.max(0, role.monthly_analyses_limit - role.monthly_analyses_used);
   
   return {
     monthly,

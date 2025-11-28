@@ -346,12 +346,36 @@ serve(async (req) => {
     }
 
     const masterData = await masterResponse.json();
-    console.log(`✓ Hero analysis complete (${usedModel})`);
     
-    const masterText = masterData.candidates?.[0]?.content?.parts?.[0]?.text;
+    let masterText = masterData.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!masterText) {
-      throw new Error("No content generated from Gemini");
+      console.error("Empty response from AI. Response structure:", JSON.stringify(masterData, null, 2));
+      
+      // Try fallback to Lovable AI if using user's Gemini key
+      if (GEMINI_API_KEY && LOVABLE_API_KEY && usedModel.includes('User Key')) {
+        console.log("Retrying with Lovable AI due to empty Gemini response...");
+        try {
+          masterResponse = await callLovableAI(parts, MULTIMODAL_MASTER_PROMPT, "google/gemini-2.5-flash");
+          const fallbackData = await masterResponse.json();
+          const fallbackText = fallbackData.candidates?.[0]?.content?.parts?.[0]?.text;
+          
+          if (fallbackText) {
+            console.log("✓ Hero analysis complete (Gemini 2.5 Flash - Lovable AI fallback)");
+            masterText = fallbackText;
+            usedModel = 'Gemini 2.5 Flash (Lovable AI fallback)';
+          } else {
+            throw new Error("Lovable AI also returned empty content");
+          }
+        } catch (fallbackError) {
+          console.error("Fallback to Lovable AI failed:", fallbackError);
+          throw new Error("No content generated from AI models (tried both Gemini and Lovable AI)");
+        }
+      } else {
+        throw new Error("No content generated from AI. Response structure: " + JSON.stringify(masterData));
+      }
+    } else {
+      console.log(`✓ Hero analysis complete (${usedModel})`);
     }
 
     // 2. Analyze remaining slices in parallel (BODY) - Use fast, efficient model

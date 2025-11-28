@@ -2,12 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Check, ArrowLeft } from 'lucide-react';
-
 const Pricing = () => {
   const navigate = useNavigate();
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50 relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50 relative overflow-hidden">
       {/* Decorative emotion stickers using real emotion images */}
       <div className="absolute top-10 right-10 w-20 h-20 opacity-20 rotate-12">
         <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" alt="Joy" className="w-full h-full" />
@@ -68,11 +65,7 @@ const Pricing = () => {
               </li>
             </ul>
 
-            <Button 
-              onClick={() => navigate('/auth')}
-              variant="outline" 
-              className="w-full"
-            >
+            <Button onClick={() => navigate('/auth')} variant="outline" className="w-full">
               Get Started Free
             </Button>
           </div>
@@ -114,10 +107,7 @@ const Pricing = () => {
               </li>
             </ul>
 
-            <Button 
-              onClick={() => navigate('/auth')}
-              className="w-full bg-white text-lem-orange hover:bg-gray-50"
-            >
+            <Button onClick={() => navigate('/auth')} className="w-full bg-white text-lem-orange hover:bg-gray-50">
               Buy Starter Pack
             </Button>
           </div>
@@ -125,7 +115,7 @@ const Pricing = () => {
           {/* Top-up Pack */}
           <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 mb-2">Top-up Pack</h2>
+              <h2 className="text-2xl font-black text-gray-900 mb-2">Top-up Pack (premium users)</h2>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black text-gray-900">€4.99</span>
               </div>
@@ -151,13 +141,7 @@ const Pricing = () => {
               </li>
             </ul>
 
-            <Button 
-              onClick={() => navigate('/auth')}
-              variant="outline"
-              className="w-full"
-            >
-              Buy Top-up Pack
-            </Button>
+            
           </div>
         </div>
 
@@ -193,8 +177,6 @@ const Pricing = () => {
           </div>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default Pricing;

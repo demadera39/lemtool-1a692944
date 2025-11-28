@@ -338,6 +338,12 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   // Helper to render a marker
   const renderMarker = (marker: Marker) => {
     if (marker.isArea && marker.width && marker.height) {
+      // Determine if emotion is positive or negative based on category
+      const positiveEmotions = [EmotionType.JOY, EmotionType.DESIRE, EmotionType.FASCINATION, EmotionType.SATISFACTION];
+      const negativeEmotions = [EmotionType.SADNESS, EmotionType.DISGUST, EmotionType.BOREDOM, EmotionType.DISSATISFACTION];
+      const isPositive = marker.emotion && positiveEmotions.includes(marker.emotion);
+      const isNegative = marker.emotion && negativeEmotions.includes(marker.emotion);
+      
       // Render area marker
       return (
         <div
@@ -354,6 +360,10 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
             className={`w-full h-full border-4 rounded-lg transition-all cursor-pointer pointer-events-auto ${
               activeMarkerId === marker.id 
                 ? 'border-lem-orange bg-lem-orange/20' 
+                : isPositive
+                ? 'border-green-500 bg-green-500/10 hover:bg-green-500/20'
+                : isNegative
+                ? 'border-red-500 bg-red-500/10 hover:bg-red-500/20'
                 : marker.source === 'HUMAN'
                 ? 'border-blue-500 bg-blue-500/10 hover:bg-blue-500/20'
                 : 'border-lem-orange bg-lem-orange/10 hover:bg-lem-orange/20'

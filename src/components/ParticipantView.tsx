@@ -5,7 +5,7 @@ import AppraisalModal from './AppraisalModal';
 import Toolbar from './Toolbar';
 import { EMOTIONS } from '../constants';
 import { submitTestSession } from '../services/supabaseService';
-import { CheckCircle2, AlertCircle, ChevronDown, Info } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ChevronDown, Info, MousePointer2, Square } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
@@ -24,8 +24,9 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(null);
   const [showAppraisal, setShowAppraisal] = useState(false);
-  const [pendingMarkerPos, setPendingMarkerPos] = useState<{x: number, y: number} | null>(null);
+  const [pendingMarkerPos, setPendingMarkerPos] = useState<{x: number, y: number, width?: number, height?: number} | null>(null);
   const [instructionsOpen, setInstructionsOpen] = useState(true);
+  const [selectionMode, setSelectionMode] = useState<'point' | 'area'>('point');
 
   const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +46,15 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
     setShowAppraisal(true);
   };
 
+  const handleAreaSelect = (x: number, y: number, width: number, height: number) => {
+    if (!selectedEmotion) {
+      toast.error('Please select an emotion from the sidebar first');
+      return;
+    }
+    setPendingMarkerPos({ x, y, width, height });
+    setShowAppraisal(true);
+  };
+
   const handleAppraisalSubmit = (appraisal: AppraisalInput) => {
     if (!pendingMarkerPos || !selectedEmotion) return;
 
@@ -56,7 +66,12 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
       emotion: selectedEmotion,
       source: 'HUMAN',
       comment: `${appraisal.prefix} ${appraisal.content}`,
-      appraisal
+      appraisal,
+      ...(pendingMarkerPos.width && pendingMarkerPos.height ? {
+        width: pendingMarkerPos.width,
+        height: pendingMarkerPos.height,
+        isArea: true
+      } : {})
     };
 
     setMarkers(prev => [...prev, newMarker]);
@@ -176,7 +191,23 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
               {markers.length} / {MIN_MARKERS} markers minimum
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <div className="flex bg-gray-100 rounded-lg p-1 mr-2">
+              <button
+                onClick={() => setSelectionMode('point')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md flex items-center gap-1 transition-all ${selectionMode === 'point' ? 'bg-white text-lem-orange shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                title="Place point markers"
+              >
+                <MousePointer2 size={14} /> Point
+              </button>
+              <button
+                onClick={() => setSelectionMode('area')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md flex items-center gap-1 transition-all ${selectionMode === 'area' ? 'bg-white text-lem-orange shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                title="Select rectangular areas"
+              >
+                <Square size={14} /> Area
+              </button>
+            </div>
             {selectedEmotion && (
               <div className="px-4 py-2 bg-lem-orange/10 text-lem-orange rounded-lg text-sm font-medium">
                 Selected: {EMOTIONS[selectedEmotion].label}
@@ -316,8 +347,9 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
             setActiveLayer={() => {}}
             layoutStructure={project.report.layoutStructure}
             screenshot={project.screenshot}
-            interactionMode="place_marker"
+            interactionMode={selectionMode === 'point' ? 'place_marker' : 'select_area'}
             onCanvasClick={handleCanvasClick}
+            onAreaSelect={handleAreaSelect}
           />
         </div>
       </div>

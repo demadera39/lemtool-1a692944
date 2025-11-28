@@ -48,6 +48,11 @@ export interface Marker {
 
   // Human Context
   appraisal?: AppraisalInput;
+  
+  // Area selection (for rectangular regions)
+  width?: number;
+  height?: number;
+  isArea?: boolean;
 }
 
 export interface Persona {

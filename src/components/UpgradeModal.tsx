@@ -13,10 +13,10 @@ interface UpgradeModalProps {
 export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleUpgrade = async () => {
+  const handlePurchasePack = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout');
+      const { data, error } = await supabase.functions.invoke('purchase-analysis-pack');
       
       if (error) throw error;
       
@@ -25,8 +25,8 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
         toast.success('Redirecting to checkout...');
       }
     } catch (error) {
-      console.error('Upgrade error:', error);
-      toast.error('Failed to start upgrade process');
+      console.error('Purchase error:', error);
+      toast.error('Failed to start purchase process');
     } finally {
       setIsLoading(false);
     }
@@ -39,9 +39,9 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
           <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] flex items-center justify-center">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <DialogTitle className="text-2xl text-center">Upgrade to Premium</DialogTitle>
+          <DialogTitle className="text-2xl text-center">Get More Analyses</DialogTitle>
           <DialogDescription className="text-center text-base">
-            Unlock unlimited analyses and advanced features
+            Buy analysis packs that never expire
           </DialogDescription>
         </DialogHeader>
 
@@ -51,8 +51,8 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
               <Zap className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <h4 className="font-semibold text-sm">Unlimited Analyses</h4>
-              <p className="text-xs text-muted-foreground">Run as many analyses as you need, no monthly limits</p>
+              <h4 className="font-semibold text-sm">5 Analyses Pack</h4>
+              <p className="text-xs text-muted-foreground">Perfect for occasional projects</p>
             </div>
           </div>
 
@@ -61,8 +61,8 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
               <TrendingUp className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <h4 className="font-semibold text-sm">Priority Processing</h4>
-              <p className="text-xs text-muted-foreground">Get faster analysis with priority queue access</p>
+              <h4 className="font-semibold text-sm">Never Expire</h4>
+              <p className="text-xs text-muted-foreground">Use at your own pace, no time pressure</p>
             </div>
           </div>
 
@@ -71,17 +71,17 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
               <Shield className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <h4 className="font-semibold text-sm">Advanced Features</h4>
-              <p className="text-xs text-muted-foreground">Access to all premium tools and upcoming features</p>
+              <h4 className="font-semibold text-sm">All Features Included</h4>
+              <p className="text-xs text-muted-foreground">Full access to participant testing and reports</p>
             </div>
           </div>
         </div>
 
         <div className="bg-accent rounded-lg p-4 text-center">
           <div className="text-3xl font-black text-foreground mb-1">
-            €9.99<span className="text-lg font-normal text-muted-foreground">/month</span>
+            €4.99<span className="text-lg font-normal text-muted-foreground"></span>
           </div>
-          <p className="text-xs text-muted-foreground">Cancel anytime, no commitments</p>
+          <p className="text-xs text-muted-foreground">One-time payment • 5 analyses</p>
         </div>
 
         <div className="flex gap-3">
@@ -94,11 +94,11 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
             Maybe Later
           </Button>
           <Button
-            onClick={handleUpgrade}
+            onClick={handlePurchasePack}
             disabled={isLoading}
             className="flex-1 bg-gradient-to-r from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] hover:opacity-90"
           >
-            {isLoading ? 'Loading...' : 'Upgrade Now'}
+            {isLoading ? 'Loading...' : 'Buy Pack'}
           </Button>
         </div>
       </DialogContent>

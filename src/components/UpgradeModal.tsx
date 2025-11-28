@@ -36,10 +36,10 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gradient-to-br from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] flex items-center justify-center p-2">
+          <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gradient-to-br from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] flex items-center justify-center p-1">
             <img 
-              src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" 
-              alt="Interest" 
+              src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/desire.png" 
+              alt="Desire" 
               className="w-full h-full"
             />
           </div>

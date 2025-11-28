@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Marker, EmotionType, LayerType } from '../types';
 import EmotionToken from './EmotionToken';
 import { EMOTIONS } from '../constants';
-import { X, MonitorPlay, Presentation } from 'lucide-react';
+import { X, MonitorPlay, Presentation, ChevronLeft, ChevronRight, ExternalLink, Layers } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
 interface AnalysisCanvasProps {
@@ -75,6 +75,9 @@ const AnalysisCanvas = ({
 }: AnalysisCanvasProps) => {
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'live' | 'snapshot'>('live');
+  const [currentSlide, setCurrentSlide] = useState(1);
+  const [totalSlides] = useState(8);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
 
   const filteredMarkers = markers.filter(m => m.layer === activeLayer);
@@ -115,27 +118,69 @@ const AnalysisCanvas = ({
 
       <div className="absolute top-4 right-4 z-30 flex gap-2">
         <button
-          onClick={() => setViewMode('live')}
-          className={`p-2 rounded-lg transition-all ${viewMode === 'live' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-          title="Live View"
+          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2"
+          title="Slides"
         >
-          <MonitorPlay size={16} />
+          <Layers size={14} />
+          Slides
+        </button>
+        <button
+          onClick={() => setScrollEnabled(!scrollEnabled)}
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${scrollEnabled ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+          title="Toggle Scroll"
+        >
+          Scroll
+        </button>
+        <button
+          onClick={() => setViewMode('live')}
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'live' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+          title="Live Site"
+        >
+          Live Site
         </button>
         <button
           onClick={() => setViewMode('snapshot')}
-          className={`p-2 rounded-lg transition-all ${viewMode === 'snapshot' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-          title="Snapshot View"
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'snapshot' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+          title="Schematic View"
         >
-          <Presentation size={16} />
+          Schematic View
+        </button>
+        <button
+          onClick={() => window.open(imgUrl, '_blank')}
+          className="p-2 rounded-lg text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 transition-all"
+          title="Open in New Tab"
+        >
+          <ExternalLink size={16} />
         </button>
       </div>
 
-      <div ref={scrollWrapperRef} className="flex-1 relative overflow-auto">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex items-center gap-4 pointer-events-none">
+        <button
+          onClick={() => setCurrentSlide(Math.max(1, currentSlide - 1))}
+          className="pointer-events-auto p-2 rounded-full bg-white/90 hover:bg-white shadow-lg transition-all disabled:opacity-50"
+          disabled={currentSlide === 1}
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <div className="px-4 py-2 rounded-full bg-white/90 shadow-lg font-medium text-sm pointer-events-auto">
+          Slide {currentSlide} / {totalSlides}
+        </div>
+        <button
+          onClick={() => setCurrentSlide(Math.min(totalSlides, currentSlide + 1))}
+          className="pointer-events-auto p-2 rounded-full bg-white/90 hover:bg-white shadow-lg transition-all disabled:opacity-50"
+          disabled={currentSlide === totalSlides}
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      <div ref={scrollWrapperRef} className={`flex-1 relative ${scrollEnabled ? 'overflow-auto' : 'overflow-hidden'}`}>
         {viewMode === 'live' ? (
           <iframe
             src={imgUrl}
             className="w-full h-full border-0 bg-white"
             title="Website Preview"
+            style={{ pointerEvents: scrollEnabled ? 'auto' : 'none' }}
           />
         ) : screenshot ? (
           <img src={screenshot} alt="Website Snapshot" className="w-full h-auto" />

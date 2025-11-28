@@ -43,16 +43,27 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     logStep("Authenticating user with token");
     
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError || !userData.user?.email) {
-      logStep("Authentication failed - returning unauthenticated response", { error: userError?.message });
+    let user;
+    try {
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+      if (userError || !userData.user?.email) {
+        logStep("Authentication failed - returning unauthenticated response", { error: userError?.message });
+        return new Response(JSON.stringify({ subscribed: false, authenticated: false }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      user = userData.user;
+    } catch (authError) {
+      // Handle thrown exceptions from Supabase client
+      const authErrorMsg = authError instanceof Error ? authError.message : String(authError);
+      logStep("Authentication threw exception - returning unauthenticated response", { error: authErrorMsg });
       return new Response(JSON.stringify({ subscribed: false, authenticated: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
     
-    const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });

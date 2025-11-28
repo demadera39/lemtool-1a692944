@@ -606,7 +606,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
           />
       )}
 
-      <div ref={scrollWrapperRef} className="flex-1 overflow-y-auto overflow-x-hidden relative">
+      <div ref={scrollWrapperRef} className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col">
         {viewMode === 'presentation' && screenshot && !isAnalyzing && interactionMode === 'read_only' && (
             <div className="sticky top-4 z-40 flex items-center gap-4 bg-white/90 backdrop-blur shadow-lg px-4 py-2 rounded-full mb-4 mx-auto w-fit">
                 <button
@@ -629,9 +629,10 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
             </div>
         )}
 
+        <div className={`${viewMode === 'snapshot' ? 'flex-1 flex flex-col' : ''}`}>
         <div
             ref={containerRef}
-            className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl' : ''} ${interactionMode === 'select_area' ? 'cursor-crosshair' : ''}`}
+            className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl flex-shrink-0' : ''} ${interactionMode === 'select_area' ? 'cursor-crosshair' : ''}`}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -701,87 +702,46 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                  </div>
             </div>
           ) : viewMode === 'snapshot' && screenshot ? (
-            <div className="flex flex-col gap-4 h-full">
-              <div ref={imageScrollContainerRef} className="relative w-full flex-1 overflow-y-auto border-4 border-gray-300 rounded-lg">
-                  <div ref={containerRef} className="relative w-full">
-                    <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
-                    <div className="absolute inset-0 z-10 pointer-events-none">
-                      {filteredMarkers.map((marker) => renderMarker(marker))}
-                    </div>
+            <>
+              <div ref={imageScrollContainerRef} className="relative w-full border-4 border-gray-300 rounded-lg overflow-hidden">
+                  <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
+                  <div className="absolute inset-0 z-10 pointer-events-none">
+                    {filteredMarkers.map((marker) => renderMarker(marker))}
+                  </div>
+                  
+                  {/* Visual connection line from active marker to bottom */}
+                  {activeMarkerId && (() => {
+                    const activeMarker = filteredMarkers.find(m => m.id === activeMarkerId);
+                    if (!activeMarker) return null;
                     
-                    {/* Visual connection line from active marker to bottom */}
-                    {activeMarkerId && (() => {
-                      const activeMarker = filteredMarkers.find(m => m.id === activeMarkerId);
-                      if (!activeMarker) return null;
-                      
-                      return (
-                        <svg 
-                          className="absolute inset-0 w-full h-full pointer-events-none z-20"
-                        >
-                          <defs>
-                            <filter id="glow">
-                              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                              <feMerge>
-                                <feMergeNode in="coloredBlur"/>
-                                <feMergeNode in="SourceGraphic"/>
-                              </feMerge>
-                            </filter>
-                          </defs>
-                          <line
-                            x1={`${activeMarker.x}%`}
-                            y1={`${activeMarker.y}%`}
-                            x2={`${activeMarker.x}%`}
-                            y2="100%"
-                            stroke="#F26522"
-                            strokeWidth="3"
-                            strokeDasharray="8 4"
-                            filter="url(#glow)"
-                          />
-                        </svg>
-                      );
-                    })()}
-                  </div>
-              </div>
-              
-              {/* Fixed speech bubble at bottom - always visible */}
-              {activeMarkerId && (() => {
-                const activeMarker = filteredMarkers.find(m => m.id === activeMarkerId);
-                if (!activeMarker) return null;
-                
-                let title = 'Insight';
-                if (activeMarker.layer === 'emotions' && activeMarker.emotion) title = EMOTIONS[activeMarker.emotion].label;
-                if (activeMarker.layer === 'needs') title = activeMarker.need || 'Psych Need';
-                if (activeMarker.layer === 'strategy') title = activeMarker.brief_type || 'Strategic Point';
-                
-                return (
-                  <div className="w-full bg-white rounded-lg shadow-xl p-6 border-2 border-lem-orange animate-in fade-in slide-in-from-bottom-4 duration-300 flex-shrink-0">
-                    <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
-                      <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2">
-                        {activeMarker.layer === 'emotions' && activeMarker.emotion ? (
-                          <div className="transform scale-75 origin-left">
-                            <EmotionToken emotion={activeMarker.emotion} size="sm" />
-                          </div>
-                        ) : activeMarker.source === 'HUMAN' ? (
-                          <UserIcon size={18} className="text-blue-500" />
-                        ) : (
-                          <Bot size={18} className="text-lem-orange" />
-                        )}
-                        {title}
-                      </h4>
-                      <button 
-                        onClick={() => setActiveMarkerId(null)} 
-                        className="text-gray-400 hover:text-gray-700 transition-colors bg-gray-100 rounded-full p-1.5 hover:bg-gray-200"
+                    return (
+                      <svg 
+                        className="absolute inset-0 w-full h-full pointer-events-none z-20"
                       >
-                        <X size={18} />
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed max-h-32 overflow-y-auto">
-                      {activeMarker.comment}
-                    </p>
-                  </div>
-                );
-              })()}
-            </div>
+                        <defs>
+                          <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge>
+                              <feMergeNode in="coloredBlur"/>
+                              <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                          </filter>
+                        </defs>
+                        <line
+                          x1={`${activeMarker.x}%`}
+                          y1={`${activeMarker.y}%`}
+                          x2={`${activeMarker.x}%`}
+                          y2="100%"
+                          stroke="#F26522"
+                          strokeWidth="3"
+                          strokeDasharray="8 4"
+                          filter="url(#glow)"
+                        />
+                      </svg>
+                    );
+                  })()}
+              </div>
+            </>
           ) : (
             <>
               <div className="absolute inset-0 z-0">
@@ -797,6 +757,46 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
               </div>
             </>
           )}
+        </div>
+        
+        {/* Fixed speech bubble outside containerRef for snapshot view */}
+        {viewMode === 'snapshot' && activeMarkerId && (() => {
+          const activeMarker = markers.find(m => m.id === activeMarkerId && m.layer === activeLayer);
+          if (!activeMarker) return null;
+          
+          let title = 'Insight';
+          if (activeMarker.layer === 'emotions' && activeMarker.emotion) title = EMOTIONS[activeMarker.emotion].label;
+          if (activeMarker.layer === 'needs') title = activeMarker.need || 'Psych Need';
+          if (activeMarker.layer === 'strategy') title = activeMarker.brief_type || 'Strategic Point';
+          
+          return (
+            <div className="w-full max-w-6xl mx-auto mt-4 bg-white rounded-lg shadow-xl p-6 border-2 border-lem-orange animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
+                <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                  {activeMarker.layer === 'emotions' && activeMarker.emotion ? (
+                    <div className="transform scale-75 origin-left">
+                      <EmotionToken emotion={activeMarker.emotion} size="sm" />
+                    </div>
+                  ) : activeMarker.source === 'HUMAN' ? (
+                    <UserIcon size={18} className="text-blue-500" />
+                  ) : (
+                    <Bot size={18} className="text-lem-orange" />
+                  )}
+                  {title}
+                </h4>
+                <button 
+                  onClick={() => setActiveMarkerId(null)} 
+                  className="text-gray-400 hover:text-gray-700 transition-colors bg-gray-100 rounded-full p-1.5 hover:bg-gray-200"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed max-h-32 overflow-y-auto">
+                {activeMarker.comment}
+              </p>
+            </div>
+          );
+        })()}
         </div>
       </div>
     </div>

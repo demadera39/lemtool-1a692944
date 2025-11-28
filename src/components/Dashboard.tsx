@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { User, Project, TestSession } from '../types';
 import { getProjects, getProjectSessions } from '../services/supabaseService';
-import { Plus, Layout, Users, LogOut, ExternalLink, Calendar } from 'lucide-react';
+import { getRemainingAnalyses } from '../services/userRoleService';
+import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown } from 'lucide-react';
 import { Button } from './ui/button';
 import AnalysisCanvas from './AnalysisCanvas';
 import ReportPanel from './ReportPanel';
@@ -22,10 +23,17 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [activeLayer, setActiveLayer] = useState<'emotions' | 'needs' | 'strategy'>('emotions');
   const [showAI, setShowAI] = useState(true);
   const [showHumans, setShowHumans] = useState(true);
+  const [remainingAnalyses, setRemainingAnalyses] = useState<number>(-1);
 
   useEffect(() => {
     loadProjects();
+    loadUserRole();
   }, [user]);
+
+  const loadUserRole = async () => {
+    const remaining = await getRemainingAnalyses(user.id);
+    setRemainingAnalyses(remaining);
+  };
 
   useEffect(() => {
     if (selectedProject) {
@@ -146,7 +154,18 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
             </svg>
             <div>
               <h1 className="text-xl font-black text-gray-900">LEMtool Dashboard</h1>
-              <p className="text-sm text-gray-500">{user.email}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-500">{user.email}</p>
+                {remainingAnalyses === -1 ? (
+                  <span className="flex items-center gap-1 text-xs font-bold text-lem-orange">
+                    <Crown size={12} />Premium
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+                    {remainingAnalyses} analyses left
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex gap-2">

@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Toolbar from '@/components/Toolbar';
 import AnalysisCanvas from '@/components/AnalysisCanvas';
 import ReportPanel from '@/components/ReportPanel';
 import Dashboard from '@/components/Dashboard';
 import ParticipantView from '@/components/ParticipantView';
-import LoginModal from '@/components/LoginModal';
 import AboutModal from '@/components/AboutModal';
 import { Marker, EmotionType, User, LayerType, Project } from '@/types';
 import { analyzeWebsite } from '@/services/geminiService';
 import { supabase, signOut, createProject, getProjectById } from '@/services/supabaseService';
-import { Search, Info, AlertCircle, X, Save } from 'lucide-react';
+import { getUserRole, canCreateAnalysis, incrementAnalysisCount, getRemainingAnalyses } from '@/services/userRoleService';
+import { Search, Info, AlertCircle, X, Save, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'participant'>('landing');
   const [testProject, setTestProject] = useState<Project | null>(null);
   const [url, setUrl] = useState('');
@@ -24,33 +26,38 @@ const Index = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [validUrl, setValidUrl] = useState('');
   const [user, setUser] = useState<User | null>(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [activeLayer, setActiveLayer] = useState<LayerType>('emotions');
   const [showInfoBanner, setShowInfoBanner] = useState(true);
+  const [remainingAnalyses, setRemainingAnalyses] = useState<number>(-1);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser({
+        const newUser = {
           id: session.user.id,
           email: session.user.email!,
           name: session.user.user_metadata.full_name || session.user.user_metadata.name,
           isAdmin: false
-        });
+        };
+        setUser(newUser);
+        loadUserRole(session.user.id);
       } else {
         setUser(null);
+        setRemainingAnalyses(-1);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        setUser({
+        const newUser = {
           id: session.user.id,
           email: session.user.email!,
           name: session.user.user_metadata.full_name || session.user.user_metadata.name,
           isAdmin: false
-        });
+        };
+        setUser(newUser);
+        loadUserRole(session.user.id);
       }
     });
 
@@ -68,12 +75,52 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const loadUserRole = async (userId: string) => {
+    const remaining = await getRemainingAnalyses(userId);
+    setRemainingAnalyses(remaining);
+  };
+
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
     let targetUrl = url.trim();
     if (!targetUrl) return;
     if (!targetUrl.match(/^https?:\/\//i)) targetUrl = 'https://' + targetUrl;
     
+    // Check if user is logged in
+    if (!user) {
+      // Anonymous preview mode - limited to 4 markers per category
+      setUrl(targetUrl);
+      setValidUrl(targetUrl);
+      setHasStarted(true);
+      setIsAnalyzing(true);
+      setMarkers([]);
+      setReport(null);
+      setActiveLayer('emotions');
+
+      try {
+        const result = await analyzeWebsite(targetUrl);
+        // Limit markers for anonymous users
+        const limitedMarkers = result.markers.slice(0, 4);
+        setMarkers(limitedMarkers);
+        // Create preview report with limited data
+        setReport({ ...result.report, isPreview: true });
+        toast.info('Preview mode - Sign up for full analysis!');
+      } catch (error) {
+        console.error("Analysis Error:", error);
+        toast.error('Analysis failed.');
+      } finally {
+        setIsAnalyzing(false);
+      }
+      return;
+    }
+
+    // Check if user can create analysis
+    const canCreate = await canCreateAnalysis(user.id);
+    if (!canCreate) {
+      toast.error('You have reached your analysis limit. Upgrade to premium!');
+      return;
+    }
+
     setUrl(targetUrl);
     setValidUrl(targetUrl);
     setHasStarted(true);
@@ -86,10 +133,12 @@ const Index = () => {
       const result = await analyzeWebsite(targetUrl);
       setMarkers(result.markers);
       setReport(result.report);
+      await incrementAnalysisCount(user.id);
+      await loadUserRole(user.id);
       toast.success('Analysis complete!');
     } catch (error) {
       console.error("Analysis Error:", error);
-      toast.error('Analysis failed. Using demo mode.');
+      toast.error('Analysis failed.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -138,7 +187,6 @@ const Index = () => {
 
   return (
     <div className="flex h-screen w-screen bg-gray-50 text-gray-900 overflow-hidden">
-      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLoginSuccess={(u) => { setUser(u); setShowLoginModal(false); }} />
       <AboutModal isOpen={showAboutModal} onClose={() => setShowAboutModal(false)} />
       <Toolbar onAddMarker={handleAddMarker} />
 
@@ -163,10 +211,25 @@ const Index = () => {
           </form>
 
           <div className="w-32 flex justify-end gap-2">
-            {report && user && <Button size="sm" variant="outline" onClick={handleSaveProject}><Save size={12} className="mr-1" />Save</Button>}
-            <button onClick={() => user ? setCurrentView('dashboard') : setShowLoginModal(true)} className="text-xs font-bold text-gray-400 hover:text-lem-orange">
-              {user ? 'Dashboard' : 'Login'}
-            </button>
+            {report && user && !report.isPreview && (
+              <Button size="sm" variant="outline" onClick={handleSaveProject}>
+                <Save size={12} className="mr-1" />Save
+              </Button>
+            )}
+            {user ? (
+              <div className="flex flex-col items-end">
+                <button onClick={() => setCurrentView('dashboard')} className="text-xs font-bold text-gray-700 hover:text-lem-orange">
+                  Dashboard
+                </button>
+                <span className="text-[10px] text-gray-500">
+                  {remainingAnalyses === -1 ? 'Premium' : `${remainingAnalyses} left`}
+                </span>
+              </div>
+            ) : (
+              <button onClick={() => navigate('/auth')} className="text-xs font-bold text-gray-400 hover:text-lem-orange">
+                Sign In
+              </button>
+            )}
           </div>
         </header>
 
@@ -196,7 +259,28 @@ const Index = () => {
           </div>
 
           <div className="w-96 h-full shadow-xl z-20 bg-white border-l border-gray-200 flex-shrink-0">
-            <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} />
+            {report?.isPreview && !user ? (
+              <div className="h-full flex flex-col">
+                <div className="flex-1 blur-sm pointer-events-none">
+                  <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+                  <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md text-center">
+                    <Lock size={48} className="mx-auto mb-4 text-lem-orange" />
+                    <h3 className="text-2xl font-black text-gray-900 mb-2">Unlock Full Report</h3>
+                    <p className="text-gray-600 mb-6">
+                      Sign up for free to get detailed analysis, all markers, and participant testing features!
+                    </p>
+                    <Button onClick={() => navigate('/auth')} className="w-full bg-lem-orange hover:bg-lem-orange-dark mb-3">
+                      Get Started Free
+                    </Button>
+                    <p className="text-xs text-gray-500">3 free analyses • No credit card required</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} />
+            )}
           </div>
         </div>
       </div>

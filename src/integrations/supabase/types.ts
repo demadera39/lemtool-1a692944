@@ -132,15 +132,71 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          analyses_limit: number
+          analyses_used: number
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_end: string | null
+          subscription_start: string | null
+          subscription_status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          analyses_limit?: number
+          analyses_used?: number
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_end?: string | null
+          subscription_start?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          analyses_limit?: number
+          analyses_used?: number
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_end?: string | null
+          subscription_start?: string | null
+          subscription_status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_analyses_count: { Args: { _user_id: string }; Returns: number }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      increment_analysis_count: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "free" | "premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -267,6 +323,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["free", "premium"],
+    },
   },
 } as const

@@ -173,6 +173,9 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
               <Plus size={18} className="mr-2" />
               New Analysis
             </Button>
+            <Button variant="outline" onClick={() => window.location.href = '/settings'}>
+              Settings
+            </Button>
             <Button variant="outline" onClick={onLogout}>
               <LogOut size={18} className="mr-2" />
               Logout

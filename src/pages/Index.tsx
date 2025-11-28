@@ -39,6 +39,7 @@ const Index = () => {
           isAdmin: false
         };
         setUser(newUser);
+        setTimeout(() => checkSubscription(session.user.id), 0);
         loadUserRole(session.user.id);
       } else {
         setUser(null);
@@ -55,6 +56,7 @@ const Index = () => {
           isAdmin: false
         };
         setUser(newUser);
+        setTimeout(() => checkSubscription(session.user.id), 0);
         loadUserRole(session.user.id);
       }
     });
@@ -72,6 +74,14 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkSubscription = async (userId: string) => {
+    try {
+      await supabase.functions.invoke('check-subscription');
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+    }
+  };
 
   const loadUserRole = async (userId: string) => {
     const remaining = await getRemainingAnalyses(userId);
@@ -210,20 +220,23 @@ const Index = () => {
             </Button>
           </form>
 
-          <div className="w-32 flex justify-end gap-2">
+          <div className="w-32 flex justify-end gap-2 items-center">
             {report && user && !report.isPreview && (
               <Button size="sm" variant="outline" onClick={handleSaveProject}>
                 <Save size={12} className="mr-1" />Save
               </Button>
             )}
             {user ? (
-              <div className="flex flex-col items-end">
-                <button onClick={() => setCurrentView('dashboard')} className="text-xs font-bold text-gray-700 hover:text-lem-orange">
-                  Dashboard
+              <div className="flex gap-3 items-center">
+                <button onClick={() => navigate('/settings')} className="text-xs font-medium text-gray-500 hover:text-lem-orange flex items-center gap-1">
+                  Settings
                 </button>
-                <span className="text-[10px] text-gray-500">
-                  {remainingAnalyses === -1 ? 'Premium' : `${remainingAnalyses} left`}
-                </span>
+                <button onClick={() => setCurrentView('dashboard')} className="text-xs font-bold text-gray-700 hover:text-lem-orange flex flex-col items-end">
+                  <span>Dashboard</span>
+                  <span className="text-[10px] text-gray-500">
+                    {remainingAnalyses === -1 ? '✨ Premium' : `${remainingAnalyses} left`}
+                  </span>
+                </button>
               </div>
             ) : (
               <button onClick={() => navigate('/auth')} className="text-xs font-bold text-gray-400 hover:text-lem-orange">

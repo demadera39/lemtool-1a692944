@@ -701,8 +701,8 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                  </div>
             </div>
           ) : viewMode === 'snapshot' && screenshot ? (
-            <>
-              <div ref={imageScrollContainerRef} className="relative w-full max-h-[80vh] overflow-y-auto border-4 border-gray-300 rounded-lg">
+            <div className="flex flex-col gap-4 h-full">
+              <div ref={imageScrollContainerRef} className="relative w-full flex-1 overflow-y-auto border-4 border-gray-300 rounded-lg">
                   <div ref={containerRef} className="relative w-full">
                     <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
                     <div className="absolute inset-0 z-10 pointer-events-none">
@@ -743,7 +743,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                   </div>
               </div>
               
-              {/* Fixed speech bubble at bottom */}
+              {/* Fixed speech bubble at bottom - always visible */}
               {activeMarkerId && (() => {
                 const activeMarker = filteredMarkers.find(m => m.id === activeMarkerId);
                 if (!activeMarker) return null;
@@ -754,7 +754,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                 if (activeMarker.layer === 'strategy') title = activeMarker.brief_type || 'Strategic Point';
                 
                 return (
-                  <div className="mt-4 bg-white rounded-lg shadow-xl p-6 border-2 border-lem-orange animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="w-full bg-white rounded-lg shadow-xl p-6 border-2 border-lem-orange animate-in fade-in slide-in-from-bottom-4 duration-300 flex-shrink-0">
                     <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
                       <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2">
                         {activeMarker.layer === 'emotions' && activeMarker.emotion ? (
@@ -775,13 +775,13 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                         <X size={18} />
                       </button>
                     </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">
+                    <p className="text-sm text-gray-700 leading-relaxed max-h-32 overflow-y-auto">
                       {activeMarker.comment}
                     </p>
                   </div>
                 );
               })()}
-            </>
+            </div>
           ) : (
             <>
               <div className="absolute inset-0 z-0">

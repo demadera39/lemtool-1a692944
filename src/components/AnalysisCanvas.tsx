@@ -708,59 +708,68 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                     <div className="absolute inset-0 z-10 pointer-events-none">
                       {filteredMarkers.map((marker) => renderMarker(marker))}
                     </div>
+                    
+                    {/* Visual connection line from active marker to bottom */}
+                    {activeMarkerId && (() => {
+                      const activeMarker = filteredMarkers.find(m => m.id === activeMarkerId);
+                      if (!activeMarker) return null;
+                      
+                      return (
+                        <svg 
+                          className="absolute inset-0 w-full h-full pointer-events-none z-20"
+                        >
+                          <defs>
+                            <filter id="glow">
+                              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                              <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                              </feMerge>
+                            </filter>
+                          </defs>
+                          <line
+                            x1={`${activeMarker.x}%`}
+                            y1={`${activeMarker.y}%`}
+                            x2={`${activeMarker.x}%`}
+                            y2="100%"
+                            stroke="#F26522"
+                            strokeWidth="3"
+                            strokeDasharray="8 4"
+                            filter="url(#glow)"
+                          />
+                        </svg>
+                      );
+                    })()}
                   </div>
               </div>
-              {/* Active bubble overlay - rendered outside clipping container */}
+              
+              {/* Fixed speech bubble at bottom */}
               {activeMarkerId && (() => {
                 const activeMarker = filteredMarkers.find(m => m.id === activeMarkerId);
                 if (!activeMarker) return null;
                 
+                let title = 'Insight';
+                if (activeMarker.layer === 'emotions' && activeMarker.emotion) title = EMOTIONS[activeMarker.emotion].label;
+                if (activeMarker.layer === 'needs') title = activeMarker.need || 'Psych Need';
+                if (activeMarker.layer === 'strategy') title = activeMarker.brief_type || 'Strategic Point';
+                
                 return (
-                  <div className="absolute inset-0 z-50 pointer-events-none overflow-visible">
-                    {/* Connection line from marker to bubble */}
-                    <svg 
-                      className="absolute inset-0 w-full h-full pointer-events-none"
-                      style={{ zIndex: 49 }}
-                    >
-                      <defs>
-                        <marker
-                          id="arrowhead"
-                          markerWidth="10"
-                          markerHeight="10"
-                          refX="5"
-                          refY="5"
-                          orient="auto"
-                        >
-                          <polygon points="0 0, 10 5, 0 10" fill="#F26522" />
-                        </marker>
-                      </defs>
-                      <line
-                        x1={`${activeMarker.x}%`}
-                        y1={`${activeMarker.y}%`}
-                        x2={`${activeMarker.x}%`}
-                        y2={`calc(${activeMarker.y}% - 80px)`}
-                        stroke="#F26522"
-                        strokeWidth="2"
-                        strokeDasharray="4 4"
-                        markerEnd="url(#arrowhead)"
-                      />
-                    </svg>
-                    
-                    <div 
-                      style={{ 
-                        position: 'absolute', 
-                        left: `${activeMarker.x}%`, 
-                        top: `${activeMarker.y}%`,
-                        transform: 'translate(-50%, -50%)'
-                      }} 
-                      className="pointer-events-auto"
-                    >
-                      <SpeechBubble
-                        marker={activeMarker}
-                        onClose={() => setActiveMarkerId(null)}
-                        allMarkers={filteredMarkers}
-                      />
+                  <div className="mt-4 bg-white rounded-lg shadow-xl p-6 border-2 border-lem-orange animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
+                      <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                        {activeMarker.source === 'HUMAN' ? <UserIcon size={18} className="text-blue-500" /> : <Bot size={18} className="text-lem-orange" />}
+                        {title}
+                      </h4>
+                      <button 
+                        onClick={() => setActiveMarkerId(null)} 
+                        className="text-gray-400 hover:text-gray-700 transition-colors bg-gray-100 rounded-full p-1.5 hover:bg-gray-200"
+                      >
+                        <X size={18} />
+                      </button>
                     </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {activeMarker.comment}
+                    </p>
                   </div>
                 );
               })()}

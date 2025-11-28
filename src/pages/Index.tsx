@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { AnalysisCanvas } from '@/components/AnalysisCanvas';
-import { ReportPanel } from '@/components/ReportPanel';
+import AnalysisCanvas from '@/components/AnalysisCanvas';
+import ReportPanel from '@/components/ReportPanel';
+import Toolbar from '@/components/Toolbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Marker, AnalysisReport, EmotionType } from '@/types/lemtool';
+import { Marker, AnalysisReport, EmotionType, LayerType } from '@/types';
 import { Search, Info, AlertCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -15,52 +16,92 @@ const Index = () => {
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [showInfoBanner, setShowInfoBanner] = useState(true);
+  const [activeLayer, setActiveLayer] = useState<LayerType>('emotions');
 
   const analyzeWebsite = async (targetUrl: string): Promise<{ markers: Marker[]; report: AnalysisReport }> => {
-    // Simulate AI analysis - In production, this would call Lovable AI
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    const emotions: EmotionType[] = ['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation'];
+    const emotions: EmotionType[] = [
+      EmotionType.JOY,
+      EmotionType.DESIRE,
+      EmotionType.FASCINATION,
+      EmotionType.SATISFACTION,
+      EmotionType.SADNESS,
+      EmotionType.DISGUST
+    ];
     
-    // Generate random markers
     const generatedMarkers: Marker[] = Array.from({ length: 6 }, (_, i) => ({
       id: `marker-${i}`,
       x: 20 + Math.random() * 60,
       y: 15 + Math.random() * 70,
+      layer: 'emotions' as LayerType,
       emotion: emotions[Math.floor(Math.random() * emotions.length)],
       comment: 'AI-detected emotional trigger point',
-      timestamp: Date.now(),
+      source: 'AI' as const,
     }));
 
-    // Generate emotion distribution
-    const emotionDist: Record<EmotionType, number> = {
-      joy: Math.floor(Math.random() * 30),
-      trust: Math.floor(Math.random() * 25),
-      fear: Math.floor(Math.random() * 15),
-      surprise: Math.floor(Math.random() * 10),
-      sadness: Math.floor(Math.random() * 10),
-      disgust: Math.floor(Math.random() * 5),
-      anger: Math.floor(Math.random() * 5),
-      anticipation: Math.floor(Math.random() * 20),
-    };
-
     const generatedReport: AnalysisReport = {
-      url: targetUrl,
       overallScore: 65 + Math.floor(Math.random() * 25),
-      emotions: emotionDist,
-      insights: [
-        'Strong positive emotional triggers in hero section',
-        'Call-to-action buttons evoke trust and anticipation',
-        'Color scheme promotes feelings of joy and confidence',
-        'Navigation design reduces cognitive friction',
+      summary: 'This website demonstrates strong emotional engagement through well-placed visual elements and clear messaging. The design effectively balances user needs with business goals.',
+      targetAudience: 'Tech-savvy professionals aged 25-45 seeking innovative solutions',
+      audienceSplit: [
+        { label: 'Early Adopters', percentage: 45 },
+        { label: 'Pragmatists', percentage: 35 },
+        { label: 'Conservative Users', percentage: 20 }
       ],
-      recommendations: [
+      personas: [
+        {
+          name: 'Sarah Chen',
+          role: 'Product Manager',
+          bio: 'Results-driven PM at a mid-sized tech company',
+          goals: 'Find efficient tools to streamline team workflows',
+          quote: 'I need solutions that just work without a steep learning curve',
+          techLiteracy: 'High',
+          psychographics: 'Values efficiency, innovation, and collaboration',
+          values: ['Efficiency', 'Innovation', 'Team Success'],
+          frustrations: ['Complex interfaces', 'Poor documentation', 'Slow support']
+        }
+      ],
+      brandValues: ['Innovation', 'Reliability', 'User-First Design'],
+      keyFindings: [
+        {
+          title: 'Strong Visual Hierarchy',
+          description: 'The layout effectively guides users through key information',
+          type: 'positive'
+        },
+        {
+          title: 'Clear Call-to-Actions',
+          description: 'Primary actions are prominently displayed and easy to find',
+          type: 'positive'
+        },
+        {
+          title: 'Navigation Complexity',
+          description: 'Some users may find the menu structure overwhelming',
+          type: 'negative'
+        }
+      ],
+      suggestions: [
         'Enhance trust signals near CTAs',
         'Add social proof elements',
         'Optimize color contrast for accessibility',
-        'Strengthen emotional connection in copy',
+        'Strengthen emotional connection in copy'
       ],
-      timestamp: Date.now(),
+      layoutStructure: [
+        { type: 'hero', estimatedHeight: 600, backgroundColorHint: 'light' },
+        { type: 'features', estimatedHeight: 800, backgroundColorHint: 'light' },
+        { type: 'testimonials', estimatedHeight: 400, backgroundColorHint: 'light' }
+      ],
+      sdtScores: {
+        autonomy: { score: 7, justification: 'Users have control over their experience with clear choices' },
+        competence: { score: 8, justification: 'Interface provides immediate feedback and guidance' },
+        relatedness: { score: 6, justification: 'Social elements present but could be more prominent' }
+      },
+      creativeBrief: {
+        problemStatement: 'Users struggle to find the information they need quickly',
+        targetEmotion: 'Confidence and Trust',
+        howMightWe: 'How might we simplify navigation while maintaining comprehensive content?',
+        strategicDirection: 'Focus on progressive disclosure and contextual help'
+      }
     };
 
     return { markers: generatedMarkers, report: generatedReport };
@@ -85,6 +126,7 @@ const Index = () => {
     setIsAnalyzing(true);
     setMarkers([]);
     setReport(null);
+    setActiveLayer('emotions');
 
     try {
       const result = await analyzeWebsite(targetUrl);
@@ -99,16 +141,28 @@ const Index = () => {
     }
   };
 
-  const handleRemoveMarker = (id: string) => {
-    setMarkers(prev => prev.filter(m => m.id !== id));
+  const handleAddMarker = (emotion: EmotionType) => {
+    if (!hasStarted || activeLayer !== 'emotions') return;
+    const newMarker: Marker = {
+      id: Math.random().toString(36).substr(2, 9),
+      x: 50,
+      y: 20,
+      layer: 'emotions',
+      emotion,
+      source: 'AI',
+      comment: 'Manually added emotion marker'
+    };
+    setMarkers(prev => [...prev, newMarker]);
   };
 
   return (
-    <div className="flex h-screen w-screen bg-background overflow-hidden">
-      <div className="flex-1 flex flex-col h-full">
-        <header className="h-16 bg-card border-b border-border flex items-center px-6 shadow-sm z-10 justify-between flex-shrink-0">
+    <div className="flex h-screen w-screen bg-gray-50 text-gray-900 overflow-hidden">
+      <Toolbar onAddMarker={handleAddMarker} />
+
+      <div className="flex-1 flex flex-col h-full relative">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm z-10 justify-between flex-shrink-0">
           <div className="w-32 flex justify-start">
-            <button className="text-xs font-medium text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors">
+            <button className="text-xs font-medium text-gray-500 hover:text-lem-orange flex items-center gap-1 transition-colors">
               <Info size={14} />
               About LEMtool
             </button>
@@ -117,11 +171,11 @@ const Index = () => {
           <form onSubmit={handleAnalyze} className="flex-1 max-w-2xl mx-auto flex items-center gap-2">
             <div className="relative flex-1 group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search size={16} className="text-muted-foreground group-focus-within:text-primary" />
+                <Search size={16} className="text-gray-400 group-focus-within:text-lem-orange" />
               </div>
               <Input
                 type="text"
-                placeholder="Enter website URL (e.g., www.example.com)"
+                placeholder="Enter website URL (e.g., www.metodic.io)"
                 className="pl-10"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -131,57 +185,67 @@ const Index = () => {
             <Button
               type="submit"
               disabled={isAnalyzing || !url}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-lem-orange hover:bg-lem-orange-dark"
             >
-              {isAnalyzing ? 'Analyzing...' : 'Analyze'}
+              {isAnalyzing ? 'Thinking...' : 'Analyze'}
             </Button>
           </form>
 
           <div className="w-32 flex justify-end">
-            <button className="text-xs font-medium text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors">
+            <button className="text-xs font-bold text-gray-400 hover:text-lem-orange flex items-center gap-1">
               Login
             </button>
           </div>
         </header>
 
         {showInfoBanner && (
-          <div className="bg-accent border-b border-border text-accent-foreground text-xs px-6 py-2 flex items-center justify-between">
+          <div className="bg-orange-50 border-b border-orange-200 text-orange-900 text-xs px-6 py-2 flex items-center justify-between z-[5]">
             <div className="flex items-center gap-2">
-              <AlertCircle size={14} className="text-primary" />
+              <AlertCircle size={14} className="text-lem-orange" />
               <span>
-                <strong>Note:</strong> Some websites have security that blocks live previews. The analysis still works perfectly!
+                <strong>Note:</strong> Some websites have security that blocks live previews. Don't worry, the analysis still works perfectly!
               </span>
             </div>
-            <button onClick={() => setShowInfoBanner(false)} className="hover:bg-accent/80 p-1 rounded-full">
+            <button onClick={() => setShowInfoBanner(false)} className="hover:bg-orange-100 p-1 rounded-full">
               <X size={14} />
             </button>
           </div>
         )}
 
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 bg-muted/30 relative flex flex-col overflow-hidden p-6">
+        <div className="flex-1 flex overflow-hidden relative">
+          <div className="flex-1 bg-gray-100 relative flex flex-col overflow-hidden">
             {!hasStarted ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center max-w-md mx-auto">
-                <div className="w-24 h-24 bg-muted rounded-full mb-6 flex items-center justify-center text-4xl border-4 border-border">
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto text-gray-500">
+                <div className="w-24 h-24 bg-gray-200 rounded-full mb-6 flex items-center justify-center text-4xl grayscale opacity-50 border-4 border-gray-200">
                   😑
                 </div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">Ready to Measure Emotion?</h2>
-                <p className="text-muted-foreground mb-6">
-                  Enter a URL above. The website will load, and AI will overlay emotional markers showing how users feel.
-                </p>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">Ready to Measure Emotion?</h2>
+                <p className="mb-6">Enter a URL above. The live website will load, and AI will overlay emotional markers.</p>
               </div>
             ) : (
-              <AnalysisCanvas
-                url={validUrl}
-                markers={markers}
-                onRemoveMarker={handleRemoveMarker}
-                isAnalyzing={isAnalyzing}
-              />
+              <div className="w-full h-full relative p-6">
+                <AnalysisCanvas
+                  imgUrl={validUrl}
+                  markers={markers}
+                  setMarkers={setMarkers}
+                  isAnalyzing={isAnalyzing}
+                  activeLayer={activeLayer}
+                  setActiveLayer={setActiveLayer}
+                  screenshot={report?.screenshot}
+                />
+              </div>
             )}
           </div>
 
-          <div className="w-96 h-full shadow-xl bg-card border-l border-border flex-shrink-0 overflow-hidden">
-            <ReportPanel report={report} isAnalyzing={isAnalyzing} />
+          <div className="w-96 h-full shadow-xl z-20 bg-white border-l border-gray-200 flex-shrink-0">
+            <ReportPanel
+              report={report}
+              markers={markers}
+              isAnalyzing={isAnalyzing}
+              currentUrl={validUrl}
+              activeLayer={activeLayer}
+              setActiveLayer={setActiveLayer}
+            />
           </div>
         </div>
       </div>

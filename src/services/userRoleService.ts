@@ -18,11 +18,32 @@ export const getUserRole = async (userId: string): Promise<UserRole | null> => {
     .from('user_roles')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error fetching user role:', error);
     return null;
+  }
+
+  // If no role exists, create default free role
+  if (!data) {
+    const { data: newRole, error: createError } = await supabase
+      .from('user_roles')
+      .insert({
+        user_id: userId,
+        role: 'free',
+        analyses_used: 0,
+        analyses_limit: 3
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('Error creating user role:', createError);
+      return null;
+    }
+
+    return newRole;
   }
 
   return data;

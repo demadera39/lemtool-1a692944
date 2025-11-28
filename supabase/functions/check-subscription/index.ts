@@ -83,32 +83,32 @@ serve(async (req) => {
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
       
-      // Update user role to premium
+      // Upsert user role to premium
       await supabaseClient
         .from('user_roles')
-        .update({ 
+        .upsert({ 
+          user_id: user.id,
           role: 'premium',
           stripe_customer_id: customerId,
           stripe_subscription_id: subscription.id,
           subscription_status: subscription.status,
           subscription_start: new Date(subscription.current_period_start * 1000).toISOString(),
           subscription_end: subscriptionEnd
-        })
-        .eq('user_id', user.id);
+        }, { onConflict: 'user_id' });
     } else {
       logStep("No active subscription found");
-      // Update user role to free
+      // Upsert user role to free
       await supabaseClient
         .from('user_roles')
-        .update({ 
+        .upsert({ 
+          user_id: user.id,
           role: 'free',
           stripe_customer_id: customerId,
           stripe_subscription_id: null,
           subscription_status: null,
           subscription_start: null,
           subscription_end: null
-        })
-        .eq('user_id', user.id);
+        }, { onConflict: 'user_id' });
     }
 
     return new Response(JSON.stringify({

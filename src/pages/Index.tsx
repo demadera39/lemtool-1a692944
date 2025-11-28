@@ -19,6 +19,7 @@ const Index = () => {
   const [activeLayer, setActiveLayer] = useState<LayerType>('emotions');
 
   const analyzeWebsite = async (targetUrl: string): Promise<{ markers: Marker[]; report: AnalysisReport }> => {
+    // For now, using simulated analysis - will be replaced with real Gemini API call
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     const emotions: EmotionType[] = [

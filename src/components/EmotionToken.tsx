@@ -20,15 +20,15 @@ const EmotionToken = ({
   const [imgError, setImgError] = useState(false);
 
   const sizeClasses = {
-    sm: 'w-10 h-10',
-    md: 'w-14 h-14',
-    lg: 'w-20 h-20',
+    sm: 'w-12 h-12',
+    md: 'w-20 h-20',
+    lg: 'w-28 h-28',
   };
 
   const iconSize = {
-    sm: 20,
-    md: 28,
-    lg: 40
+    sm: 24,
+    md: 36,
+    lg: 48
   };
 
   const paddingClass = imgError ? 'p-2.5 bg-gray-100' : 'p-0 bg-transparent';
@@ -37,11 +37,17 @@ const EmotionToken = ({
     <div
       onClick={onClick}
       className={`
-        relative rounded-full flex items-center justify-center transition-transform duration-200 cursor-pointer select-none overflow-hidden
+        relative rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer select-none overflow-hidden
         ${sizeClasses[size]}
-        ${selected ? 'ring-4 ring-white ring-opacity-50 scale-110 z-10 shadow-xl' : 'hover:scale-105 shadow-md'}
+        ${selected ? 'ring-4 ring-white scale-125 z-10 animate-pulse' : 'hover:scale-110'}
         ${paddingClass}
       `}
+      style={{
+        boxShadow: selected 
+          ? '0 0 30px rgba(255, 255, 255, 0.9), 0 0 60px rgba(242, 101, 34, 0.5)' 
+          : '0 0 20px rgba(255, 255, 255, 0.7), 0 4px 12px rgba(0, 0, 0, 0.15)',
+        animation: selected ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : undefined
+      }}
       title={def.description}
       role="button"
       aria-label={def.label}

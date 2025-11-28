@@ -97,7 +97,7 @@ const AnalysisCanvas = ({
     if (scrollHeight <= 0) return;
 
     let scrollProgress = 0;
-    const scrollDuration = 10000; // 10 seconds total scroll
+    const scrollDuration = 30000; // 30 seconds total scroll
     const scrollStep = 50; // Update every 50ms
     const totalSteps = scrollDuration / scrollStep;
     const scrollIncrement = scrollHeight / totalSteps;

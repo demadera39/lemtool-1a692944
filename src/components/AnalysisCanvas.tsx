@@ -185,6 +185,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
     interactionMode = 'read_only', onCanvasClick, onAreaSelect
 }) => {
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
+  const [selectedEmotionMarker, setSelectedEmotionMarker] = useState<Marker | null>(null);
   const [showSchematic, setShowSchematic] = useState(false);
   const [viewMode, setViewMode] = useState<'snapshot' | 'live' | 'presentation'>('live');
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
@@ -270,6 +271,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
 
   const handleBackgroundClick = (e: React.MouseEvent) => {
       setActiveMarkerId(null);
+      // Don't clear selected emotion banner on background click
       if (interactionMode === 'place_marker' && onCanvasClick && containerRef.current) {
           const rect = containerRef.current.getBoundingClientRect();
           const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -320,6 +322,12 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   const handleMarkerClick = (e: React.MouseEvent, markerId: string) => {
       e.stopPropagation();
       setActiveMarkerId(markerId);
+      
+      // If it's an emotion marker, show it in the banner
+      const marker = markers.find(m => m.id === markerId);
+      if (marker && marker.layer === 'emotions' && marker.emotion) {
+          setSelectedEmotionMarker(marker);
+      }
   };
 
   const filteredMarkers = markers.filter(m => m.layer === activeLayer);
@@ -508,6 +516,35 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
         <div className="absolute top-14 left-1/2 -translate-x-1/2 bg-yellow-100 text-yellow-800 text-sm font-bold px-4 py-2 rounded-lg shadow-lg z-35 flex items-center gap-2 cursor-pointer" onClick={() => setShowSchematic(true)}>
             <AlertTriangle size={16} />
             <span>Website preview might be blocked. Click here to switch to Schematic View if it's blank.</span>
+        </div>
+      )}
+
+      {/* Selected Emotion Banner */}
+      {selectedEmotionMarker && selectedEmotionMarker.emotion && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 max-w-4xl w-[95%] bg-white border-2 border-lem-orange rounded-xl shadow-2xl z-40 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <EmotionToken emotion={selectedEmotionMarker.emotion} size="lg" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    {EMOTIONS[selectedEmotionMarker.emotion].label}
+                  </h3>
+                  <button 
+                    onClick={() => setSelectedEmotionMarker(null)} 
+                    className="text-gray-400 hover:text-gray-700 transition-colors bg-gray-50 hover:bg-gray-100 rounded-full p-2"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <p className="text-gray-700 leading-relaxed">
+                  {selectedEmotionMarker.comment}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

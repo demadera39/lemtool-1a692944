@@ -162,31 +162,23 @@ const AnalysisCanvas = ({
       </div>
 
       <div className="absolute top-4 right-4 z-30 flex gap-2">
-        {!isAnalyzing && (
+        {!isAnalyzing && markers.length > 0 && (
           <>
             <button
-              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2"
-              title="Slides"
-            >
-              <Layers size={14} />
-              Slides
-            </button>
-            <button
-              onClick={() => setScrollEnabled(!scrollEnabled)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${scrollEnabled ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-              title="Toggle Scroll"
-            >
-              Scroll
-            </button>
-            <button
-              onClick={() => setViewMode('live')}
+              onClick={() => {
+                setViewMode('live');
+                setScrollEnabled(true);
+              }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'live' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
               title="Live Site"
             >
               Live Site
             </button>
             <button
-              onClick={() => setViewMode('snapshot')}
+              onClick={() => {
+                setViewMode('snapshot');
+                setScrollEnabled(false);
+              }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'snapshot' ? 'bg-lem-orange text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
               title="Schematic View"
             >
@@ -203,29 +195,31 @@ const AnalysisCanvas = ({
         )}
       </div>
 
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex items-center gap-4 pointer-events-none">
-        <button
-          onClick={() => setCurrentSlide(Math.max(1, currentSlide - 1))}
-          className="pointer-events-auto p-2 rounded-full bg-white/90 hover:bg-white shadow-lg transition-all disabled:opacity-50"
-          disabled={currentSlide === 1}
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <div className="px-4 py-2 rounded-full bg-white/90 shadow-lg font-medium text-sm pointer-events-auto">
-          Slide {currentSlide} / {totalSlides}
+      {viewMode === 'snapshot' && !isAnalyzing && markers.length > 0 && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex items-center gap-4 pointer-events-none">
+          <button
+            onClick={() => setCurrentSlide(Math.max(1, currentSlide - 1))}
+            className="pointer-events-auto p-2 rounded-full bg-white/90 hover:bg-white shadow-lg transition-all disabled:opacity-50"
+            disabled={currentSlide === 1}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <div className="px-4 py-2 rounded-full bg-white/90 shadow-lg font-medium text-sm pointer-events-auto">
+            Slide {currentSlide} / {totalSlides}
+          </div>
+          <button
+            onClick={() => setCurrentSlide(Math.min(totalSlides, currentSlide + 1))}
+            className="pointer-events-auto p-2 rounded-full bg-white/90 hover:bg-white shadow-lg transition-all disabled:opacity-50"
+            disabled={currentSlide === totalSlides}
+          >
+            <ChevronRight size={20} />
+          </button>
         </div>
-        <button
-          onClick={() => setCurrentSlide(Math.min(totalSlides, currentSlide + 1))}
-          className="pointer-events-auto p-2 rounded-full bg-white/90 hover:bg-white shadow-lg transition-all disabled:opacity-50"
-          disabled={currentSlide === totalSlides}
-        >
-          <ChevronRight size={20} />
-        </button>
-      </div>
+      )}
 
       <div 
         ref={scrollWrapperRef} 
-        className={`flex-1 relative ${(scrollEnabled && !isAnalyzing) ? 'overflow-auto' : 'overflow-hidden'}`}
+        className={`flex-1 relative ${(scrollEnabled && !isAnalyzing && viewMode === 'live') ? 'overflow-auto' : 'overflow-hidden'}`}
         style={{ pointerEvents: isAnalyzing ? 'none' : 'auto' }}
       >
         {viewMode === 'live' ? (
@@ -235,8 +229,8 @@ const AnalysisCanvas = ({
             className="w-full border-0 bg-white"
             title="Website Preview"
             style={{ 
-              height: '500vh',
-              minHeight: '500vh',
+              height: isAnalyzing ? '500vh' : '100%',
+              minHeight: isAnalyzing ? '500vh' : '100%',
               pointerEvents: (scrollEnabled && !isAnalyzing) ? 'auto' : 'none' 
             }}
           />
@@ -248,7 +242,7 @@ const AnalysisCanvas = ({
           </div>
         )}
 
-        {filteredMarkers.map((marker) => (
+        {viewMode === 'snapshot' && filteredMarkers.map((marker) => (
           <div
             key={marker.id}
             className="absolute transform -translate-x-1/2 -translate-y-1/2 group"

@@ -1,0 +1,173 @@
+import { Marker, EmotionType, AnalysisReport } from '../types';
+import { supabase } from './supabaseService';
+
+export interface GeminiAnalysisResult {
+  markers: Marker[];
+  report: AnalysisReport;
+}
+
+function generateId(): string {
+  return Math.random().toString(36).substring(2, 15);
+}
+
+// Helper to fetch a screenshot as base64
+async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
+  try {
+    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
+    
+    const response = await fetch(screenshotServiceUrl);
+    if (!response.ok) throw new Error('Screenshot fetch failed');
+    
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        resolve(base64);
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.warn("Screenshot capture failed:", e);
+    return null;
+  }
+}
+
+export async function analyzeWebsite(url: string): Promise<GeminiAnalysisResult> {
+  try {
+    // Get screenshot first
+    const screenshot = await getWebsiteScreenshotBase64(url);
+    
+    // Call the edge function
+    const { data, error } = await supabase.functions.invoke('analyze-website', {
+      body: { url, screenshot }
+    });
+
+    if (error) {
+      console.error('Analysis error:', error);
+      throw error;
+    }
+
+    // If we have a rawResponse, it means parsing failed
+    if (data.rawResponse) {
+      console.warn('AI returned non-JSON response, using fallback');
+      return generateFallbackAnalysis(url, screenshot);
+    }
+
+    // Process markers
+    const markers: Marker[] = (data.markers || []).map((m: any) => ({
+      id: generateId(),
+      x: m.x || 50,
+      y: m.y || 50,
+      layer: m.layer || 'emotions',
+      comment: m.comment || '',
+      source: 'AI' as const,
+      emotion: m.emotion,
+      need: m.need,
+      brief_type: m.brief_type
+    }));
+
+    const report: AnalysisReport = {
+      ...data.report,
+      screenshot: screenshot || undefined
+    };
+
+    return { markers, report };
+  } catch (error) {
+    console.error('Gemini analysis error:', error);
+    // Return fallback analysis
+    const screenshot = await getWebsiteScreenshotBase64(url);
+    return generateFallbackAnalysis(url, screenshot);
+  }
+}
+
+function generateFallbackAnalysis(url: string, screenshot: string | null): GeminiAnalysisResult {
+  const emotions: EmotionType[] = [
+    EmotionType.JOY,
+    EmotionType.DESIRE,
+    EmotionType.FASCINATION,
+    EmotionType.SATISFACTION,
+    EmotionType.SADNESS,
+    EmotionType.DISGUST
+  ];
+  
+  const markers: Marker[] = Array.from({ length: 8 }, (_, i) => ({
+    id: generateId(),
+    x: 20 + Math.random() * 60,
+    y: 15 + Math.random() * 70,
+    layer: 'emotions' as const,
+    emotion: emotions[Math.floor(Math.random() * emotions.length)],
+    comment: 'AI-detected emotional trigger point (demo mode)',
+    source: 'AI' as const,
+  }));
+
+  const report: AnalysisReport = {
+    overallScore: 65 + Math.floor(Math.random() * 25),
+    summary: 'Analysis is running in demo mode. The website shows emotional engagement through design elements. Connect Gemini API for full analysis.',
+    targetAudience: 'General web users',
+    audienceSplit: [
+      { label: 'Early Adopters', percentage: 45 },
+      { label: 'Mainstream Users', percentage: 35 },
+      { label: 'Late Adopters', percentage: 20 }
+    ],
+    personas: [
+      {
+        name: 'Demo User',
+        role: 'Web Visitor',
+        bio: 'Regular internet user exploring the website',
+        goals: 'Find relevant information quickly',
+        quote: 'I want websites that are easy to understand',
+        techLiteracy: 'Mid',
+        psychographics: 'Values simplicity and clarity',
+        values: ['Efficiency', 'Clarity', 'Trust'],
+        frustrations: ['Complex navigation', 'Slow loading']
+      }
+    ],
+    brandValues: ['User-Friendly', 'Professional', 'Trustworthy'],
+    keyFindings: [
+      {
+        title: 'Visual Design',
+        description: 'The layout provides clear visual hierarchy',
+        type: 'positive'
+      },
+      {
+        title: 'User Flow',
+        description: 'Navigation could be simplified',
+        type: 'negative'
+      }
+    ],
+    suggestions: [
+      'Enhance visual consistency',
+      'Optimize loading speed',
+      'Improve mobile responsiveness',
+      'Add more trust signals'
+    ],
+    layoutStructure: [
+      { type: 'hero', estimatedHeight: 600, backgroundColorHint: 'light' },
+      { type: 'features', estimatedHeight: 800, backgroundColorHint: 'light' },
+      { type: 'cta', estimatedHeight: 400, backgroundColorHint: 'light' }
+    ],
+    sdtScores: {
+      autonomy: { score: 7, justification: 'Users have reasonable control over their experience' },
+      competence: { score: 7, justification: 'Interface provides adequate feedback' },
+      relatedness: { score: 6, justification: 'Social elements could be enhanced' }
+    },
+    creativeBrief: {
+      problemStatement: 'Users need clearer pathways to key information',
+      targetEmotion: 'Confidence and Clarity',
+      howMightWe: 'How might we simplify navigation while maintaining depth?',
+      strategicDirection: 'Focus on progressive disclosure and intuitive flows',
+      actionableSteps: [
+        'Redesign primary navigation',
+        'Add contextual help',
+        'Improve visual hierarchy'
+      ],
+      benchmarks: [
+        { name: 'Apple.com', reason: 'Clean, minimal design approach' }
+      ]
+    },
+    screenshot: screenshot || undefined
+  };
+
+  return { markers, report };
+}

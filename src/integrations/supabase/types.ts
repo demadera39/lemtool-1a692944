@@ -38,6 +38,100 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          is_admin: boolean | null
+          name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          is_admin?: boolean | null
+          name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_admin?: boolean | null
+          name?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          id: string
+          markers: Json | null
+          report: Json
+          screenshot: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          markers?: Json | null
+          report: Json
+          screenshot?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          markers?: Json | null
+          report?: Json
+          screenshot?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          markers: Json | null
+          participant_name: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          markers?: Json | null
+          participant_name: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          markers?: Json | null
+          participant_name?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_sessions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

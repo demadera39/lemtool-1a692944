@@ -406,7 +406,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
               </div>
             )}
           </div>
-          {viewMode !== 'presentation' && activeMarkerId === marker.id && (
+          {viewMode !== 'presentation' && activeMarkerId === marker.id && marker.layer !== 'emotions' && (
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50">
               <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} />
             </div>
@@ -424,7 +424,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
         >
                 <div className="relative transform -translate-x-1/2 -translate-y-1/2">
                 <div className="animate-float">
-                    {viewMode !== 'presentation' && activeMarkerId === marker.id && (
+                    {viewMode !== 'presentation' && activeMarkerId === marker.id && marker.layer !== 'emotions' && (
                         <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} />
                     )}
                     <div className="transform scale-150 origin-center cursor-pointer pointer-events-auto">

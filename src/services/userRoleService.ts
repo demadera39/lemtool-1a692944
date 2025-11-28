@@ -6,6 +6,10 @@ export interface UserRole {
   role: 'free' | 'premium';
   analyses_used: number;
   analyses_limit: number;
+  monthly_analyses_used: number;
+  monthly_analyses_limit: number;
+  pack_analyses_remaining: number;
+  last_monthly_reset?: string;
   subscription_status?: string;
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
@@ -53,11 +57,13 @@ export const canCreateAnalysis = async (userId: string): Promise<boolean> => {
   const role = await getUserRole(userId);
   if (!role) return false;
 
-  // Premium users have unlimited analyses
-  if (role.role === 'premium') return true;
+  // Premium users can use monthly analyses
+  if (role.role === 'premium' && role.monthly_analyses_used < role.monthly_analyses_limit) {
+    return true;
+  }
 
-  // Free users are limited
-  return role.analyses_used < role.analyses_limit;
+  // Anyone can use pack analyses if they have them
+  return role.pack_analyses_remaining > 0;
 };
 
 export const incrementAnalysisCount = async (userId: string): Promise<void> => {
@@ -70,11 +76,16 @@ export const incrementAnalysisCount = async (userId: string): Promise<void> => {
   }
 };
 
-export const getRemainingAnalyses = async (userId: string): Promise<number> => {
+export const getRemainingAnalyses = async (userId: string): Promise<{ monthly: number; pack: number }> => {
   const role = await getUserRole(userId);
-  if (!role) return 0;
+  if (!role) return { monthly: 0, pack: 0 };
 
-  if (role.role === 'premium') return -1; // Unlimited
-
-  return Math.max(0, role.analyses_limit - role.analyses_used);
+  const monthly = role.role === 'premium' 
+    ? Math.max(0, role.monthly_analyses_limit - role.monthly_analyses_used)
+    : 0;
+  
+  return {
+    monthly,
+    pack: role.pack_analyses_remaining
+  };
 };

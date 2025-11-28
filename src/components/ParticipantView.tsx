@@ -275,7 +275,11 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-lem-orange mt-1">•</span>
-                      <span>Click on the specific element that triggered that emotion</span>
+                      <span><strong>Point mode:</strong> Click on a specific element to place a marker</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span><strong>Area mode:</strong> Click and drag to select a rectangular region</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-lem-orange mt-1">•</span>

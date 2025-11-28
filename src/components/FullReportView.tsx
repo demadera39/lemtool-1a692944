@@ -257,16 +257,16 @@ const FullReportView = ({
               
               {/* Filter Controls */}
               <div className="space-y-4">
-                <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Layer Filter */}
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Layer</label>
-                    <div className="flex gap-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 block">Layer</label>
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant={areaViewLayer === 'emotions' ? 'default' : 'outline'}
                         onClick={() => setAreaViewLayer('emotions')}
-                        className={`flex-1 h-9 text-sm font-medium ${areaViewLayer === 'emotions' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                        className={`h-9 text-xs font-medium px-3 ${areaViewLayer === 'emotions' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
                       >
                         <Heart size={14} className="mr-1.5" />
                         Emotions
@@ -275,7 +275,7 @@ const FullReportView = ({
                         size="sm"
                         variant={areaViewLayer === 'needs' ? 'default' : 'outline'}
                         onClick={() => setAreaViewLayer('needs')}
-                        className={`flex-1 h-9 text-sm font-medium ${areaViewLayer === 'needs' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                        className={`h-9 text-xs font-medium px-3 ${areaViewLayer === 'needs' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
                       >
                         <Brain size={14} className="mr-1.5" />
                         Needs
@@ -284,7 +284,7 @@ const FullReportView = ({
                         size="sm"
                         variant={areaViewLayer === 'strategy' ? 'default' : 'outline'}
                         onClick={() => setAreaViewLayer('strategy')}
-                        className={`flex-1 h-9 text-sm font-medium ${areaViewLayer === 'strategy' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                        className={`h-9 text-xs font-medium px-3 ${areaViewLayer === 'strategy' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
                       >
                         <Lightbulb size={14} className="mr-1.5" />
                         Strategy
@@ -293,14 +293,14 @@ const FullReportView = ({
                   </div>
 
                   {/* Source Filter */}
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Source</label>
-                    <div className="flex gap-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 block">Source</label>
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant={areaViewSource === 'all' ? 'default' : 'outline'}
                         onClick={() => setAreaViewSource('all')}
-                        className={`flex-1 h-9 text-sm font-medium ${areaViewSource === 'all' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                        className={`h-9 text-xs font-medium px-3 ${areaViewSource === 'all' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
                       >
                         All
                       </Button>
@@ -308,7 +308,7 @@ const FullReportView = ({
                         size="sm"
                         variant={areaViewSource === 'ai' ? 'default' : 'outline'}
                         onClick={() => setAreaViewSource('ai')}
-                        className={`flex-1 h-9 text-sm font-medium ${areaViewSource === 'ai' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                        className={`h-9 text-xs font-medium px-3 ${areaViewSource === 'ai' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
                       >
                         AI
                       </Button>
@@ -316,7 +316,7 @@ const FullReportView = ({
                         size="sm"
                         variant={areaViewSource === 'human' ? 'default' : 'outline'}
                         onClick={() => setAreaViewSource('human')}
-                        className={`flex-1 h-9 text-sm font-medium ${areaViewSource === 'human' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                        className={`h-9 text-xs font-medium px-3 ${areaViewSource === 'human' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
                       >
                         Human
                       </Button>
@@ -324,14 +324,14 @@ const FullReportView = ({
                   </div>
 
                   {/* View Mode Toggle */}
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-3 block">View</label>
-                    <div className="flex gap-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 block">View</label>
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant={areaViewMode === 'heatmap' ? 'default' : 'outline'}
                         onClick={() => setAreaViewMode('heatmap')}
-                        className={`flex-1 h-9 text-sm font-medium ${areaViewMode === 'heatmap' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                        className={`h-9 text-xs font-medium px-3 ${areaViewMode === 'heatmap' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
                       >
                         <Grid3x3 size={14} className="mr-1.5" />
                         Areas
@@ -340,7 +340,7 @@ const FullReportView = ({
                         size="sm"
                         variant={areaViewMode === 'points' ? 'default' : 'outline'}
                         onClick={() => setAreaViewMode('points')}
-                        className={`flex-1 h-9 text-sm font-medium ${areaViewMode === 'points' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                        className={`h-9 text-xs font-medium px-3 ${areaViewMode === 'points' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
                       >
                         <MapPin size={14} className="mr-1.5" />
                         Points
@@ -349,8 +349,8 @@ const FullReportView = ({
                   </div>
 
                   {/* Participant Filter */}
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Participant</label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 block">Participant</label>
                     <Select value={selectedSession} onValueChange={setSelectedSession}>
                       <SelectTrigger className="h-9 bg-white border-gray-300 hover:bg-gray-50">
                         <SelectValue placeholder="All participants" />

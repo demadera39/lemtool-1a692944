@@ -38,54 +38,81 @@ const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ laye
     return null;
 };
 
-// Smart SpeechBubble with viewport-aware positioning
+// Smart SpeechBubble with container-aware positioning
 const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 'up' | 'down' }> = ({ marker, onClose, direction }) => {
     const bubbleRef = useRef<HTMLDivElement>(null);
     const [computedDirection, setComputedDirection] = useState<'up' | 'down'>(direction || 'up');
     const [horizontalOffset, setHorizontalOffset] = useState<number>(0);
     const [arrowOffset, setArrowOffset] = useState<number>(50);
+    const [maxWidth, setMaxWidth] = useState<number>(320); // w-80 default
 
     useEffect(() => {
         if (!bubbleRef.current) return;
         
         const bubble = bubbleRef.current;
         const rect = bubble.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        const viewportWidth = window.innerWidth;
+        
+        // Find the scrollable container or use viewport
+        let container = bubble.parentElement;
+        while (container && container !== document.body) {
+            const style = window.getComputedStyle(container);
+            if (style.overflow === 'auto' || style.overflow === 'scroll' || 
+                style.overflowY === 'auto' || style.overflowY === 'scroll') {
+                break;
+            }
+            container = container.parentElement;
+        }
+        
+        const containerRect = container && container !== document.body 
+            ? container.getBoundingClientRect() 
+            : { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth, width: window.innerWidth, height: window.innerHeight };
         
         // Vertical positioning (up/down)
         if (!direction) {
-            const spaceAbove = rect.top;
-            const spaceBelow = viewportHeight - rect.bottom;
+            const spaceAbove = rect.top - containerRect.top;
+            const spaceBelow = containerRect.bottom - rect.bottom;
             
-            if (spaceAbove < 100 && spaceBelow > spaceAbove) {
+            if (spaceAbove < 150 && spaceBelow > spaceAbove) {
                 setComputedDirection('down');
             } else {
                 setComputedDirection('up');
             }
         }
         
-        // Horizontal boundary detection
-        const bubbleWidth = rect.width;
-        const bubbleCenter = rect.left + bubbleWidth / 2;
+        // Horizontal boundary detection and sizing
         const padding = 16; // Minimum distance from edges
+        const availableWidth = containerRect.width - (padding * 2);
+        const bubbleWidth = Math.min(320, availableWidth); // Max 320px or container width
+        setMaxWidth(bubbleWidth);
+        
+        const bubbleCenter = rect.left + rect.width / 2;
+        const containerLeft = containerRect.left;
+        const containerRight = containerRect.right;
         
         let newHorizontalOffset = 0;
         let newArrowOffset = 50; // Default center position (%)
         
-        // Check if bubble extends beyond left edge
-        if (rect.left < padding) {
-            newHorizontalOffset = padding - rect.left;
-            // Calculate arrow position relative to bubble's new position
-            newArrowOffset = ((bubbleCenter - padding) / bubbleWidth) * 100;
-            newArrowOffset = Math.max(10, Math.min(90, newArrowOffset)); // Clamp between 10-90%
-        }
-        // Check if bubble extends beyond right edge
-        else if (rect.right > viewportWidth - padding) {
-            newHorizontalOffset = (viewportWidth - padding) - rect.right;
-            // Calculate arrow position relative to bubble's new position
-            newArrowOffset = ((bubbleCenter - (rect.left + newHorizontalOffset)) / bubbleWidth) * 100;
-            newArrowOffset = Math.max(10, Math.min(90, newArrowOffset)); // Clamp between 10-90%
+        // Check if bubble would extend beyond left edge
+        const wouldExtendLeft = (bubbleCenter - bubbleWidth / 2) < (containerLeft + padding);
+        // Check if bubble would extend beyond right edge  
+        const wouldExtendRight = (bubbleCenter + bubbleWidth / 2) > (containerRight - padding);
+        
+        if (wouldExtendLeft) {
+            // Shift bubble right
+            const idealLeft = containerLeft + padding;
+            const currentLeft = bubbleCenter - bubbleWidth / 2;
+            newHorizontalOffset = idealLeft - currentLeft;
+            // Arrow points back to marker
+            newArrowOffset = ((bubbleCenter - idealLeft) / bubbleWidth) * 100;
+            newArrowOffset = Math.max(15, Math.min(85, newArrowOffset));
+        } else if (wouldExtendRight) {
+            // Shift bubble left
+            const idealRight = containerRight - padding;
+            const currentRight = bubbleCenter + bubbleWidth / 2;
+            newHorizontalOffset = idealRight - currentRight;
+            // Arrow points back to marker
+            newArrowOffset = ((bubbleCenter - (bubbleCenter + newHorizontalOffset - bubbleWidth / 2)) / bubbleWidth) * 100;
+            newArrowOffset = Math.max(15, Math.min(85, newArrowOffset));
         }
         
         setHorizontalOffset(newHorizontalOffset);
@@ -106,9 +133,11 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
     return (
       <div
         ref={bubbleRef}
-        className={`absolute w-80 bg-white rounded-lg shadow-2xl p-4 z-50 transform -translate-x-1/2 flex flex-col ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
+        className={`absolute bg-white rounded-lg shadow-2xl p-4 z-50 transform -translate-x-1/2 flex flex-col ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
         style={{
-          left: `calc(50% + ${horizontalOffset}px)`
+          left: `calc(50% + ${horizontalOffset}px)`,
+          width: `${maxWidth}px`,
+          maxWidth: `${maxWidth}px`
         }}
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}
@@ -118,7 +147,7 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
             {marker.source === 'HUMAN' ? <UserIcon size={14} className="text-blue-500" /> : <Bot size={14} className="text-lem-orange" />}
             {title}
           </h4>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition-colors bg-gray-50 rounded-full p-1">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition-colors bg-gray-50 rounded-full p-1 flex-shrink-0">
             <X size={14} />
           </button>
         </div>

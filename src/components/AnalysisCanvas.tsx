@@ -523,10 +523,11 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
 
         <div
             ref={containerRef}
-            className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl' : ''}`}
-            onClick={handleMouseDown}
+            className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl' : ''} ${interactionMode === 'select_area' ? 'cursor-crosshair' : ''}`}
+            onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
             style={{
                 pointerEvents: isAnalyzing ? 'none' : 'auto',
                 cursor: interactionMode === 'place_marker' ? 'crosshair' : interactionMode === 'select_area' ? 'crosshair' : 'default'

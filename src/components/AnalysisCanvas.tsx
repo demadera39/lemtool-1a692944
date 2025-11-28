@@ -593,7 +593,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
              <div className="w-full min-h-screen relative">
                 <AdaptiveWireframe structure={layoutStructure || []} />
                 <div className="absolute inset-0 z-10 pointer-events-none">
-                  {filteredMarkers.map((marker) => renderMarker(marker))}
+                  {filteredMarkers.filter(m => !m.isArea).map((marker) => renderMarker(marker))}
                 </div>
              </div>
           ) : viewMode === 'presentation' && screenshot ? (

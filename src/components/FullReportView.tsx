@@ -270,6 +270,24 @@ const FullReportView = ({
                       <Heart size={12} className="mr-1" />
                       Emotions
                     </Button>
+                    <Button
+                      size="sm"
+                      variant={areaViewLayer === 'needs' ? 'default' : 'outline'}
+                      onClick={() => setAreaViewLayer('needs')}
+                      className={`flex-1 text-xs ${areaViewLayer === 'needs' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
+                    >
+                      <Brain size={12} className="mr-1" />
+                      Needs
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={areaViewLayer === 'strategy' ? 'default' : 'outline'}
+                      onClick={() => setAreaViewLayer('strategy')}
+                      className={`flex-1 text-xs ${areaViewLayer === 'strategy' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
+                    >
+                      <Lightbulb size={12} className="mr-1" />
+                      Strategy
+                    </Button>
                   </div>
                 </div>
 

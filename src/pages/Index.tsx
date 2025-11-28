@@ -79,6 +79,8 @@ const Index = () => {
   const checkSubscription = async (userId: string) => {
     try {
       await supabase.functions.invoke('check-subscription');
+      // Reload user role after subscription check to get updated limits
+      await loadUserRole(userId);
     } catch (error) {
       console.error('Error checking subscription:', error);
     }
@@ -240,13 +242,16 @@ const Index = () => {
             {user ? (
               <div className="flex items-center gap-2">
                 <div className="text-xs text-gray-600 flex items-center gap-2">
-                  {remainingAnalyses.monthly >= 0 && (
-                    <span className="font-bold text-lem-orange">{remainingAnalyses.monthly}/{remainingAnalyses.monthlyLimit} monthly</span>
-                  )}
-                  {remainingAnalyses.pack > 0 && (
-                    <span className="text-gray-600">{remainingAnalyses.pack} pack</span>
-                  )}
-                  {remainingAnalyses.monthly === 0 && remainingAnalyses.pack === 0 && (
+                  {(remainingAnalyses.monthly > 0 || remainingAnalyses.pack > 0) ? (
+                    <>
+                      {remainingAnalyses.monthly > 0 && (
+                        <span className="font-bold text-lem-orange">{remainingAnalyses.monthly}/{remainingAnalyses.monthlyLimit} monthly</span>
+                      )}
+                      {remainingAnalyses.pack > 0 && (
+                        <span className="text-gray-600">{remainingAnalyses.pack} pack</span>
+                      )}
+                    </>
+                  ) : (
                     <span className="text-gray-500">0 analyses left</span>
                   )}
                 </div>

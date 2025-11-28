@@ -6,6 +6,8 @@ export interface GeminiAnalysisResult {
   report: AnalysisReport;
 }
 
+export type AnalysisProgressCallback = (progress: number, message: string) => void;
+
 function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
@@ -77,21 +79,26 @@ async function sliceImageBase64(base64Full: string): Promise<{ slices: string[],
   });
 }
 
-export async function analyzeWebsite(url: string): Promise<GeminiAnalysisResult> {
+export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressCallback): Promise<GeminiAnalysisResult> {
   try {
     // Get screenshot first
+    onProgress?.(10, 'Capturing website screenshot...');
     const screenshot = await getWebsiteScreenshotBase64(url);
     
     if (!screenshot) {
+      onProgress?.(100, 'Analysis complete');
       return generateFallbackAnalysis(url, null);
     }
 
+    onProgress?.(30, 'Processing screenshot...');
     console.log("Starting Slice & Conquer Analysis...");
 
     // Slice the image into 16:9 chunks
     const { slices, sliceHeights, totalHeight } = await sliceImageBase64(screenshot);
     console.log(`Sliced into ${slices.length} chunks. Total Height: ${totalHeight}px`);
 
+    onProgress?.(50, 'Analyzing emotional triggers...');
+    
     // Call the edge function with sliced data
     const { data, error } = await supabase.functions.invoke('analyze-website', {
       body: { 
@@ -103,6 +110,8 @@ export async function analyzeWebsite(url: string): Promise<GeminiAnalysisResult>
       }
     });
 
+    onProgress?.(80, 'Processing analysis results...');
+
     if (error) {
       console.error('Analysis error:', error);
       throw error;
@@ -111,6 +120,7 @@ export async function analyzeWebsite(url: string): Promise<GeminiAnalysisResult>
     // If we have a rawResponse, it means parsing failed
     if (data.rawResponse) {
       console.warn('AI returned non-JSON response, using fallback');
+      onProgress?.(100, 'Analysis complete');
       return generateFallbackAnalysis(url, screenshot);
     }
 
@@ -132,9 +142,11 @@ export async function analyzeWebsite(url: string): Promise<GeminiAnalysisResult>
       screenshot: screenshot || undefined
     };
 
+    onProgress?.(100, 'Analysis complete');
     return { markers, report };
   } catch (error) {
     console.error('Gemini analysis error:', error);
+    onProgress?.(100, 'Analysis complete');
     // Return fallback analysis
     const screenshot = await getWebsiteScreenshotBase64(url);
     return generateFallbackAnalysis(url, screenshot);

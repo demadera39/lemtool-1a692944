@@ -5,10 +5,11 @@ import AppraisalModal from './AppraisalModal';
 import Toolbar from './Toolbar';
 import { EMOTIONS } from '../constants';
 import { submitTestSession } from '../services/supabaseService';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ChevronDown, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
 interface ParticipantViewProps {
   project: Project;
@@ -24,6 +25,7 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(null);
   const [showAppraisal, setShowAppraisal] = useState(false);
   const [pendingMarkerPos, setPendingMarkerPos] = useState<{x: number, y: number} | null>(null);
+  const [instructionsOpen, setInstructionsOpen] = useState(true);
 
   const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,7 +171,7 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
       <div className="flex-1 flex flex-col h-full">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm justify-between">
           <div>
-            <h2 className="font-bold text-gray-900">{participantName}'s Test Session</h2>
+            <h2 className="font-bold text-gray-900">{participantName}&apos;s Test Session</h2>
             <p className="text-xs text-gray-500">
               {markers.length} / {MIN_MARKERS} markers minimum
             </p>
@@ -193,6 +195,116 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
             )}
           </div>
         </header>
+
+        <Collapsible open={instructionsOpen} onOpenChange={setInstructionsOpen} className="border-b border-gray-200">
+          <CollapsibleTrigger className="w-full bg-gradient-to-r from-blue-50 to-orange-50 hover:from-blue-100 hover:to-orange-100 transition-colors">
+            <div className="px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 text-white rounded-full p-1.5">
+                  <Info size={16} />
+                </div>
+                <span className="font-bold text-gray-900 text-sm">Testing Instructions</span>
+                <span className="text-xs text-gray-500">(Click to {instructionsOpen ? 'hide' : 'show'})</span>
+              </div>
+              <ChevronDown 
+                size={20} 
+                className={`text-gray-600 transition-transform ${instructionsOpen ? 'rotate-180' : ''}`}
+              />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-6 py-4 bg-white space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <h4 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                    <span className="bg-lem-orange text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">1</span>
+                    Before You Start
+                  </h4>
+                  <ul className="text-sm text-gray-700 space-y-2 ml-8">
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span><strong>Scroll through the entire page</strong> first to get a complete first impression</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span>Take your time to <strong>observe all sections</strong> before adding markers</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                    <span className="bg-lem-orange text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">2</span>
+                    Adding Markers
+                  </h4>
+                  <ul className="text-sm text-gray-700 space-y-2 ml-8">
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span>Select an emotion from the left sidebar that matches your feeling</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span>Click on the specific element that triggered that emotion</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span><strong>Add at least {MIN_MARKERS} markers</strong> to complete the test</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                    <span className="bg-lem-orange text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">3</span>
+                    Be Specific & Honest
+                  </h4>
+                  <ul className="text-sm text-gray-700 space-y-2 ml-8">
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span><strong>Describe your thoughts precisely:</strong> What caught your attention?</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span><strong>Mention your goals:</strong> What were you trying to accomplish?</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span><strong>Share honest reactions:</strong> Both positive and negative feedback are valuable</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                    <span className="bg-lem-orange text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">4</span>
+                    Quality Over Quantity
+                  </h4>
+                  <ul className="text-sm text-gray-700 space-y-2 ml-8">
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span>Detailed comments are more helpful than brief ones</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span>Explain <em>why</em> you felt a certain way about an element</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-lem-orange mt-1">•</span>
+                      <span>Focus on meaningful reactions rather than rushing to reach {MIN_MARKERS} markers</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r">
+                <p className="text-sm text-blue-900">
+                  <strong>💡 Tip:</strong> Your honest feedback helps improve the user experience. 
+                  There are no right or wrong answers - we want to understand your genuine reactions and thought process.
+                </p>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         <div className="flex-1 overflow-y-auto">
           <AnalysisCanvas

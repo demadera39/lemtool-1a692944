@@ -34,13 +34,18 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
         useCORS: true,
         logging: false,
         allowTaint: true,
+        windowHeight: reportElement.scrollHeight,
         onclone: (clonedDoc) => {
-          // Add page break styles to cloned document
           const style = clonedDoc.createElement('style');
           style.innerHTML = `
-            .pdf-no-break {
-              page-break-inside: avoid !important;
-              break-inside: avoid !important;
+            @media print {
+              .pdf-no-break {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+              }
+              .pdf-page-break-before {
+                page-break-before: always !important;
+              }
             }
           `;
           clonedDoc.head.appendChild(style);
@@ -58,17 +63,16 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
+      
+      const margin = 10;
       let heightLeft = imgHeight;
       let position = 0;
 
-      // Add first page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
 
-      // Add subsequent pages
-      while (heightLeft > 0) {
-        position -= pdfHeight;
+      while (heightLeft > margin) {
+        position = -(imgHeight - heightLeft);
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
@@ -470,27 +474,206 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
           </CardContent>
         </Card>
 
-        {/* Participant Sessions */}
+        {/* Participant Insights & Analysis */}
         {sessions.length > 0 && (
-          <Card className="mb-6 pdf-no-break">
-            <CardHeader>
-              <CardTitle className="text-xl">Participant Feedback Sessions</CardTitle>
+          <Card className="mb-6 pdf-no-break pdf-page-break-before">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Users className="text-blue-600" size={24} />
+                Participant Insights & Findings
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-2">Qualitative analysis from {sessions.length} participant {sessions.length === 1 ? 'session' : 'sessions'}</p>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {sessions.map((session, idx) => (
-                  <div key={session.id} className="p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-gray-900">{session.participant_name}</span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(session.created_at).toLocaleDateString()}
-                      </span>
+            <CardContent className="pt-6">
+              {/* Metrics Overview */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-lg text-center">
+                  <p className="text-3xl font-black">{sessions.length}</p>
+                  <p className="text-xs uppercase tracking-wide mt-1">Participants</p>
+                </div>
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg text-center">
+                  <p className="text-3xl font-black">{sessions.reduce((sum, s) => sum + s.markers.length, 0)}</p>
+                  <p className="text-xs uppercase tracking-wide mt-1">Human Markers</p>
+                </div>
+                <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-lg text-center">
+                  <p className="text-3xl font-black">
+                    {sessions.reduce((sum, s) => sum + s.markers.filter(m => m.emotion && EMOTIONS[m.emotion].category === 'Positive').length, 0)}
+                  </p>
+                  <p className="text-xs uppercase tracking-wide mt-1">Positive Reactions</p>
+                </div>
+                <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-lg text-center">
+                  <p className="text-3xl font-black">
+                    {sessions.reduce((sum, s) => sum + s.markers.filter(m => m.emotion && EMOTIONS[m.emotion].category === 'Negative').length, 0)}
+                  </p>
+                  <p className="text-xs uppercase tracking-wide mt-1">Negative Reactions</p>
+                </div>
+              </div>
+
+              {/* Participant Emotion Analysis */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-bold text-lg mb-3 text-gray-900">Emotional Response Patterns</h4>
+                {(() => {
+                  const participantEmotions = sessions.flatMap(s => s.markers).filter(m => m.emotion);
+                  const emotionCounts = participantEmotions.reduce((acc, m) => {
+                    if (m.emotion) acc[m.emotion] = (acc[m.emotion] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>);
+                  const topParticipantEmotions = Object.entries(emotionCounts)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 3);
+
+                  return topParticipantEmotions.length > 0 ? (
+                    <div className="space-y-3">
+                      {topParticipantEmotions.map(([emotion, count]) => {
+                        const emotionData = EMOTIONS[emotion as keyof typeof EMOTIONS];
+                        const percentage = (count / participantEmotions.length) * 100;
+                        return (
+                          <div key={emotion} className="flex items-center gap-3">
+                            <EmotionToken emotion={emotion as any} size="sm" />
+                            <div className="flex-1">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="font-semibold text-sm">{emotionData.label}</span>
+                                <span className="text-xs text-gray-600">{count} mentions ({percentage.toFixed(0)}%)</span>
+                              </div>
+                              <Progress value={percentage} className="h-2" />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="text-sm text-gray-600">
-                      {session.markers.length} emotional markers provided
+                  ) : (
+                    <p className="text-sm text-gray-500">No emotional markers from participants yet</p>
+                  );
+                })()}
+              </div>
+
+              {/* Key Participant Quotes & Comments */}
+              <div className="mb-6">
+                <h4 className="font-bold text-lg mb-3 text-gray-900">Notable Participant Comments</h4>
+                <div className="space-y-3">
+                  {sessions.flatMap(s => 
+                    s.markers.filter(m => m.comment && m.comment.length > 20).map(m => ({
+                      ...m,
+                      participantName: s.participant_name,
+                      sessionDate: s.created_at
+                    }))
+                  ).slice(0, 6).map((marker, idx) => (
+                    <div key={idx} className="bg-white border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm">
+                      <div className="flex items-start gap-3">
+                        {marker.emotion && <EmotionToken emotion={marker.emotion} size="sm" />}
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-700 italic mb-2">&ldquo;{marker.comment}&rdquo;</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span className="font-semibold">{marker.participantName}</span>
+                            <span>•</span>
+                            <span>{new Date(marker.sessionDate).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+
+              {/* Conclusions & Insights */}
+              <div className="bg-gradient-to-br from-lem-orange to-orange-600 text-white p-6 rounded-lg">
+                <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                  <Lightbulb size={20} />
+                  Key Conclusions from Participant Testing
+                </h4>
+                <div className="space-y-3 text-sm">
+                  {(() => {
+                    const participantMarkers = sessions.flatMap(s => s.markers);
+                    const positiveCount = participantMarkers.filter(m => m.emotion && EMOTIONS[m.emotion].category === 'Positive').length;
+                    const negativeCount = participantMarkers.filter(m => m.emotion && EMOTIONS[m.emotion].category === 'Negative').length;
+                    const totalCount = participantMarkers.filter(m => m.emotion).length;
+                    const positiveRatio = totalCount > 0 ? (positiveCount / totalCount) * 100 : 0;
+                    
+                    const needsMarkers = participantMarkers.filter(m => m.layer === 'needs');
+                    const strategyMarkers = participantMarkers.filter(m => m.layer === 'strategy');
+
+                    return (
+                      <>
+                        <div className="bg-white/10 backdrop-blur-sm p-3 rounded">
+                          <p className="font-semibold mb-1">Overall Sentiment:</p>
+                          <p>
+                            {positiveRatio >= 60 
+                              ? `Participants responded overwhelmingly positive (${positiveRatio.toFixed(0)}% positive reactions), indicating strong emotional resonance with the design.`
+                              : positiveRatio >= 40
+                              ? `Participants showed mixed emotional responses (${positiveRatio.toFixed(0)}% positive), suggesting room for optimization in user experience.`
+                              : `Participants expressed concerns (${(100 - positiveRatio).toFixed(0)}% negative/neutral reactions), highlighting critical areas requiring attention.`
+                            }
+                          </p>
+                        </div>
+                        
+                        <div className="bg-white/10 backdrop-blur-sm p-3 rounded">
+                          <p className="font-semibold mb-1">Psychological Needs:</p>
+                          <p>
+                            {needsMarkers.length > 0
+                              ? `Participants identified ${needsMarkers.length} areas related to psychological needs, emphasizing the importance of ${needsMarkers[0]?.need || 'user empowerment'} in the design.`
+                              : `Participants focused primarily on emotional responses rather than deeper psychological needs, suggesting intuitive usability.`
+                            }
+                          </p>
+                        </div>
+                        
+                        <div className="bg-white/10 backdrop-blur-sm p-3 rounded">
+                          <p className="font-semibold mb-1">Strategic Opportunities:</p>
+                          <p>
+                            {strategyMarkers.length > 0
+                              ? `Participants highlighted ${strategyMarkers.length} strategic areas, providing valuable insights for ${strategyMarkers.filter(m => m.brief_type === 'Opportunity').length > 0 ? 'enhancement opportunities' : 'addressing pain points'}.`
+                              : `Most participant feedback focused on immediate emotional reactions, suggesting strong first impressions but potential for deeper engagement analysis.`
+                            }
+                          </p>
+                        </div>
+
+                        <div className="bg-white/10 backdrop-blur-sm p-3 rounded">
+                          <p className="font-semibold mb-1">Consensus vs. Divergence:</p>
+                          <p>
+                            {sessions.length > 1
+                              ? `With ${sessions.length} participants, ${positiveRatio >= 70 || positiveRatio <= 30 ? 'there is strong consensus' : 'opinions are diverse'}, ${positiveRatio >= 70 || positiveRatio <= 30 ? 'indicating clear UX patterns' : 'suggesting varied user perspectives worth exploring'}.`
+                              : `Single participant provides initial insights; additional testing recommended for broader validation.`
+                            }
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Individual Session Details */}
+              <div className="mt-6">
+                <h4 className="font-bold text-lg mb-3 text-gray-900">Individual Participant Sessions</h4>
+                <div className="space-y-3">
+                  {sessions.map((session) => (
+                    <div key={session.id} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-bold text-gray-900">{session.participant_name}</span>
+                        <span className="text-sm text-gray-500">
+                          {new Date(session.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div className="bg-white p-2 rounded">
+                          <p className="font-bold text-lg">{session.markers.length}</p>
+                          <p className="text-gray-600">Total Markers</p>
+                        </div>
+                        <div className="bg-white p-2 rounded">
+                          <p className="font-bold text-lg text-green-600">
+                            {session.markers.filter(m => m.emotion && EMOTIONS[m.emotion].category === 'Positive').length}
+                          </p>
+                          <p className="text-gray-600">Positive</p>
+                        </div>
+                        <div className="bg-white p-2 rounded">
+                          <p className="font-bold text-lg text-red-600">
+                            {session.markers.filter(m => m.emotion && EMOTIONS[m.emotion].category === 'Negative').length}
+                          </p>
+                          <p className="text-gray-600">Negative</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>

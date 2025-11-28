@@ -42,27 +42,44 @@ const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ laye
     return null;
 };
 
-// Updated SpeechBubble with explicit direction support
+// Smart SpeechBubble with viewport-aware positioning
 const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 'up' | 'down' }> = ({ marker, onClose, direction }) => {
+    const bubbleRef = useRef<HTMLDivElement>(null);
+    const [computedDirection, setComputedDirection] = useState<'up' | 'down'>(direction || 'up');
+
+    useEffect(() => {
+        if (direction || !bubbleRef.current) return;
+        
+        const bubble = bubbleRef.current;
+        const rect = bubble.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        
+        // Check if bubble would be cut off at top or bottom
+        const spaceAbove = rect.top;
+        const spaceBelow = viewportHeight - rect.bottom;
+        
+        // Default to up, but flip to down if not enough space above
+        if (spaceAbove < 100 && spaceBelow > spaceAbove) {
+            setComputedDirection('down');
+        } else {
+            setComputedDirection('up');
+        }
+    }, [direction, marker]);
+
     let title = 'Insight';
     if (marker.layer === 'emotions' && marker.emotion) title = EMOTIONS[marker.emotion].label;
     if (marker.layer === 'needs') title = marker.need || 'Psych Need';
     if (marker.layer === 'strategy') title = marker.brief_type || 'Strategic Point';
 
-    // Determine direction: Prop overrides automatic detection
-    let isDown = false;
-    if (direction) {
-        isDown = direction === 'down';
-    } else {
-        // Default logic: If marker is near the top of its relative container
-        isDown = marker.y < 20;
-    }
+    const finalDirection = direction || computedDirection;
+    const isDown = finalDirection === 'down';
 
     const positionClass = isDown ? "top-full mt-4" : "bottom-full mb-4";
     const arrowClass = isDown ? "-top-2 rotate-45 border-l border-t" : "-bottom-2 rotate-45 border-r border-b";
 
     return (
       <div
+        ref={bubbleRef}
         className={`absolute w-80 bg-white rounded-lg shadow-2xl p-4 z-50 transform -translate-x-1/2 left-1/2 flex flex-col ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}

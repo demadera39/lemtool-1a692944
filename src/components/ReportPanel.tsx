@@ -32,7 +32,7 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
       <div className="p-6 border-b border-gray-200 flex-shrink-0">
-        <h2 className="text-2xl font-black text-gray-900 mb-4">Analysis</h2>
+        <h2 className="text-2xl font-black text-gray-900 mb-4">Summary</h2>
         {currentUrl && (
           <p className="text-xs text-gray-500 truncate mb-4">{currentUrl}</p>
         )}
@@ -196,42 +196,53 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
               </>
             )}
 
-            {activeLayer === 'needs' && (
+            {activeLayer === 'needs' && needsMarkers.length > 0 && (
               <Card>
-                <CardContent className="py-8">
-                  <div className="text-center text-gray-500">
-                    <Brain size={48} className="mx-auto mb-4 opacity-30" />
-                    <p className="font-medium">Psychological Needs Analysis</p>
-                    <p className="text-sm mt-1">Coming soon</p>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Brain className="text-lem-orange" size={18} />
+                    Psychological Needs
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Analysis of how the interface supports user autonomy, competence, and relatedness.
+                  </p>
+                  <div className="space-y-2">
+                    {needsMarkers.map((marker, idx) => (
+                      <div key={idx} className="border-l-2 border-blue-500 pl-3 py-1">
+                        <h4 className="font-bold text-sm text-gray-900">{marker.need}</h4>
+                        <p className="text-xs text-gray-600">{marker.comment}</p>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {activeLayer === 'strategy' && (
+            {activeLayer === 'strategy' && strategyMarkers.length > 0 && (
               <Card>
-                <CardContent className="py-8">
-                  <div className="text-center text-gray-500">
-                    <Target size={48} className="mx-auto mb-4 opacity-30" />
-                    <p className="font-medium">Strategic Insights</p>
-                    <p className="text-sm mt-1">Coming soon</p>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Target className="text-lem-orange" size={18} />
+                    Strategic Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Key opportunities and pain points identified in the user experience.
+                  </p>
+                  <div className="space-y-2">
+                    {strategyMarkers.map((marker, idx) => (
+                      <div key={idx} className="border-l-2 border-green-500 pl-3 py-1">
+                        <h4 className="font-bold text-sm text-gray-900">{marker.brief_type}</h4>
+                        <p className="text-xs text-gray-600">{marker.comment}</p>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
             )}
-
-            <Card className="bg-gradient-to-br from-gray-50 to-orange-50 border-2 border-orange-200">
-              <CardContent className="py-8 text-center">
-                <Lock size={48} className="mx-auto mb-4 text-lem-orange" />
-                <h3 className="font-black text-lg text-gray-900 mb-2">Unlock Deep Insights</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Get detailed persona breakdowns, psychological needs analysis, and a strategic design brief.
-                </p>
-                <Button className="bg-lem-orange hover:bg-lem-orange-dark text-white font-bold">
-                  Unlock Full Report
-                </Button>
-              </CardContent>
-            </Card>
           </>
         )}
       </div>

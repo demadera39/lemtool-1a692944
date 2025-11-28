@@ -164,7 +164,7 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
         emotionLabel={selectedEmotion ? EMOTIONS[selectedEmotion].label : ''}
       />
 
-      <Toolbar onAddMarker={handleEmotionSelect} />
+      <Toolbar onAddMarker={handleEmotionSelect} selectedEmotion={selectedEmotion} />
 
       <div className="flex-1 flex flex-col h-full">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm justify-between">
@@ -194,7 +194,7 @@ const ParticipantView = ({ project, onExit }: ParticipantViewProps) => {
           </div>
         </header>
 
-        <div className="flex-1 p-6">
+        <div className="flex-1 overflow-y-auto">
           <AnalysisCanvas
             imgUrl={project.url}
             markers={markers}

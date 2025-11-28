@@ -118,6 +118,7 @@ export interface Project {
   report: AnalysisReport;
   markers: Marker[];
   screenshot?: string;
+  archived?: boolean;
 }
 
 export interface TestSession {

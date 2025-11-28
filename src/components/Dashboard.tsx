@@ -1,13 +1,24 @@
 import { useState, useEffect } from 'react';
 import { User, Project, TestSession } from '../types';
-import { getProjects, getProjectSessions } from '../services/supabaseService';
+import { getProjects, getProjectSessions, deleteProject, archiveProject } from '../services/supabaseService';
 import { getRemainingAnalyses } from '../services/userRoleService';
-import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown, FileText } from 'lucide-react';
+import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown, FileText, Trash2, Archive, ArchiveRestore, Bot } from 'lucide-react';
 import { Button } from './ui/button';
 import AnalysisCanvas from './AnalysisCanvas';
 import ReportPanel from './ReportPanel';
 import FullReportView from './FullReportView';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
+import { Badge } from './ui/badge';
 
 interface DashboardProps {
   user: User;
@@ -26,11 +37,15 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [showAI, setShowAI] = useState(true);
   const [showHumans, setShowHumans] = useState(true);
   const [remainingAnalyses, setRemainingAnalyses] = useState<{ monthly: number; pack: number; monthlyLimit: number }>({ monthly: 0, pack: 0, monthlyLimit: 10 });
+  const [showArchived, setShowArchived] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [projectSessions, setProjectSessions] = useState<Record<string, number>>({});
 
   useEffect(() => {
     loadProjects();
     loadUserRole();
-  }, [user]);
+  }, [user, showArchived]);
 
   const loadUserRole = async () => {
     const remaining = await getRemainingAnalyses(user.id);
@@ -44,13 +59,50 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   }, [selectedProject]);
 
   const loadProjects = async () => {
-    const data = await getProjects(user.id);
+    const data = await getProjects(user.id, showArchived);
     setProjects(data);
+    
+    // Load session counts for each project
+    const sessionCounts: Record<string, number> = {};
+    await Promise.all(
+      data.map(async (project) => {
+        const sessions = await getProjectSessions(project.id);
+        sessionCounts[project.id] = sessions.length;
+      })
+    );
+    setProjectSessions(sessionCounts);
   };
 
   const loadSessions = async (pid: string) => {
     const data = await getProjectSessions(pid);
     setSessions(data);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!projectToDelete) return;
+    
+    try {
+      await deleteProject(projectToDelete.id);
+      toast.success('Project deleted successfully');
+      loadProjects();
+      setDeleteDialogOpen(false);
+      setProjectToDelete(null);
+    } catch (error) {
+      toast.error('Failed to delete project');
+      console.error(error);
+    }
+  };
+
+  const handleArchiveProject = async (project: Project) => {
+    try {
+      const isArchiving = !project.archived;
+      await archiveProject(project.id, isArchiving);
+      toast.success(isArchiving ? 'Project archived' : 'Project restored');
+      loadProjects();
+    } catch (error) {
+      toast.error('Failed to archive project');
+      console.error(error);
+    }
   };
 
   const getCombinedMarkers = () => {
@@ -214,20 +266,37 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Projects</h2>
-          <p className="text-gray-600">Manage your website analyses and participant testing sessions</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Projects</h2>
+            <p className="text-gray-600">Manage your website analyses and participant testing sessions</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowArchived(!showArchived)}
+            className="flex items-center gap-2"
+          >
+            {showArchived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+            {showArchived ? 'Show Active' : 'Show Archived'}
+          </Button>
         </div>
 
         {projects.length === 0 ? (
           <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
             <Layout size={48} className="mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">No projects yet</h3>
-            <p className="text-gray-600 mb-6">Create your first analysis to get started</p>
-            <Button onClick={onNewAnalysis} className="bg-lem-orange hover:bg-lem-orange-dark">
-              <Plus size={18} className="mr-2" />
-              New Analysis
-            </Button>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              {showArchived ? 'No archived projects' : 'No projects yet'}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {showArchived ? 'Archive projects to see them here' : 'Create your first analysis to get started'}
+            </p>
+            {!showArchived && (
+              <Button onClick={onNewAnalysis} className="bg-lem-orange hover:bg-lem-orange-dark">
+                <Plus size={18} className="mr-2" />
+                New Analysis
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -242,6 +311,18 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                 )}
                 <div className="p-4">
                   <h3 className="font-bold text-gray-900 mb-1 truncate">{project.url}</h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge variant="secondary" className="text-xs flex items-center gap-1 bg-orange-100 text-orange-700">
+                      <Bot size={10} />
+                      Tested by AI
+                    </Badge>
+                    {projectSessions[project.id] > 0 && (
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1 bg-blue-100 text-blue-700">
+                        <Users size={10} />
+                        {projectSessions[project.id]} {projectSessions[project.id] === 1 ? 'Human' : 'Humans'}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
                     <span className="flex items-center gap-1">
                       <Calendar size={12} />
@@ -293,6 +374,37 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                       <ExternalLink size={14} className="mr-2" />
                       Copy Participant Link
                     </Button>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-gray-600 hover:text-gray-900"
+                        onClick={() => handleArchiveProject(project)}
+                      >
+                        {project.archived ? (
+                          <>
+                            <ArchiveRestore size={14} className="mr-1" />
+                            Restore
+                          </>
+                        ) : (
+                          <>
+                            <Archive size={14} className="mr-1" />
+                            Archive
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          setProjectToDelete(project);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -300,6 +412,27 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
           </div>
         )}
       </main>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &ldquo;{projectToDelete?.url}&rdquo;? This action cannot be undone. 
+              All analysis data and participant sessions will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteProject}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

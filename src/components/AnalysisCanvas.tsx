@@ -606,7 +606,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
           />
       )}
 
-      <div ref={scrollWrapperRef} className="flex-1 overflow-hidden relative flex flex-col">
+      <div ref={scrollWrapperRef} className="flex-1 overflow-y-auto overflow-x-hidden relative">
         {viewMode === 'presentation' && screenshot && !isAnalyzing && interactionMode === 'read_only' && (
             <div className="sticky top-4 z-40 flex items-center gap-4 bg-white/90 backdrop-blur shadow-lg px-4 py-2 rounded-full mb-4 mx-auto w-fit">
                 <button
@@ -640,7 +640,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
           if (activeMarker.layer === 'strategy') title = activeMarker.brief_type || 'Strategic Point';
           
           return (
-            <div key={`${activeMarkerId}-${activeMarker.comment.substring(0, 20)}`} className="w-full max-w-6xl mx-auto mb-4 bg-white rounded-lg shadow-xl p-4 border-2 border-lem-orange flex-shrink-0">
+            <div key={`${activeMarkerId}-${activeMarker.comment.substring(0, 20)}`} className="sticky top-0 z-50 w-full max-w-6xl mx-auto mb-4 bg-white rounded-lg shadow-xl p-4 border-2 border-lem-orange">
               <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
                 <h4 className="font-bold text-base text-gray-900 flex items-center gap-2">
                   {activeMarker.layer === 'emotions' && activeMarker.emotion ? (
@@ -670,7 +670,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
 
         <div
             ref={containerRef}
-            className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl flex-1 overflow-hidden flex flex-col' : ''} ${interactionMode === 'select_area' ? 'cursor-crosshair' : ''}`}
+            className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl' : ''} ${interactionMode === 'select_area' ? 'cursor-crosshair' : ''}`}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -740,7 +740,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                  </div>
             </div>
           ) : viewMode === 'snapshot' && screenshot ? (
-            <div ref={imageScrollContainerRef} className="relative w-full flex-1 overflow-y-auto border-4 border-gray-300 rounded-lg">
+            <div ref={imageScrollContainerRef} className="relative w-full border-4 border-gray-300 rounded-lg">
                 <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
                 <div className="absolute inset-0 z-10 pointer-events-none">
                   {filteredMarkers.map((marker) => renderMarker(marker))}

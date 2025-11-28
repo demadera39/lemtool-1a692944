@@ -29,56 +29,97 @@ const MULTIMODAL_MASTER_PROMPT = `
 You are an Elite Senior UX Researcher analyzing the **HERO SECTION / TOP PART** of a website.
 Target URL: {URL}
 
-**CRITICAL REQUIREMENT: PRECISION & PLACEMENT**
-- Coordinates (x,y) range from 0-100.
-- x=0 is Left, x=100 is Right.
-- y=0 is Top, y=100 is Bottom.
-- Place markers at the **exact visual center** of UI elements.
-- DO NOT use default coordinates like 50,50 or 0,0 or 100,100.
-- DO NOT place markers on empty whitespace.
+**TASK**:
+1. Analyze this screenshot viewport for Emotional Markers, SDT Needs, and Strategic Insights.
+2. Generate the **MASTER STRATEGIC REPORT** based on this primary visual context.
 
-Return ONLY valid JSON wrapped in \`\`\`json \`\`\`:
+**CRITICAL REQUIREMENT 1: PERSONAS**
+- You **MUST** generate **4 to 5 DISTINCT PERSONAS**.
+- Do not just generate 1 or 2. We need a full spectrum of users (e.g., The Skeptic, The Power User, The Novice, The Decision Maker).
+
+**CRITICAL REQUIREMENT 2: APPRAISAL THEORY BRIEF**
+- The "creativeBrief" must use **Appraisal Theory Statements** to guide improvements.
+- For each "actionableStep", structure it as ONE of these three types:
+  1. **Goal-Based**: "GOAL: [User wants X]. FIX: [UI Change]. RESULT: Evokes [Emotion]."
+  2. **Attitude-Based**: "ATTITUDE: [User thinks X]. FIX: [UI Change]. RESULT: Evokes [Emotion]."
+  3. **Norm-Based**: "NORM: [User believes X]. FIX: [UI Change]. RESULT: Evokes [Emotion]."
+- Provide 3-5 specific steps in this format.
+- Also include "benchmarks" of real world examples.
+
+**CRITICAL REQUIREMENT 3: PRECISION & PLACEMENT**
+- **Center of Mass**: Coordinates (x,y) must range from 0-100.
+  - x=0 is Left, x=100 is Right.
+  - y=0 is Top, y=100 is Bottom.
+- **Visual Mapping**: Place the marker at the **exact visual center** of the UI element (button, headline, image face) you are discussing.
+- **DO NOT** place markers on empty whitespace or margins.
+- **DO NOT** cluster markers. If you have 3 insights about one section, pick 3 distinct visual anchors within that section.
+
+**OUTPUT JSON STRUCTURE**
+Return ONLY a valid JSON object wrapped in \`\`\`json \`\`\`.
 {
   "markers": [
     {
       "x": number (0-100),
       "y": number (0-100),
-      "comment": "The element [Name]...",
-      "emotion": "Joy"|"Desire"|"Interest"|"Satisfaction"|"Neutral"|"Sadness"|"Aversion"|"Boredom"|"Dissatisfaction"
+      "layer": "emotions" | "needs" | "strategy",
+      "comment": "Start with: 'The element [Name/Text]...' then explain.",
+      "emotion": "Joy" | "Desire" | "Interest" | "Satisfaction" | "Neutral" | "Sadness" | "Aversion" | "Boredom" | "Dissatisfaction",
+      "need": "Autonomy" | "Competence" | "Relatedness",
+      "brief_type": "Opportunity" | "Pain Point" | "Insight"
     }
   ],
   "overallScore": number (0-100),
   "summary": string,
   "targetAudience": string,
+  "audienceSplit": [{ "label": string, "percentage": number }],
   "brandValues": [string],
-  "sdtScores": { 
-    "autonomy": { "score": number, "justification": string }, 
-    "competence": { "score": number, "justification": string }, 
-    "relatedness": { "score": number, "justification": string } 
+  "personas": [
+    { "name": string, "role": string, "bio": string, "goals": string, "quote": string, "techLiteracy": "Low"|"Mid"|"High", "psychographics": string, "values": [string], "frustrations": [string] }
+  ],
+  "layoutStructure": [
+    { "type": "hero"|"features"|"testimonials"|"pricing"|"footer"|"cta"|"unknown"|"social_proof"|"faq", "estimatedHeight": number, "backgroundColorHint": "light"|"dark"|"colorful" }
+  ],
+  "sdtScores": { "autonomy": { "score": number, "justification": string }, "competence": { "score": number, "justification": string }, "relatedness": { "score": number, "justification": string } },
+  "creativeBrief": {
+     "problemStatement": string,
+     "targetEmotion": string,
+     "howMightWe": string,
+     "strategicDirection": string,
+     "actionableSteps": [string],
+     "benchmarks": [{ "name": string, "reason": string }]
   },
-  "keyFindings": [{ "title": string, "description": string }],
+  "keyFindings": [{ "title": string, "description": string, "type": "positive"|"negative"|"neutral" }],
   "suggestions": [string]
 }
 `;
 
 const MARKER_ONLY_PROMPT = `
-Analyze this **LOWER SECTION** of a website (URL: {URL}).
+You are analyzing a **LOWER SCROLL SECTION (BODY/FOOTER)** of a website.
+Target URL: {URL}
 
-**COORDINATE INSTRUCTIONS**:
-- This image is a SLICE of the full page.
-- x=0, y=0 is TOP-LEFT of THIS image.
-- x=100, y=100 is BOTTOM-RIGHT of THIS image.
-- Be precise. If a button is on the left, x ~25. If on the right, x ~85.
-- AVOID 50,50 or 0,0.
+**TASK**:
+Identify specific UX/UI elements in this slice that trigger emotions, fulfill psychological needs, or represent strategic opportunities.
 
-Return ONLY valid JSON wrapped in \`\`\`json \`\`\`:
+**CRITICAL COORDINATE INSTRUCTIONS**:
+- The provided image is a **SLICE** of a larger page.
+- **x=0, y=0** is the TOP-LEFT of *this specific image*.
+- **x=100, y=100** is the BOTTOM-RIGHT of *this specific image*.
+- You **MUST** pinpoint the exact element.
+- Example: If discussing a "Pricing Card" on the left, x should be ~25. If discussing a "Contact Button" on the right, x should be ~85.
+- **AVOID** placing markers at exactly 50,50 or 0,0. Be precise.
+
+**OUTPUT JSON STRUCTURE**
+Return ONLY a valid JSON object wrapped in \`\`\`json \`\`\`.
 {
   "markers": [
     {
       "x": number (0-100),
       "y": number (0-100),
-      "comment": "The element [Name]...",
-      "emotion": "Joy"|"Desire"|"Interest"|"Satisfaction"|"Neutral"|"Sadness"|"Aversion"|"Boredom"|"Dissatisfaction"
+      "layer": "emotions" | "needs" | "strategy",
+      "comment": "Start with: 'The element [Name/Text]...' then explain.",
+      "emotion": "Joy" | "Desire" | "Interest" | "Satisfaction" | "Neutral" | "Sadness" | "Aversion" | "Boredom" | "Dissatisfaction",
+      "need": "Autonomy" | "Competence" | "Relatedness",
+      "brief_type": "Opportunity" | "Pain Point" | "Insight"
     }
   ]
 }
@@ -216,19 +257,21 @@ serve(async (req) => {
     const cleanedMasterText = cleanJson(masterText);
     const parsedMaster = JSON.parse(cleanedMasterText);
 
-    // Transform emotion types
+    // Transform emotion types (handle Interest→Fascination and Aversion→Disgust)
     const emotionTypeMap: Record<string, string> = {
-      'JOY': 'Joy', 'DESIRE': 'Desire', 'FASCINATION': 'Fascination',
-      'INTEREST': 'Fascination', 'SATISFACTION': 'Satisfaction',
-      'NEUTRAL': 'Neutral', 'SADNESS': 'Sadness', 'DISGUST': 'Disgust',
-      'AVERSION': 'Disgust', 'BOREDOM': 'Boredom', 'DISSATISFACTION': 'Dissatisfaction'
+      'JOY': 'Joy', 'DESIRE': 'Desire', 'INTEREST': 'Fascination', 'FASCINATION': 'Fascination',
+      'SATISFACTION': 'Satisfaction', 'NEUTRAL': 'Neutral', 'SADNESS': 'Sadness',
+      'AVERSION': 'Disgust', 'DISGUST': 'Disgust', 'BOREDOM': 'Boredom',
+      'DISSATISFACTION': 'Dissatisfaction'
     };
 
     let allMarkers = (parsedMaster.markers || []).map((m: any) => ({
-      x: m.x || 50,
-      y: m.y || 50,
-      layer: 'emotions',
+      x: Math.max(1, Math.min(99, m.x || 50)),
+      y: Math.max(0, Math.min(100, m.y || 50)),
+      layer: m.layer || 'emotions',
       emotion: emotionTypeMap[m.emotion?.toUpperCase()] || 'Neutral',
+      need: m.need,
+      brief_type: m.brief_type,
       comment: m.comment || '',
     }));
 
@@ -254,18 +297,21 @@ serve(async (req) => {
         const thisSliceHeight = sliceHeights[index + 1];
 
         const processedBodyMarkers = rawMarkers.map((m: any) => {
-          // Convert local % to local pixels
+          // STITCHING MATH:
+          // 1. Convert local % to local pixels
           const localYPx = (m.y / 100) * thisSliceHeight;
-          // Add offset of previous slices
+          // 2. Add offset of previous slices
           const globalYPx = currentYOffset + localYPx;
-          // Convert to global %
+          // 3. Convert to global %
           const globalY = (globalYPx / totalHeight) * 100;
 
           return {
-            x: m.x || 50,
+            x: Math.max(1, Math.min(99, m.x || 50)),
             y: globalY,
-            layer: 'emotions',
+            layer: m.layer || 'emotions',
             emotion: emotionTypeMap[m.emotion?.toUpperCase()] || 'Neutral',
+            need: m.need,
+            brief_type: m.brief_type,
             comment: m.comment || '',
           };
         });
@@ -278,15 +324,16 @@ serve(async (req) => {
       }
     });
 
-    // 6. Filter out suspicious default positions
+    // 6. Filter out suspicious default positions (hallucination artifacts)
     allMarkers = allMarkers.filter((m: any) => {
+      // Reject lazy defaults like 0,0, 50,50, 100,100
       if (m.x === 0 || m.x === 100) return false;
-      if (m.x === 50 && m.y === 50) return false;
+      // Don't filter 50,50 too aggressively in case it's legitimate
       return true;
     });
 
-    // 7. Decluster markers
-    if (allMarkers.length > 5) {
+    // 7. Apply de-clustering algorithm
+    if (allMarkers.length > 0) {
       allMarkers = declusterMarkers(allMarkers);
     }
 
@@ -304,30 +351,46 @@ serve(async (req) => {
         : { score: sdtScores.relatedness || 5, justification: "Social connection" }
     };
 
+    // 9. Parse personas with proper structure
+    const personas = Array.isArray(parsedMaster.personas) ? parsedMaster.personas.map((p: any) => ({
+      name: p.name || "Unknown Persona",
+      role: p.role || "Unknown Role",
+      bio: p.bio || `A ${p.role || 'user'} seeking solutions based on their core values.`,
+      quote: p.quote || "I'm hoping this website solves my problem quickly.",
+      goals: p.goals || "Evaluate the product/service and decide if it's a good fit.",
+      techLiteracy: p.techLiteracy || "Mid",
+      psychographics: p.psychographics || "",
+      values: Array.isArray(p.values) ? p.values : [],
+      frustrations: Array.isArray(p.frustrations) ? p.frustrations : [],
+      demographics: p.demographics || "",
+    })) : [];
+
     const report = {
       overallScore: parsedMaster.overallScore || 70,
       summary: parsedMaster.summary || "Analysis complete",
       targetAudience: parsedMaster.targetAudience || "General web users",
-      audienceSplit: [
-        { label: 'Primary', percentage: 60 },
-        { label: 'Secondary', percentage: 30 },
-        { label: 'Tertiary', percentage: 10 }
-      ],
-      personas: [],
+      audienceSplit: Array.isArray(parsedMaster.audienceSplit) && parsedMaster.audienceSplit.length > 0
+        ? parsedMaster.audienceSplit
+        : [{ label: 'Primary', percentage: 60 }, { label: 'Secondary', percentage: 30 }, { label: 'Tertiary', percentage: 10 }],
+      personas: personas,
       brandValues: parsedMaster.brandValues || [],
       keyFindings: (parsedMaster.keyFindings || []).map((f: any) => ({
         title: f.title || 'Insight',
         description: f.description || '',
-        type: 'neutral'
+        type: f.type || 'neutral'
       })),
       suggestions: parsedMaster.suggestions || [],
-      layoutStructure: [],
+      layoutStructure: Array.isArray(parsedMaster.layoutStructure) && parsedMaster.layoutStructure.length > 0
+        ? parsedMaster.layoutStructure
+        : [{ type: 'unknown', estimatedHeight: 3000, backgroundColorHint: 'light' }],
       sdtScores: transformedSdtScores,
-      creativeBrief: {
-        problemStatement: '',
-        targetEmotion: '',
-        howMightWe: '',
-        strategicDirection: ''
+      creativeBrief: parsedMaster.creativeBrief || {
+        problemStatement: 'N/A',
+        targetEmotion: 'N/A',
+        howMightWe: 'N/A',
+        strategicDirection: 'N/A',
+        actionableSteps: [],
+        benchmarks: []
       }
     };
 

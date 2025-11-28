@@ -45,7 +45,8 @@ async function sliceImageBase64(base64Full: string): Promise<{ slices: string[],
       const totalWidth = img.width;
       const totalHeight = img.height;
 
-      // 16:9 aspect ratio slice height to match standard screens
+      // We use a 16:9 aspect ratio slice height to match standard screens
+      // This ensures Gemini sees "familiar" viewports
       const sliceHeight = Math.floor(totalWidth * (9/16));
 
       const slices: string[] = [];
@@ -56,8 +57,10 @@ async function sliceImageBase64(base64Full: string): Promise<{ slices: string[],
 
       for (let i = 0; i < numSlices; i++) {
         const sourceY = i * sliceHeight;
+        // The last slice might be shorter
         const currentSliceHeight = Math.min(sliceHeight, totalHeight - sourceY);
 
+        // Resize canvas to fit this specific slice exactly
         canvas.height = currentSliceHeight;
         ctx.clearRect(0, 0, totalWidth, currentSliceHeight);
 
@@ -111,11 +114,11 @@ export async function analyzeWebsite(url: string): Promise<GeminiAnalysisResult>
       return generateFallbackAnalysis(url, screenshot);
     }
 
-    // Process markers
+    // Process markers with exact coordinate clamping to match GitHub version
     const markers: Marker[] = (data.markers || []).map((m: any) => ({
       id: generateId(),
-      x: m.x || 50,
-      y: m.y || 50,
+      x: Math.max(1, Math.min(99, m.x || 50)),
+      y: Math.max(0, Math.min(100, m.y || 50)),
       layer: m.layer || 'emotions',
       comment: m.comment || '',
       source: 'AI' as const,

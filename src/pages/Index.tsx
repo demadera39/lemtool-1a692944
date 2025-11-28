@@ -5,6 +5,7 @@ import AnalysisCanvas from '@/components/AnalysisCanvas';
 import ReportPanel from '@/components/ReportPanel';
 import Dashboard from '@/components/Dashboard';
 import ParticipantView from '@/components/ParticipantView';
+import { UpgradeModal } from '@/components/UpgradeModal';
 import { Marker, EmotionType, User, LayerType, Project } from '@/types';
 import { analyzeWebsite } from '@/services/geminiService';
 import { supabase, signOut, createProject, getProjectById, ensureProfile } from '@/services/supabaseService';
@@ -29,6 +30,7 @@ const Index = () => {
   const [activeLayer, setActiveLayer] = useState<LayerType>('emotions');
   const [showInfoBanner, setShowInfoBanner] = useState(true);
   const [remainingAnalyses, setRemainingAnalyses] = useState<{ monthly: number; pack: number; monthlyLimit: number }>({ monthly: 0, pack: 0, monthlyLimit: 10 });
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -143,7 +145,7 @@ const Index = () => {
     // Check if user can create analysis
     const canCreate = await canCreateAnalysis(user.id);
     if (!canCreate) {
-      toast.error('You have reached your analysis limit. Upgrade to premium!');
+      setShowUpgradeModal(true);
       return;
     }
 
@@ -225,6 +227,7 @@ const Index = () => {
 
   return (
     <div className="flex h-screen w-screen bg-gray-50 text-gray-900 overflow-hidden">
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
       <Toolbar onAddMarker={handleAddMarker} selectedEmotion={null} />
 
       <div className="flex-1 flex flex-col h-full relative">

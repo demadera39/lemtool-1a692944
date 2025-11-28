@@ -397,18 +397,18 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   
   // Auto-scroll to marker when selected (especially from external list)
   useEffect(() => {
-    if (activeMarkerId && viewMode === 'snapshot' && imageScrollContainerRef.current && containerRef.current) {
+    if (activeMarkerId && viewMode === 'snapshot' && scrollWrapperRef.current && containerRef.current) {
       const marker = markers.find(m => m.id === activeMarkerId);
       if (!marker) return;
       
-      const containerHeight = imageScrollContainerRef.current.clientHeight;
+      const containerHeight = scrollWrapperRef.current.clientHeight;
       const imageHeight = containerRef.current.clientHeight;
       const markerPositionY = (marker.y / 100) * imageHeight;
       
       // Scroll so marker is in the middle of the viewport
       const targetScroll = markerPositionY - (containerHeight / 2);
       
-      imageScrollContainerRef.current.scrollTo({
+      scrollWrapperRef.current.scrollTo({
         top: Math.max(0, targetScroll),
         behavior: 'smooth'
       });

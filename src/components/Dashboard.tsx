@@ -6,6 +6,7 @@ import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown } from 'luci
 import { Button } from './ui/button';
 import AnalysisCanvas from './AnalysisCanvas';
 import ReportPanel from './ReportPanel';
+import { toast } from 'sonner';
 
 interface DashboardProps {
   user: User;
@@ -66,7 +67,9 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const copyTestLink = (projectId: string) => {
     const testLink = `${window.location.origin}?test=${projectId}`;
     navigator.clipboard.writeText(testLink);
-    alert('Test link copied to clipboard!');
+    toast.success('Participant link copied!', {
+      description: 'Share this link with participants so they can provide emotional feedback on the same design.',
+    });
   };
 
   if (viewMode === 'detail' && selectedProject) {
@@ -231,33 +234,35 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                       {project.report.overallScore}/100
                     </span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedProject(project);
+                          setViewMode('detail');
+                        }}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onNavigateToTest(project)}
+                      >
+                        <Users size={14} className="mr-1" />
+                        Test
+                      </Button>
+                    </div>
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => {
-                        setSelectedProject(project);
-                        setViewMode('detail');
-                      }}
-                    >
-                      View
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onNavigateToTest(project)}
-                    >
-                      <Users size={14} className="mr-1" />
-                      Test
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
+                      className="w-full bg-lem-orange hover:bg-lem-orange-dark"
                       onClick={() => copyTestLink(project.id)}
-                      title="Copy test link"
                     >
-                      <ExternalLink size={14} />
+                      <ExternalLink size={14} className="mr-2" />
+                      Copy Participant Link
                     </Button>
                   </div>
                 </div>

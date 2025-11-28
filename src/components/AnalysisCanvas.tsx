@@ -674,7 +674,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
 
         <div
             ref={containerRef}
-            className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl h-full' : ''} ${interactionMode === 'select_area' ? 'cursor-crosshair' : ''}`}
+            className={`relative w-full mx-auto bg-gray-50 shadow-2xl transition-all duration-300 ${viewMode === 'live' ? 'min-h-[1200vh]' : ''} ${viewMode === 'presentation' ? 'max-w-6xl aspect-video overflow-hidden rounded-xl bg-gray-900' : ''} ${viewMode === 'snapshot' ? 'max-w-6xl' : ''} ${interactionMode === 'select_area' ? 'cursor-crosshair' : ''}`}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -744,7 +744,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                  </div>
             </div>
           ) : viewMode === 'snapshot' && screenshot ? (
-            <div ref={imageScrollContainerRef} className="relative w-full h-full overflow-y-auto border-4 border-gray-300 rounded-lg">
+            <div ref={imageScrollContainerRef} className="relative w-full border-4 border-gray-300 rounded-lg">
                 <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
                 <div className="absolute inset-0 z-10 pointer-events-none">
                   {filteredMarkers.map((marker) => renderMarker(marker))}

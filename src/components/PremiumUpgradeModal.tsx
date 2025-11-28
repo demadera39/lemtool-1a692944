@@ -36,8 +36,12 @@ export const PremiumUpgradeModal = ({ open, onOpenChange }: PremiumUpgradeModalP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] flex items-center justify-center">
-            <Crown className="w-6 h-6 text-white" />
+          <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gradient-to-br from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] flex items-center justify-center p-2">
+            <img 
+              src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" 
+              alt="Interest" 
+              className="w-full h-full"
+            />
           </div>
           <DialogTitle className="text-2xl text-center">Upgrade to Premium</DialogTitle>
           <DialogDescription className="text-center text-base">

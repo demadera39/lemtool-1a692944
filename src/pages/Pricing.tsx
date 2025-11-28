@@ -5,7 +5,6 @@ import { Check, ArrowLeft } from 'lucide-react';
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const [isYearly, setIsYearly] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50 relative overflow-hidden">
@@ -34,53 +33,26 @@ const Pricing = () => {
           <h1 className="text-5xl font-black text-gray-900 mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
-            Start free, upgrade when you need more analyses
+          <p className="text-xl text-gray-600">
+            Buy analysis packs that never expire • No subscriptions
           </p>
-          
-          {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-3 bg-white rounded-full p-1 shadow-md border border-gray-200">
-            <button
-              onClick={() => setIsYearly(false)}
-              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
-                !isYearly
-                  ? 'bg-lem-orange text-white'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setIsYearly(true)}
-              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
-                isYearly
-                  ? 'bg-lem-orange text-white'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Yearly
-              <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                Save €11
-              </span>
-            </button>
-          </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {/* Free Tier */}
           <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
             <div className="mb-6">
               <h2 className="text-2xl font-black text-gray-900 mb-2">Free</h2>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black text-gray-900">€0</span>
-                <span className="text-gray-500">/forever</span>
               </div>
+              <p className="text-gray-500 text-sm mt-1">One-time only</p>
             </div>
 
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">3 UI analyses per account</span>
+                <span className="text-gray-700"><strong>3 analyses</strong> to try the tool</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
@@ -94,53 +66,35 @@ const Pricing = () => {
                 <Check size={20} className="text-gray-500 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-400">No participant testing</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Check size={20} className="text-gray-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-400">No comparison dashboard</span>
-              </li>
             </ul>
 
-            <div className="relative">
-              <div className="absolute -top-3 -right-3 w-10 h-10 animate-bounce">
-                <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" alt="Joy" className="w-full h-full" />
-              </div>
-              <Button 
-                onClick={() => navigate('/auth')}
-                variant="outline" 
-                className="w-full"
-              >
-                Get Started Free
-              </Button>
-            </div>
+            <Button 
+              onClick={() => navigate('/auth')}
+              variant="outline" 
+              className="w-full"
+            >
+              Get Started Free
+            </Button>
           </div>
 
-          {/* Premium Tier */}
+          {/* Starter Pack */}
           <div className="bg-gradient-to-br from-lem-orange to-orange-600 rounded-2xl border-2 border-lem-orange p-8 shadow-2xl relative">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-1 rounded-full text-sm font-bold text-lem-orange border-2 border-lem-orange">
               Most Popular
             </div>
 
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-white mb-2">Premium</h2>
+              <h2 className="text-2xl font-black text-white mb-2">Starter Pack</h2>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-white">
-                  {isYearly ? '€109' : '€9.99'}
-                </span>
-                <span className="text-orange-100">
-                  /{isYearly ? 'year' : 'month'}
-                </span>
+                <span className="text-5xl font-black text-white">€9.99</span>
               </div>
-              {isYearly && (
-                <p className="text-orange-100 text-sm mt-2">
-                  €9.08/month billed annually
-                </p>
-              )}
+              <p className="text-orange-100 text-sm mt-1">10 analyses • Never expire</p>
             </div>
 
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium">Unlimited UI analyses</span>
+                <span className="text-white font-medium"><strong>10 analyses</strong> that never expire</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
@@ -158,26 +112,52 @@ const Pricing = () => {
                 <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
                 <span className="text-white font-medium">AI vs Human comparison</span>
               </li>
+            </ul>
+
+            <Button 
+              onClick={() => navigate('/auth')}
+              className="w-full bg-white text-lem-orange hover:bg-gray-50"
+            >
+              Buy Starter Pack
+            </Button>
+          </div>
+
+          {/* Top-up Pack */}
+          <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
+            <div className="mb-6">
+              <h2 className="text-2xl font-black text-gray-900 mb-2">Top-up Pack</h2>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-black text-gray-900">€4.99</span>
+              </div>
+              <p className="text-gray-500 text-sm mt-1">5 analyses • Never expire</p>
+            </div>
+
+            <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
-                <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium">Priority support</span>
+                <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700"><strong>5 analyses</strong> that never expire</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">Perfect for occasional use</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">All premium features</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">Buy multiple packs anytime</span>
               </li>
             </ul>
 
-            <div className="relative">
-              <div className="absolute -top-3 -right-3 w-10 h-10 animate-pulse">
-                <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" alt="Interest" className="w-full h-full" />
-              </div>
-              <Button 
-                onClick={() => navigate('/auth')}
-                className="w-full bg-white text-lem-orange hover:bg-gray-50"
-              >
-                Start Free Trial
-              </Button>
-              <p className="text-center text-orange-100 text-xs mt-3">
-                Start with 3 free analyses
-              </p>
-            </div>
+            <Button 
+              onClick={() => navigate('/auth')}
+              variant="outline"
+              className="w-full"
+            >
+              Buy Top-up Pack
+            </Button>
           </div>
         </div>
 
@@ -188,18 +168,18 @@ const Pricing = () => {
           <div className="max-w-2xl mx-auto space-y-6 text-left">
             <div className="bg-white rounded-lg p-6 border border-gray-200">
               <h4 className="font-bold text-gray-900 mb-2">
-                Can I upgrade or downgrade anytime?
+                Do analysis packs expire?
               </h4>
               <p className="text-gray-600">
-                Yes! You can upgrade to Premium at any time. If you cancel, you'll keep Premium features until the end of your billing period.
+                No! Once you purchase a pack, the analyses are yours forever. Use them at your own pace.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 border border-gray-200">
               <h4 className="font-bold text-gray-900 mb-2">
-                What happens to my projects if I cancel?
+                Can I buy multiple packs?
               </h4>
               <p className="text-gray-600">
-                Your existing projects and data remain accessible. You'll keep your 3 free analyses and can view all previous work.
+                Yes! Buy as many top-up packs as you need. They all stack and never expire.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 border border-gray-200">

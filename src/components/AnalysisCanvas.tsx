@@ -51,7 +51,12 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
         if (!bubbleRef.current) return;
         
         const bubble = bubbleRef.current;
-        const rect = bubble.getBoundingClientRect();
+        const markerElement = bubble.parentElement;
+        if (!markerElement) return;
+        
+        // Get marker position in viewport
+        const markerRect = markerElement.getBoundingClientRect();
+        const markerCenterX = markerRect.left + markerRect.width / 2;
         
         // Find the scrollable container or use viewport
         let container = bubble.parentElement;
@@ -68,100 +73,54 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
             ? container.getBoundingClientRect() 
             : { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth, width: window.innerWidth, height: window.innerHeight };
         
+        // Calculate available width with padding
+        const padding = 16;
+        const availableWidth = containerRect.width - (padding * 2);
+        const bubbleWidth = Math.min(320, availableWidth);
+        setMaxWidth(bubbleWidth);
+        
+        // Calculate ideal centered position
+        const idealLeft = markerCenterX - bubbleWidth / 2;
+        const idealRight = markerCenterX + bubbleWidth / 2;
+        
+        // Check boundaries and adjust
+        let finalLeft = idealLeft;
+        let newArrowOffset = 50; // Default center (%)
+        
+        if (idealLeft < containerRect.left + padding) {
+            // Would overflow left - stick to left edge
+            finalLeft = containerRect.left + padding;
+            // Calculate arrow position to point at marker
+            const distanceFromLeft = markerCenterX - finalLeft;
+            newArrowOffset = (distanceFromLeft / bubbleWidth) * 100;
+            newArrowOffset = Math.max(10, Math.min(90, newArrowOffset));
+        } else if (idealRight > containerRect.right - padding) {
+            // Would overflow right - stick to right edge
+            finalLeft = containerRect.right - padding - bubbleWidth;
+            // Calculate arrow position to point at marker
+            const distanceFromLeft = markerCenterX - finalLeft;
+            newArrowOffset = (distanceFromLeft / bubbleWidth) * 100;
+            newArrowOffset = Math.max(10, Math.min(90, newArrowOffset));
+        }
+        
+        // Store the actual left position (in pixels relative to marker)
+        const leftOffset = finalLeft - markerCenterX;
+        setHorizontalOffset(leftOffset);
+        setArrowOffset(newArrowOffset);
+        
         // Vertical positioning (up/down)
         if (!direction) {
-            const spaceAbove = rect.top - containerRect.top;
-            const spaceBelow = containerRect.bottom - rect.bottom;
+            const spaceAbove = markerRect.top - containerRect.top;
+            const spaceBelow = containerRect.bottom - markerRect.bottom;
             
-            if (spaceAbove < 150 && spaceBelow > spaceAbove) {
+            if (spaceAbove < 200 && spaceBelow > spaceAbove) {
                 setComputedDirection('down');
             } else {
                 setComputedDirection('up');
             }
         }
         
-        // Horizontal boundary detection and sizing
-        const padding = 16; // Minimum distance from edges
-        const availableWidth = containerRect.width - (padding * 2);
-        const bubbleWidth = Math.min(320, availableWidth); // Max 320px or container width
-        setMaxWidth(bubbleWidth);
-        
-        const bubbleCenter = rect.left + rect.width / 2;
-        const containerLeft = containerRect.left;
-        const containerRight = containerRect.right;
-        
-        let newHorizontalOffset = 0;
-        let newArrowOffset = 50; // Default center position (%)
-        
-        // Check if bubble would extend beyond left edge
-        const wouldExtendLeft = (bubbleCenter - bubbleWidth / 2) < (containerLeft + padding);
-        // Check if bubble would extend beyond right edge  
-        const wouldExtendRight = (bubbleCenter + bubbleWidth / 2) > (containerRight - padding);
-        
-        if (wouldExtendLeft) {
-            // Shift bubble right
-            const idealLeft = containerLeft + padding;
-            const currentLeft = bubbleCenter - bubbleWidth / 2;
-            newHorizontalOffset = idealLeft - currentLeft;
-            // Arrow points back to marker
-            newArrowOffset = ((bubbleCenter - idealLeft) / bubbleWidth) * 100;
-            newArrowOffset = Math.max(15, Math.min(85, newArrowOffset));
-        } else if (wouldExtendRight) {
-            // Shift bubble left
-            const idealRight = containerRight - padding;
-            const currentRight = bubbleCenter + bubbleWidth / 2;
-            newHorizontalOffset = idealRight - currentRight;
-            // Arrow points back to marker
-            newArrowOffset = ((bubbleCenter - (bubbleCenter + newHorizontalOffset - bubbleWidth / 2)) / bubbleWidth) * 100;
-            newArrowOffset = Math.max(15, Math.min(85, newArrowOffset));
-        }
-        
-        // Collision detection with other markers
-        let newVerticalOffset = 0;
-        const otherMarkers = allMarkers.filter(m => m.id !== marker.id);
-        const markerElements = document.querySelectorAll('[data-marker-id]');
-        
-        for (const otherMarker of otherMarkers) {
-            const otherElement = Array.from(markerElements).find(
-                el => el.getAttribute('data-marker-id') === otherMarker.id
-            );
-            
-            if (otherElement) {
-                const otherRect = otherElement.getBoundingClientRect();
-                
-                // Check if bubble overlaps with other marker
-                const bubbleLeft = bubbleCenter + newHorizontalOffset - bubbleWidth / 2;
-                const bubbleRight = bubbleCenter + newHorizontalOffset + bubbleWidth / 2;
-                const bubbleTop = direction === 'down' || computedDirection === 'down' ? rect.bottom + 16 : rect.top - rect.height - 16;
-                const bubbleBottom = bubbleTop + rect.height;
-                
-                const horizontalOverlap = 
-                    bubbleLeft < otherRect.right + 8 && 
-                    bubbleRight > otherRect.left - 8;
-                
-                const verticalOverlap = 
-                    bubbleTop < otherRect.bottom + 8 && 
-                    bubbleBottom > otherRect.top - 8;
-                
-                if (horizontalOverlap && verticalOverlap) {
-                    // Push bubble away from the marker
-                    const isUp = direction !== 'down' && computedDirection !== 'down';
-                    if (isUp) {
-                        // Push further up
-                        const neededShift = (otherRect.top - 8) - bubbleBottom;
-                        newVerticalOffset = Math.min(newVerticalOffset, neededShift);
-                    } else {
-                        // Push further down
-                        const neededShift = (otherRect.bottom + 8) - bubbleTop;
-                        newVerticalOffset = Math.max(newVerticalOffset, neededShift);
-                    }
-                }
-            }
-        }
-        
-        setHorizontalOffset(newHorizontalOffset);
-        setArrowOffset(newArrowOffset);
-        setVerticalOffset(newVerticalOffset);
+        setVerticalOffset(0); // Simplified - remove collision for now to fix boundaries first
     }, [direction, marker, allMarkers, computedDirection]);
 
     let title = 'Insight';
@@ -178,12 +137,11 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
     return (
       <div
         ref={bubbleRef}
-        className={`absolute bg-white rounded-lg shadow-2xl p-4 z-50 transform -translate-x-1/2 flex flex-col ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
+        className={`absolute bg-white rounded-lg shadow-2xl p-4 z-50 flex flex-col ${positionClass} border border-gray-100 animate-in fade-in zoom-in-95 duration-200`}
         style={{
-          left: `calc(50% + ${horizontalOffset}px)`,
+          left: `${horizontalOffset}px`,
           width: `${maxWidth}px`,
-          maxWidth: `${maxWidth}px`,
-          transform: `translate(-50%, ${verticalOffset}px)`
+          maxWidth: `${maxWidth}px`
         }}
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}

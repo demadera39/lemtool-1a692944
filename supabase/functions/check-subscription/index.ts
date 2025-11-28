@@ -76,12 +76,26 @@ serve(async (req) => {
       limit: 1,
     });
     const hasActiveSub = subscriptions.data.length > 0;
-    let subscriptionEnd = null;
-
+    
+    let subscriptionData = null;
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      subscriptionEnd = subscription.current_period_end * 1000;
-      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
+      // Safely extract and validate timestamps
+      const periodStart = subscription.current_period_start;
+      const periodEnd = subscription.current_period_end;
+      
+      logStep("Active subscription found", { 
+        subscriptionId: subscription.id, 
+        periodStart,
+        periodEnd 
+      });
+      
+      subscriptionData = {
+        id: subscription.id,
+        status: subscription.status,
+        start: periodStart ? new Date(periodStart * 1000).toISOString() : null,
+        end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      };
     } else {
       logStep("No active subscription found");
     }
@@ -112,7 +126,7 @@ serve(async (req) => {
     
     const currentPackAnalyses = currentRole?.pack_analyses_remaining || 0;
     
-    // Only update pack analyses if we found new purchases (total from Stripe > current in DB)
+    // Only update pack analyses if we found new purchases
     const newPackAnalyses = totalPackAnalyses > currentPackAnalyses ? totalPackAnalyses : currentPackAnalyses;
 
     const { error: updateError } = await supabaseClient
@@ -121,21 +135,24 @@ serve(async (req) => {
         user_id: user.id,
         role: hasActiveSub ? 'premium' : 'free',
         stripe_customer_id: customerId,
-        stripe_subscription_id: hasActiveSub ? subscriptions.data[0].id : null,
-        subscription_status: hasActiveSub ? 'active' : null,
-        subscription_start: hasActiveSub ? new Date(subscriptions.data[0].current_period_start * 1000).toISOString() : null,
-        subscription_end: subscriptionEnd ? new Date(subscriptionEnd).toISOString() : null,
+        stripe_subscription_id: subscriptionData?.id || null,
+        subscription_status: subscriptionData?.status || null,
+        subscription_start: subscriptionData?.start || null,
+        subscription_end: subscriptionData?.end || null,
         monthly_analyses_limit: hasActiveSub ? 10 : 0,
         pack_analyses_remaining: newPackAnalyses,
       }, { onConflict: 'user_id' });
     
     if (updateError) {
       logStep("ERROR updating user role", { error: updateError });
+      throw updateError;
     }
+
+    logStep("Successfully updated user role");
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
-      subscription_end: subscriptionEnd
+      subscription_end: subscriptionData?.end || null
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

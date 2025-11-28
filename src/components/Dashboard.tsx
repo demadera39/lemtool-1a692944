@@ -206,6 +206,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                 currentUrl={selectedProject.url}
                 activeLayer={activeLayer}
                 setActiveLayer={setActiveLayer}
+                screenshot={selectedProject.screenshot}
               />
             </div>
           </div>

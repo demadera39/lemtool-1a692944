@@ -1,9 +1,11 @@
 import { AnalysisReport, Marker, LayerType } from '../types';
-import { Award, Users, Target, Lightbulb, TrendingUp, Brain, Lock } from 'lucide-react';
+import { Award, Users, Target, Lightbulb, TrendingUp, Brain, Lock, Map } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { useState } from 'react';
 
 interface ReportPanelProps {
   report: AnalysisReport | null;
@@ -12,12 +14,28 @@ interface ReportPanelProps {
   currentUrl: string;
   activeLayer: LayerType;
   setActiveLayer: (layer: LayerType) => void;
+  screenshot?: string;
 }
 
-const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, setActiveLayer }: ReportPanelProps) => {
+const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, setActiveLayer, screenshot }: ReportPanelProps) => {
   const emotionMarkers = markers.filter(m => m.layer === 'emotions');
   const needsMarkers = markers.filter(m => m.layer === 'needs');
   const strategyMarkers = markers.filter(m => m.layer === 'strategy');
+  const areaMarkers = markers.filter(m => m.isArea);
+  
+  const [selectedSession, setSelectedSession] = useState<string>('all');
+  const [showAreaView, setShowAreaView] = useState(false);
+  
+  // Get unique sessions from markers
+  const sessions = Array.from(new Set(markers.filter(m => m.sessionId).map(m => m.sessionId)));
+  
+  const getFilteredAreas = () => {
+    if (selectedSession === 'all') return areaMarkers;
+    if (selectedSession === 'ai') return areaMarkers.filter(m => m.source === 'AI');
+    return areaMarkers.filter(m => m.sessionId === selectedSession);
+  };
+  
+  const filteredAreas = getFilteredAreas();
 
   if (isAnalyzing) {
     return (
@@ -52,11 +70,14 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
           </div>
         )}
 
-        <div className="flex gap-2 border-b border-gray-200">
+        <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
           <button
-            onClick={() => setActiveLayer('emotions')}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-all ${
-              activeLayer === 'emotions'
+            onClick={() => {
+              setActiveLayer('emotions');
+              setShowAreaView(false);
+            }}
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
+              activeLayer === 'emotions' && !showAreaView
                 ? 'text-lem-orange border-b-2 border-lem-orange'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
@@ -64,9 +85,12 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
             Emotions
           </button>
           <button
-            onClick={() => setActiveLayer('needs')}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-all ${
-              activeLayer === 'needs'
+            onClick={() => {
+              setActiveLayer('needs');
+              setShowAreaView(false);
+            }}
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
+              activeLayer === 'needs' && !showAreaView
                 ? 'text-lem-orange border-b-2 border-lem-orange'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
@@ -74,15 +98,30 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
             Psych Needs
           </button>
           <button
-            onClick={() => setActiveLayer('strategy')}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-all ${
-              activeLayer === 'strategy'
+            onClick={() => {
+              setActiveLayer('strategy');
+              setShowAreaView(false);
+            }}
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
+              activeLayer === 'strategy' && !showAreaView
                 ? 'text-lem-orange border-b-2 border-lem-orange'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             Strategy
           </button>
+          {areaMarkers.length > 0 && (
+            <button
+              onClick={() => setShowAreaView(true)}
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
+                showAreaView
+                  ? 'text-lem-orange border-b-2 border-lem-orange'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Area View
+            </button>
+          )}
         </div>
       </div>
 
@@ -107,7 +146,7 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
               </CardContent>
             </Card>
 
-            {activeLayer === 'emotions' && (
+            {activeLayer === 'emotions' && !showAreaView && (
               <>
                 <Card>
                   <CardHeader>
@@ -239,6 +278,89 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                         <p className="text-xs text-gray-600">{marker.comment}</p>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {showAreaView && areaMarkers.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Map className="text-lem-orange" size={18} />
+                    Area Heatmap
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4">
+                    <label className="text-sm font-medium mb-2 block">Filter by participant:</label>
+                    <Select value={selectedSession} onValueChange={setSelectedSession}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All participants" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All participants</SelectItem>
+                        <SelectItem value="ai">AI only</SelectItem>
+                        {sessions.map((sessionId) => (
+                          <SelectItem key={sessionId} value={sessionId!}>
+                            Session {sessionId?.slice(-6)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {screenshot && (
+                    <div className="relative w-full border border-gray-200 rounded-lg overflow-hidden">
+                      <img src={screenshot} alt="Screenshot" className="w-full" />
+                      <div className="absolute inset-0">
+                        {filteredAreas.map((marker, idx) => {
+                          const isPositive = marker.emotion && ['Joy', 'Desire', 'Fascination', 'Satisfaction'].includes(marker.emotion);
+                          const isNegative = marker.emotion && ['Sadness', 'Disgust', 'Boredom', 'Dissatisfaction'].includes(marker.emotion);
+                          
+                          return (
+                            <div
+                              key={idx}
+                              style={{
+                                position: 'absolute',
+                                left: `${marker.x}%`,
+                                top: `${marker.y}%`,
+                                width: `${marker.width}%`,
+                                height: `${marker.height}%`,
+                                backgroundColor: isPositive 
+                                  ? 'rgba(34, 197, 94, 0.2)' 
+                                  : isNegative 
+                                  ? 'rgba(239, 68, 68, 0.2)' 
+                                  : 'rgba(59, 130, 246, 0.2)',
+                                border: isPositive 
+                                  ? '2px solid rgba(34, 197, 94, 0.5)' 
+                                  : isNegative 
+                                  ? '2px solid rgba(239, 68, 68, 0.5)' 
+                                  : '2px solid rgba(59, 130, 246, 0.5)',
+                                pointerEvents: 'none'
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm text-gray-600">
+                      Showing {filteredAreas.length} area{filteredAreas.length !== 1 ? 's' : ''} 
+                      {selectedSession !== 'all' && ` for ${selectedSession === 'ai' ? 'AI' : `Session ${selectedSession.slice(-6)}`}`}
+                    </p>
+                    <div className="flex gap-4 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-green-500 bg-opacity-30 border-2 border-green-500 border-opacity-50 rounded"></div>
+                        <span>Positive emotions</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-red-500 bg-opacity-30 border-2 border-red-500 border-opacity-50 rounded"></div>
+                        <span>Negative emotions</span>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

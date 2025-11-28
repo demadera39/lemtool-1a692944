@@ -16,9 +16,11 @@ interface ReportPanelProps {
   activeLayer: LayerType;
   setActiveLayer: (layer: LayerType) => void;
   screenshot?: string;
+  activeMarkerId?: string | null;
+  onMarkerSelect?: (markerId: string | null) => void;
 }
 
-const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, setActiveLayer, screenshot }: ReportPanelProps) => {
+const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, setActiveLayer, screenshot, activeMarkerId, onMarkerSelect }: ReportPanelProps) => {
   const emotionMarkers = markers.filter(m => m.layer === 'emotions');
   const needsMarkers = markers.filter(m => m.layer === 'needs');
   const strategyMarkers = markers.filter(m => m.layer === 'strategy');
@@ -286,7 +288,11 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                   </p>
                   <div className="space-y-2">
                     {needsMarkers.map((marker, idx) => (
-                      <div key={idx} className="border-l-2 border-blue-500 pl-3 py-1">
+                      <div 
+                        key={idx} 
+                        onClick={() => onMarkerSelect?.(marker.id)}
+                        className={`border-l-2 border-blue-500 pl-3 py-1 cursor-pointer hover:bg-gray-50 transition-colors rounded ${activeMarkerId === marker.id ? 'bg-blue-50 ring-2 ring-blue-300' : ''}`}
+                      >
                         <h4 className="font-bold text-sm text-gray-900">{marker.need}</h4>
                         <p className="text-xs text-gray-600">{marker.comment}</p>
                       </div>
@@ -310,7 +316,11 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                   </p>
                   <div className="space-y-2">
                     {strategyMarkers.map((marker, idx) => (
-                      <div key={idx} className="border-l-2 border-green-500 pl-3 py-1">
+                      <div 
+                        key={idx} 
+                        onClick={() => onMarkerSelect?.(marker.id)}
+                        className={`border-l-2 border-green-500 pl-3 py-1 cursor-pointer hover:bg-gray-50 transition-colors rounded ${activeMarkerId === marker.id ? 'bg-green-50 ring-2 ring-green-300' : ''}`}
+                      >
                         <h4 className="font-bold text-sm text-gray-900">{marker.brief_type}</h4>
                         <p className="text-xs text-gray-600">{marker.comment}</p>
                       </div>

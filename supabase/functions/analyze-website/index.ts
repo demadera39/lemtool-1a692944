@@ -162,6 +162,83 @@ function declusterMarkers(markers: any[]): any[] {
   }));
 }
 
+async function callGeminiAPI(apiKey: string, parts: any[], prompt: string, maxTokens: number = 4096) {
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: maxTokens,
+        }
+      }),
+    }
+  );
+  return response;
+}
+
+async function callLovableAI(parts: any[], prompt: string) {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  
+  // Convert parts to messages format for Lovable AI
+  const messages = [
+    {
+      role: "user",
+      content: parts.map((part: any) => {
+        if (part.inline_data) {
+          return {
+            type: "image_url",
+            image_url: {
+              url: `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`
+            }
+          };
+        }
+        return { type: "text", text: part.text };
+      })
+    }
+  ];
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages,
+      max_tokens: 4096,
+    }),
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Lovable AI error: ${response.status} - ${errorText}`);
+  }
+  
+  const data = await response.json();
+  
+  // Convert Lovable AI response format back to Gemini format
+  return {
+    ok: true,
+    json: async () => ({
+      candidates: [{
+        content: {
+          parts: [{
+            text: data.choices[0].message.content
+          }]
+        }
+      }]
+    })
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -170,9 +247,10 @@ serve(async (req) => {
   try {
     const { url, slices, sliceHeights, totalHeight, screenshot } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not configured");
+    if (!GEMINI_API_KEY && !LOVABLE_API_KEY) {
+      throw new Error("No AI API key configured");
     }
 
     if (!slices || !sliceHeights || !totalHeight) {
@@ -182,39 +260,50 @@ serve(async (req) => {
     console.log(`Analyzing ${slices.length} slices. Total Height: ${totalHeight}px`);
 
     // 1. Analyze first slice with master prompt
-    const masterResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": GEMINI_API_KEY,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { inline_data: { mime_type: "image/png", data: slices[0] } },
-                { text: MULTIMODAL_MASTER_PROMPT.replace(/{URL}/g, url) }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 4096,
+    let masterResponse;
+    let usedLovableAI = false;
+    
+    const parts = [
+      { inline_data: { mime_type: "image/png", data: slices[0] } },
+      { text: MULTIMODAL_MASTER_PROMPT.replace(/{URL}/g, url) }
+    ];
+    
+    // Try Gemini API first if available
+    if (GEMINI_API_KEY) {
+      try {
+        masterResponse = await callGeminiAPI(GEMINI_API_KEY, parts, MULTIMODAL_MASTER_PROMPT);
+        
+        if (!masterResponse.ok) {
+          const errorText = await masterResponse.text();
+          console.error("Gemini API error:", masterResponse.status, errorText);
+          
+          // If rate limited and Lovable AI is available, fallback
+          if (masterResponse.status === 429 && LOVABLE_API_KEY) {
+            console.log("Rate limited on Gemini, falling back to Lovable AI");
+            masterResponse = await callLovableAI(parts, MULTIMODAL_MASTER_PROMPT);
+            usedLovableAI = true;
+          } else {
+            throw new Error(`Gemini API error: ${masterResponse.status}`);
           }
-        }),
+        }
+      } catch (error) {
+        if (LOVABLE_API_KEY) {
+          console.log("Gemini failed, falling back to Lovable AI:", error);
+          masterResponse = await callLovableAI(parts, MULTIMODAL_MASTER_PROMPT);
+          usedLovableAI = true;
+        } else {
+          throw error;
+        }
       }
-    );
-
-    if (!masterResponse.ok) {
-      const errorText = await masterResponse.text();
-      console.error("Gemini API error:", masterResponse.status, errorText);
-      throw new Error(`Gemini API error: ${masterResponse.status}`);
+    } else {
+      // No Gemini key, use Lovable AI
+      console.log("Using Lovable AI (no Gemini key configured)");
+      masterResponse = await callLovableAI(parts, MULTIMODAL_MASTER_PROMPT);
+      usedLovableAI = true;
     }
 
     const masterData = await masterResponse.json();
-    console.log("Master response received");
+    console.log(`Master response received (using ${usedLovableAI ? 'Lovable AI' : 'Gemini'})`);
     
     const masterText = masterData.candidates?.[0]?.content?.parts?.[0]?.text;
 
@@ -223,32 +312,31 @@ serve(async (req) => {
     }
 
     // 2. Analyze remaining slices in parallel
-    const bodyPromises = slices.slice(1).map((slice: string) =>
-      fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY,
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { inline_data: { mime_type: "image/png", data: slice } },
-                  { text: MARKER_ONLY_PROMPT.replace(/{URL}/g, url) }
-                ]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 2048,
-            }
-          }),
+    const bodyPromises = slices.slice(1).map(async (slice: string) => {
+      const sliceParts = [
+        { inline_data: { mime_type: "image/png", data: slice } },
+        { text: MARKER_ONLY_PROMPT.replace(/{URL}/g, url) }
+      ];
+      
+      try {
+        let response;
+        if (usedLovableAI || !GEMINI_API_KEY) {
+          response = await callLovableAI(sliceParts, MARKER_ONLY_PROMPT);
+        } else {
+          response = await callGeminiAPI(GEMINI_API_KEY, sliceParts, MARKER_ONLY_PROMPT, 2048);
+          
+          // Fallback to Lovable AI if rate limited
+          if (!response.ok && response.status === 429 && LOVABLE_API_KEY) {
+            console.log("Rate limited on body slice, falling back to Lovable AI");
+            response = await callLovableAI(sliceParts, MARKER_ONLY_PROMPT);
+          }
         }
-      ).then(r => r.json())
-    );
+        return await response.json();
+      } catch (error) {
+        console.warn("Failed to analyze slice:", error);
+        return { candidates: [{ content: { parts: [{ text: '{"markers":[]}' }] } }] };
+      }
+    });
 
     const bodyResponses = await Promise.all(bodyPromises);
     console.log(`Received ${bodyResponses.length} body slice responses`);

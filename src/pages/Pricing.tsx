@@ -6,8 +6,13 @@ const Pricing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50 relative overflow-hidden">
+      {/* Decorative emotion stickers */}
+      <div className="absolute top-10 right-10 text-6xl opacity-20 rotate-12">😊</div>
+      <div className="absolute bottom-20 left-10 text-5xl opacity-15 -rotate-12">🎯</div>
+      <div className="absolute top-1/3 left-1/4 text-4xl opacity-10">✨</div>
+      
+      <header className="bg-white border-b border-gray-200 shadow-sm relative z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate('/')}>
             <ArrowLeft size={18} className="mr-2" />
@@ -60,13 +65,16 @@ const Pricing = () => {
               </li>
             </ul>
 
-            <Button 
-              onClick={() => navigate('/auth')}
-              variant="outline" 
-              className="w-full"
-            >
-              Get Started Free
-            </Button>
+            <div className="relative">
+              <div className="absolute -top-3 -right-3 text-4xl animate-bounce">😊</div>
+              <Button 
+                onClick={() => navigate('/auth')}
+                variant="outline" 
+                className="w-full"
+              >
+                Get Started Free
+              </Button>
+            </div>
           </div>
 
           {/* Premium Tier */}
@@ -111,15 +119,18 @@ const Pricing = () => {
               </li>
             </ul>
 
-            <Button 
-              onClick={() => navigate('/auth')}
-              className="w-full bg-white text-lem-orange hover:bg-gray-50"
-            >
-              Start Free Trial
-            </Button>
-            <p className="text-center text-orange-100 text-xs mt-3">
-              Start with 3 free analyses
-            </p>
+            <div className="relative">
+              <div className="absolute -top-3 -right-3 text-4xl animate-pulse">✨</div>
+              <Button 
+                onClick={() => navigate('/auth')}
+                className="w-full bg-white text-lem-orange hover:bg-gray-50"
+              >
+                Start Free Trial
+              </Button>
+              <p className="text-center text-orange-100 text-xs mt-3">
+                Start with 3 free analyses
+              </p>
+            </div>
           </div>
         </div>
 

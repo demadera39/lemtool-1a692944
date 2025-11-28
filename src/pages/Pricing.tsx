@@ -125,7 +125,8 @@ const Pricing = () => {
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700"><strong>5 analyses</strong> that never expire</span>
+                <span className="text-gray-700 text-sm"><strong>5 analyses</strong>Top-up Pack
+(Starter users)</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />

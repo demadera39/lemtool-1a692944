@@ -41,6 +41,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [projectSessions, setProjectSessions] = useState<Record<string, number>>({});
+  const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -195,6 +196,8 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                   layoutStructure={selectedProject.report.layoutStructure}
                   screenshot={selectedProject.screenshot}
                   interactionMode="read_only"
+                  activeMarkerId={activeMarkerId}
+                  onMarkerSelect={setActiveMarkerId}
                 />
               </div>
             </div>
@@ -207,6 +210,8 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                 activeLayer={activeLayer}
                 setActiveLayer={setActiveLayer}
                 screenshot={selectedProject.screenshot}
+                activeMarkerId={activeMarkerId}
+                onMarkerSelect={setActiveMarkerId}
               />
             </div>
           </div>

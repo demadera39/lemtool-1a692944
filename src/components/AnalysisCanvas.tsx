@@ -19,6 +19,10 @@ interface AnalysisCanvasProps {
   interactionMode?: 'read_only' | 'place_marker' | 'select_area';
   onCanvasClick?: (x: number, y: number) => void;
   onAreaSelect?: (x: number, y: number, width: number, height: number) => void;
+  
+  // For external marker selection
+  activeMarkerId?: string | null;
+  onMarkerSelect?: (markerId: string | null) => void;
 }
 
 const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ layer, type }) => {
@@ -240,12 +244,17 @@ const AdaptiveWireframe = ({ structure }: { structure: LayoutSection[] }) => {
 
 const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
     imgUrl, markers, setMarkers, isAnalyzing, activeLayer, setActiveLayer, layoutStructure, screenshot, analysisProgress = 0,
-    interactionMode = 'read_only', onCanvasClick, onAreaSelect
+    interactionMode = 'read_only', onCanvasClick, onAreaSelect,
+    activeMarkerId: externalActiveMarkerId, onMarkerSelect
 }) => {
-  const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
+  const [internalActiveMarkerId, setInternalActiveMarkerId] = useState<string | null>(null);
+  const activeMarkerId = externalActiveMarkerId !== undefined ? externalActiveMarkerId : internalActiveMarkerId;
+  const setActiveMarkerId = onMarkerSelect || setInternalActiveMarkerId;
+  
   const [showSchematic, setShowSchematic] = useState(false);
   const [viewMode, setViewMode] = useState<'snapshot' | 'live' | 'presentation'>('live');
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
+  const imageScrollContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastScrollTopRef = useRef<number>(0);
@@ -379,6 +388,26 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
       e.stopPropagation();
       setActiveMarkerId(markerId);
   };
+  
+  // Auto-scroll to marker when selected (especially from external list)
+  useEffect(() => {
+    if (activeMarkerId && viewMode === 'snapshot' && imageScrollContainerRef.current && containerRef.current) {
+      const marker = markers.find(m => m.id === activeMarkerId);
+      if (!marker) return;
+      
+      const containerHeight = imageScrollContainerRef.current.clientHeight;
+      const imageHeight = containerRef.current.clientHeight;
+      const markerPositionY = (marker.y / 100) * imageHeight;
+      
+      // Scroll so marker is in the middle of the viewport
+      const targetScroll = markerPositionY - (containerHeight / 2);
+      
+      imageScrollContainerRef.current.scrollTo({
+        top: Math.max(0, targetScroll),
+        behavior: 'smooth'
+      });
+    }
+  }, [activeMarkerId, viewMode, markers]);
 
   const filteredMarkers = markers.filter(m => m.layer === activeLayer);
 
@@ -673,8 +702,8 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
             </div>
           ) : viewMode === 'snapshot' && screenshot ? (
             <>
-              <div className="relative w-full max-h-[80vh] overflow-y-auto border-4 border-gray-300 rounded-lg">
-                  <div className="relative w-full">
+              <div ref={imageScrollContainerRef} className="relative w-full max-h-[80vh] overflow-y-auto border-4 border-gray-300 rounded-lg">
+                  <div ref={containerRef} className="relative w-full">
                     <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
                     <div className="absolute inset-0 z-10 pointer-events-none">
                       {filteredMarkers.map((marker) => renderMarker(marker))}

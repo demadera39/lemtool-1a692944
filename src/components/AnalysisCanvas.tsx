@@ -757,7 +757,15 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                   <div className="mt-4 bg-white rounded-lg shadow-xl p-6 border-2 border-lem-orange animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
                       <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2">
-                        {activeMarker.source === 'HUMAN' ? <UserIcon size={18} className="text-blue-500" /> : <Bot size={18} className="text-lem-orange" />}
+                        {activeMarker.layer === 'emotions' && activeMarker.emotion ? (
+                          <div className="transform scale-75 origin-left">
+                            <EmotionToken emotion={activeMarker.emotion} size="sm" />
+                          </div>
+                        ) : activeMarker.source === 'HUMAN' ? (
+                          <UserIcon size={18} className="text-blue-500" />
+                        ) : (
+                          <Bot size={18} className="text-lem-orange" />
+                        )}
                         {title}
                       </h4>
                       <button 

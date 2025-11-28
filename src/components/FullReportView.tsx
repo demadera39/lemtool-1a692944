@@ -256,114 +256,116 @@ const FullReportView = ({
               </div>
               
               {/* Filter Controls */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
-                {/* Layer Filter */}
-                <div>
-                  <label className="text-xs font-medium text-gray-600 mb-2 block">Layer</label>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant={areaViewLayer === 'emotions' ? 'default' : 'outline'}
-                      onClick={() => setAreaViewLayer('emotions')}
-                      className={`flex-1 text-xs ${areaViewLayer === 'emotions' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
-                    >
-                      <Heart size={12} className="mr-1" />
-                      Emotions
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={areaViewLayer === 'needs' ? 'default' : 'outline'}
-                      onClick={() => setAreaViewLayer('needs')}
-                      className={`flex-1 text-xs ${areaViewLayer === 'needs' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
-                    >
-                      <Brain size={12} className="mr-1" />
-                      Needs
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={areaViewLayer === 'strategy' ? 'default' : 'outline'}
-                      onClick={() => setAreaViewLayer('strategy')}
-                      className={`flex-1 text-xs ${areaViewLayer === 'strategy' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
-                    >
-                      <Lightbulb size={12} className="mr-1" />
-                      Strategy
-                    </Button>
+              <div className="space-y-4">
+                <div className="grid grid-cols-4 gap-6">
+                  {/* Layer Filter */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Layer</label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={areaViewLayer === 'emotions' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewLayer('emotions')}
+                        className={`flex-1 h-9 text-sm font-medium ${areaViewLayer === 'emotions' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        <Heart size={14} className="mr-1.5" />
+                        Emotions
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewLayer === 'needs' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewLayer('needs')}
+                        className={`flex-1 h-9 text-sm font-medium ${areaViewLayer === 'needs' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        <Brain size={14} className="mr-1.5" />
+                        Needs
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewLayer === 'strategy' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewLayer('strategy')}
+                        className={`flex-1 h-9 text-sm font-medium ${areaViewLayer === 'strategy' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        <Lightbulb size={14} className="mr-1.5" />
+                        Strategy
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Source Filter */}
-                <div>
-                  <label className="text-xs font-medium text-gray-600 mb-2 block">Source</label>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant={areaViewSource === 'all' ? 'default' : 'outline'}
-                      onClick={() => setAreaViewSource('all')}
-                      className={`flex-1 text-xs ${areaViewSource === 'all' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
-                    >
-                      All
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={areaViewSource === 'ai' ? 'default' : 'outline'}
-                      onClick={() => setAreaViewSource('ai')}
-                      className={`flex-1 text-xs ${areaViewSource === 'ai' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
-                    >
-                      AI
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={areaViewSource === 'human' ? 'default' : 'outline'}
-                      onClick={() => setAreaViewSource('human')}
-                      className={`flex-1 text-xs ${areaViewSource === 'human' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
-                    >
-                      Human
-                    </Button>
+                  {/* Source Filter */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Source</label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={areaViewSource === 'all' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewSource('all')}
+                        className={`flex-1 h-9 text-sm font-medium ${areaViewSource === 'all' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        All
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewSource === 'ai' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewSource('ai')}
+                        className={`flex-1 h-9 text-sm font-medium ${areaViewSource === 'ai' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        AI
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewSource === 'human' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewSource('human')}
+                        className={`flex-1 h-9 text-sm font-medium ${areaViewSource === 'human' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        Human
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                {/* View Mode Toggle */}
-                <div>
-                  <label className="text-xs font-medium text-gray-600 mb-2 block">View</label>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant={areaViewMode === 'heatmap' ? 'default' : 'outline'}
-                      onClick={() => setAreaViewMode('heatmap')}
-                      className={`flex-1 text-xs ${areaViewMode === 'heatmap' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
-                    >
-                      <Grid3x3 size={12} className="mr-1" />
-                      Areas
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={areaViewMode === 'points' ? 'default' : 'outline'}
-                      onClick={() => setAreaViewMode('points')}
-                      className={`flex-1 text-xs ${areaViewMode === 'points' ? 'bg-lem-orange hover:bg-lem-orange-dark' : ''}`}
-                    >
-                      <MapPin size={12} className="mr-1" />
-                      Points
-                    </Button>
+                  {/* View Mode Toggle */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">View</label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={areaViewMode === 'heatmap' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewMode('heatmap')}
+                        className={`flex-1 h-9 text-sm font-medium ${areaViewMode === 'heatmap' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        <Grid3x3 size={14} className="mr-1.5" />
+                        Areas
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={areaViewMode === 'points' ? 'default' : 'outline'}
+                        onClick={() => setAreaViewMode('points')}
+                        className={`flex-1 h-9 text-sm font-medium ${areaViewMode === 'points' ? 'bg-lem-orange hover:bg-lem-orange text-white border-lem-orange' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        <MapPin size={14} className="mr-1.5" />
+                        Points
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Participant Filter */}
-                <div>
-                  <label className="text-xs font-medium text-gray-600 mb-2 block">Participant</label>
-                  <Select value={selectedSession} onValueChange={setSelectedSession}>
-                    <SelectTrigger className="h-8 text-xs bg-white">
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white z-50">
-                      <SelectItem value="all">All participants</SelectItem>
-                      <SelectItem value="ai">AI only</SelectItem>
-                      {uniqueSessions.map((sessionId) => (
-                        <SelectItem key={sessionId} value={sessionId}>
-                          Session {sessionId.slice(-6)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {/* Participant Filter */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-3 block">Participant</label>
+                    <Select value={selectedSession} onValueChange={setSelectedSession}>
+                      <SelectTrigger className="h-9 bg-white border-gray-300 hover:bg-gray-50">
+                        <SelectValue placeholder="All participants" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50 border shadow-lg">
+                        <SelectItem value="all">All participants</SelectItem>
+                        <SelectItem value="ai">AI only</SelectItem>
+                        {uniqueSessions.map((sessionId) => (
+                          <SelectItem key={sessionId} value={sessionId}>
+                            Session {sessionId.slice(-6)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </CardHeader>

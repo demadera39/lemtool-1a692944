@@ -332,7 +332,7 @@ const Index = () => {
             {report?.isPreview && !user ? (
               <div className="h-full flex flex-col">
                 <div className="flex-1 blur-sm pointer-events-none">
-                  <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} />
+                  <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} screenshot={report?.screenshot} />
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm">
                   <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md text-center">
@@ -349,7 +349,7 @@ const Index = () => {
                 </div>
               </div>
             ) : (
-              <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} />
+              <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} screenshot={report?.screenshot} />
             )}
           </div>
         </div>

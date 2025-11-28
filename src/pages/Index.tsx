@@ -78,7 +78,19 @@ const Index = () => {
 
   const checkSubscription = async (userId: string) => {
     try {
-      await supabase.functions.invoke('check-subscription');
+      // Check if we have a valid session before calling the function
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log('No active session, skipping subscription check');
+        return;
+      }
+      
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      if (error) {
+        console.error('Error checking subscription:', error);
+        return;
+      }
+      
       // Reload user role after subscription check to get updated limits
       await loadUserRole(userId);
     } catch (error) {

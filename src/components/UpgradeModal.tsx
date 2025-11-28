@@ -79,7 +79,7 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
 
         <div className="bg-accent rounded-lg p-4 text-center">
           <div className="text-3xl font-black text-foreground mb-1">
-            $19<span className="text-lg font-normal text-muted-foreground">/month</span>
+            €9.99<span className="text-lg font-normal text-muted-foreground">/month</span>
           </div>
           <p className="text-xs text-muted-foreground">Cancel anytime, no commitments</p>
         </div>

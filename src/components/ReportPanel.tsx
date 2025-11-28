@@ -1,5 +1,5 @@
 import { AnalysisReport, Marker, LayerType } from '../types';
-import { Award, Users, Target, Lightbulb, TrendingUp, Brain, Lock, Map, Grid3x3, MapPin } from 'lucide-react';
+import { Award, Users, Target, Lightbulb, TrendingUp, Brain, Lock, Map, Grid3x3, MapPin, Heart, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
@@ -448,32 +448,80 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                       <div className="absolute inset-0">
                         {areaViewMode === 'heatmap' ? (
                           filteredAreas.map((marker, idx) => {
-                            const isPositive = marker.emotion && ['Joy', 'Desire', 'Fascination', 'Satisfaction'].includes(marker.emotion);
-                            const isNegative = marker.emotion && ['Sadness', 'Disgust', 'Boredom', 'Dissatisfaction'].includes(marker.emotion);
-                            
-                            return (
-                              <div
-                                key={idx}
-                                style={{
-                                  position: 'absolute',
-                                  left: `${marker.x}%`,
-                                  top: `${marker.y}%`,
-                                  width: `${marker.width}%`,
-                                  height: `${marker.height}%`,
-                                  backgroundColor: isPositive 
-                                    ? 'rgba(34, 197, 94, 0.2)' 
-                                    : isNegative 
-                                    ? 'rgba(239, 68, 68, 0.2)' 
-                                    : 'rgba(59, 130, 246, 0.2)',
-                                  border: isPositive 
-                                    ? '2px solid rgba(34, 197, 94, 0.5)' 
-                                    : isNegative 
-                                    ? '2px solid rgba(239, 68, 68, 0.5)' 
-                                    : '2px solid rgba(59, 130, 246, 0.5)',
-                                  pointerEvents: 'none'
-                                }}
-                              />
-                            );
+                            if (areaViewLayer === 'emotions') {
+                              const isPositive = marker.emotion && ['Joy', 'Desire', 'Fascination', 'Satisfaction'].includes(marker.emotion);
+                              const isNegative = marker.emotion && ['Sadness', 'Disgust', 'Boredom', 'Dissatisfaction'].includes(marker.emotion);
+                              
+                              return (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    position: 'absolute',
+                                    left: `${marker.x}%`,
+                                    top: `${marker.y}%`,
+                                    width: `${marker.width}%`,
+                                    height: `${marker.height}%`,
+                                    backgroundColor: isPositive 
+                                      ? 'rgba(34, 197, 94, 0.2)' 
+                                      : isNegative 
+                                      ? 'rgba(239, 68, 68, 0.2)' 
+                                      : 'rgba(59, 130, 246, 0.2)',
+                                    border: isPositive 
+                                      ? '2px solid rgba(34, 197, 94, 0.5)' 
+                                      : isNegative 
+                                      ? '2px solid rgba(239, 68, 68, 0.5)' 
+                                      : '2px solid rgba(59, 130, 246, 0.5)',
+                                    pointerEvents: 'none'
+                                  }}
+                                />
+                              );
+                            } else if (areaViewLayer === 'needs') {
+                              const needColor = marker.need === 'Autonomy' ? 'rgba(96, 165, 250, 0.2)' : 
+                                              marker.need === 'Competence' ? 'rgba(74, 222, 128, 0.2)' : 
+                                              'rgba(244, 114, 182, 0.2)';
+                              const borderColor = marker.need === 'Autonomy' ? '2px solid rgba(96, 165, 250, 0.5)' : 
+                                                marker.need === 'Competence' ? '2px solid rgba(74, 222, 128, 0.5)' : 
+                                                '2px solid rgba(244, 114, 182, 0.5)';
+                              
+                              return (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    position: 'absolute',
+                                    left: `${marker.x}%`,
+                                    top: `${marker.y}%`,
+                                    width: `${marker.width}%`,
+                                    height: `${marker.height}%`,
+                                    backgroundColor: needColor,
+                                    border: borderColor,
+                                    pointerEvents: 'none'
+                                  }}
+                                />
+                              );
+                            } else {
+                              const strategyColor = marker.brief_type === 'Opportunity' ? 'rgba(34, 197, 94, 0.2)' : 
+                                                  marker.brief_type === 'Pain Point' ? 'rgba(239, 68, 68, 0.2)' : 
+                                                  'rgba(59, 130, 246, 0.2)';
+                              const borderColor = marker.brief_type === 'Opportunity' ? '2px solid rgba(34, 197, 94, 0.5)' : 
+                                                marker.brief_type === 'Pain Point' ? '2px solid rgba(239, 68, 68, 0.5)' : 
+                                                '2px solid rgba(59, 130, 246, 0.5)';
+                              
+                              return (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    position: 'absolute',
+                                    left: `${marker.x}%`,
+                                    top: `${marker.y}%`,
+                                    width: `${marker.width}%`,
+                                    height: `${marker.height}%`,
+                                    backgroundColor: strategyColor,
+                                    border: borderColor,
+                                    pointerEvents: 'none'
+                                  }}
+                                />
+                              );
+                            }
                           })
                         ) : (
                           filteredPoints.map((marker, idx) => (
@@ -487,8 +535,30 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                                 pointerEvents: 'none'
                               }}
                             >
-                              {marker.layer === 'emotions' && marker.emotion && (
+                              {areaViewLayer === 'emotions' && marker.emotion && (
                                 <EmotionToken emotion={marker.emotion} size="sm" />
+                              )}
+                              {areaViewLayer === 'needs' && marker.need && (
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ${
+                                  marker.need === 'Autonomy' ? 'bg-blue-400' : 
+                                  marker.need === 'Competence' ? 'bg-green-400' : 
+                                  'bg-pink-400'
+                                }`}>
+                                  {marker.need === 'Autonomy' ? <Users size={16} className="text-white" /> :
+                                   marker.need === 'Competence' ? <Brain size={16} className="text-white" /> :
+                                   <Heart size={16} className="text-white" />}
+                                </div>
+                              )}
+                              {areaViewLayer === 'strategy' && marker.brief_type && (
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ${
+                                  marker.brief_type === 'Opportunity' ? 'bg-green-500' : 
+                                  marker.brief_type === 'Pain Point' ? 'bg-red-500' : 
+                                  'bg-blue-500'
+                                }`}>
+                                  {marker.brief_type === 'Opportunity' ? <Lightbulb size={16} className="text-white" /> :
+                                   marker.brief_type === 'Pain Point' ? <AlertTriangle size={16} className="text-white" /> :
+                                   <Brain size={16} className="text-white" />}
+                                </div>
                               )}
                             </div>
                           ))
@@ -504,20 +574,56 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                       {' '}for <strong>{areaViewLayer}</strong> layer
                       {areaViewSource !== 'all' && ` from ${areaViewSource === 'ai' ? 'AI' : 'Human'} sources`}
                     </p>
-                    {areaViewMode === 'heatmap' && areaViewLayer === 'emotions' && (
-                      <div className="flex gap-4 text-xs pt-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-green-500 bg-opacity-30 border-2 border-green-500 border-opacity-50 rounded"></div>
-                          <span>Positive</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-red-500 bg-opacity-30 border-2 border-red-500 border-opacity-50 rounded"></div>
-                          <span>Negative</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-blue-500 bg-opacity-30 border-2 border-blue-500 border-opacity-50 rounded"></div>
-                          <span>Neutral</span>
-                        </div>
+                    {areaViewMode === 'heatmap' && (
+                      <div className="flex gap-4 text-xs pt-2 flex-wrap">
+                        {areaViewLayer === 'emotions' && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-green-500 bg-opacity-30 border-2 border-green-500 border-opacity-50 rounded"></div>
+                              <span>Positive</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-red-500 bg-opacity-30 border-2 border-red-500 border-opacity-50 rounded"></div>
+                              <span>Negative</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-blue-500 bg-opacity-30 border-2 border-blue-500 border-opacity-50 rounded"></div>
+                              <span>Neutral</span>
+                            </div>
+                          </>
+                        )}
+                        {areaViewLayer === 'needs' && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-blue-400 bg-opacity-30 border-2 border-blue-400 border-opacity-50 rounded"></div>
+                              <span>Autonomy</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-green-400 bg-opacity-30 border-2 border-green-400 border-opacity-50 rounded"></div>
+                              <span>Competence</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-pink-400 bg-opacity-30 border-2 border-pink-400 border-opacity-50 rounded"></div>
+                              <span>Relatedness</span>
+                            </div>
+                          </>
+                        )}
+                        {areaViewLayer === 'strategy' && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-green-500 bg-opacity-30 border-2 border-green-500 border-opacity-50 rounded"></div>
+                              <span>Opportunity</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-red-500 bg-opacity-30 border-2 border-red-500 border-opacity-50 rounded"></div>
+                              <span>Pain Point</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-blue-500 bg-opacity-30 border-2 border-blue-500 border-opacity-50 rounded"></div>
+                              <span>Insight</span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

@@ -60,7 +60,7 @@ const Pricing = () => {
             >
               Yearly
               <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                Save $11
+                Save €11
               </span>
             </button>
           </div>
@@ -72,7 +72,7 @@ const Pricing = () => {
             <div className="mb-6">
               <h2 className="text-2xl font-black text-gray-900 mb-2">Free</h2>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-gray-900">$0</span>
+                <span className="text-5xl font-black text-gray-900">€0</span>
                 <span className="text-gray-500">/forever</span>
               </div>
             </div>
@@ -124,7 +124,7 @@ const Pricing = () => {
               <h2 className="text-2xl font-black text-white mb-2">Premium</h2>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black text-white">
-                  {isYearly ? '$109' : '$9.99'}
+                  {isYearly ? '€109' : '€9.99'}
                 </span>
                 <span className="text-orange-100">
                   /{isYearly ? 'year' : 'month'}
@@ -132,7 +132,7 @@ const Pricing = () => {
               </div>
               {isYearly && (
                 <p className="text-orange-100 text-sm mt-2">
-                  $9.08/month billed annually
+                  €9.08/month billed annually
                 </p>
               )}
             </div>

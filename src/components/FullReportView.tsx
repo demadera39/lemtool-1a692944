@@ -309,18 +309,18 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
 
                     return (
                       <div key={marker.id} className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg border-l-4 border-lem-orange">
-                        <div className="md:w-1/3 relative">
-                          <div className="relative border-2 border-gray-300 rounded-lg overflow-hidden shadow-md">
-                            <img 
-                              src={project.screenshot} 
-                              alt={`Area ${idx + 1}`}
-                              className="w-full h-auto"
+                        <div className="md:w-32 flex-shrink-0 relative">
+                          <div className="relative border-2 border-gray-300 rounded-lg overflow-hidden shadow-md h-24 bg-white">
+                            <div 
+                              className="absolute inset-0"
                               style={{
-                                clipPath: `inset(${Math.max(0, marker.y - 15)}% ${Math.max(0, 100 - marker.x - 15)}% ${Math.max(0, 100 - marker.y - 15)}% ${Math.max(0, marker.x - 15)}%)`
+                                backgroundImage: `url(${project.screenshot})`,
+                                backgroundSize: `${100 / 0.15}% auto`,
+                                backgroundPosition: `${marker.x / 0.15}% ${marker.y / 0.15}%`
                               }}
                             />
                             <div 
-                              className="absolute w-3 h-3 bg-lem-orange rounded-full border-2 border-white shadow-lg"
+                              className="absolute w-2 h-2 bg-lem-orange rounded-full border border-white shadow-lg"
                               style={{ 
                                 left: '50%', 
                                 top: '50%',
@@ -329,7 +329,7 @@ const FullReportView = ({ project, sessions, onBack, onCopyParticipantLink }: Fu
                             />
                           </div>
                         </div>
-                        <div className="md:w-2/3 space-y-3">
+                        <div className="flex-1 space-y-3">
                           <div className="flex items-center gap-2">
                             <div className={`${layerColor} text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1`}>
                               {layerIcon}

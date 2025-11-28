@@ -38,13 +38,14 @@ const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ laye
     return null;
 };
 
-// Smart SpeechBubble with container-aware positioning
-const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 'up' | 'down' }> = ({ marker, onClose, direction }) => {
+// Smart SpeechBubble with container-aware positioning and collision detection
+const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 'up' | 'down'; allMarkers: Marker[] }> = ({ marker, onClose, direction, allMarkers }) => {
     const bubbleRef = useRef<HTMLDivElement>(null);
     const [computedDirection, setComputedDirection] = useState<'up' | 'down'>(direction || 'up');
     const [horizontalOffset, setHorizontalOffset] = useState<number>(0);
     const [arrowOffset, setArrowOffset] = useState<number>(50);
     const [maxWidth, setMaxWidth] = useState<number>(320); // w-80 default
+    const [verticalOffset, setVerticalOffset] = useState<number>(0);
 
     useEffect(() => {
         if (!bubbleRef.current) return;
@@ -115,9 +116,53 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
             newArrowOffset = Math.max(15, Math.min(85, newArrowOffset));
         }
         
+        // Collision detection with other markers
+        let newVerticalOffset = 0;
+        const otherMarkers = allMarkers.filter(m => m.id !== marker.id);
+        const markerElements = document.querySelectorAll('[data-marker-id]');
+        
+        for (const otherMarker of otherMarkers) {
+            const otherElement = Array.from(markerElements).find(
+                el => el.getAttribute('data-marker-id') === otherMarker.id
+            );
+            
+            if (otherElement) {
+                const otherRect = otherElement.getBoundingClientRect();
+                
+                // Check if bubble overlaps with other marker
+                const bubbleLeft = bubbleCenter + newHorizontalOffset - bubbleWidth / 2;
+                const bubbleRight = bubbleCenter + newHorizontalOffset + bubbleWidth / 2;
+                const bubbleTop = direction === 'down' || computedDirection === 'down' ? rect.bottom + 16 : rect.top - rect.height - 16;
+                const bubbleBottom = bubbleTop + rect.height;
+                
+                const horizontalOverlap = 
+                    bubbleLeft < otherRect.right + 8 && 
+                    bubbleRight > otherRect.left - 8;
+                
+                const verticalOverlap = 
+                    bubbleTop < otherRect.bottom + 8 && 
+                    bubbleBottom > otherRect.top - 8;
+                
+                if (horizontalOverlap && verticalOverlap) {
+                    // Push bubble away from the marker
+                    const isUp = direction !== 'down' && computedDirection !== 'down';
+                    if (isUp) {
+                        // Push further up
+                        const neededShift = (otherRect.top - 8) - bubbleBottom;
+                        newVerticalOffset = Math.min(newVerticalOffset, neededShift);
+                    } else {
+                        // Push further down
+                        const neededShift = (otherRect.bottom + 8) - bubbleTop;
+                        newVerticalOffset = Math.max(newVerticalOffset, neededShift);
+                    }
+                }
+            }
+        }
+        
         setHorizontalOffset(newHorizontalOffset);
         setArrowOffset(newArrowOffset);
-    }, [direction, marker]);
+        setVerticalOffset(newVerticalOffset);
+    }, [direction, marker, allMarkers, computedDirection]);
 
     let title = 'Insight';
     if (marker.layer === 'emotions' && marker.emotion) title = EMOTIONS[marker.emotion].label;
@@ -137,7 +182,8 @@ const SpeechBubble: React.FC<{ marker: Marker; onClose: () => void; direction?: 
         style={{
           left: `calc(50% + ${horizontalOffset}px)`,
           width: `${maxWidth}px`,
-          maxWidth: `${maxWidth}px`
+          maxWidth: `${maxWidth}px`,
+          transform: `translate(-50%, ${verticalOffset}px)`
         }}
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}
@@ -465,7 +511,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
           </div>
           {viewMode !== 'presentation' && activeMarkerId === marker.id && (
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50">
-              <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} />
+              <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} allMarkers={filteredMarkers} />
             </div>
           )}
         </div>
@@ -482,7 +528,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                 <div className="relative transform -translate-x-1/2 -translate-y-1/2">
                 <div className="animate-float">
                     {viewMode !== 'presentation' && activeMarkerId === marker.id && (
-                        <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} />
+                        <SpeechBubble marker={marker} onClose={() => setActiveMarkerId(null)} allMarkers={filteredMarkers} />
                     )}
                     <div className="transform scale-150 origin-center cursor-pointer pointer-events-auto">
                         <div onClick={(e) => handleMarkerClick(e, marker.id)} className="relative">
@@ -652,6 +698,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                                 marker={activeMarker}
                                 onClose={() => setActiveMarkerId(null)}
                                 direction={isAtTop ? 'down' : 'up'}
+                                allMarkers={filteredMarkers}
                              />
                         </div>
                     </div>

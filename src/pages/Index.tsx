@@ -224,6 +224,9 @@ const Index = () => {
             <button onClick={() => navigate('/pricing')} className="text-sm font-medium text-gray-600 hover:text-lem-orange transition-colors">
               Pricing
             </button>
+            <button onClick={() => navigate('/support')} className="text-sm font-medium text-gray-600 hover:text-lem-orange transition-colors">
+              Support
+            </button>
           </div>
 
           <form onSubmit={handleAnalyze} className="flex-1 max-w-2xl mx-auto flex items-center gap-2">

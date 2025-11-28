@@ -21,18 +21,25 @@ serve(async (req) => {
     // Prepare the prompt for Gemini
     const systemPrompt = `You are an expert UX researcher and emotional design analyst. Analyze the provided website screenshot and identify emotional triggers, user needs, and strategic insights.
 
-For each emotional marker you identify, provide:
-1. The emotion type (JOY, DESIRE, FASCINATION, SATISFACTION, NEUTRAL, SADNESS, DISGUST, BOREDOM, DISSATISFACTION)
-2. X and Y coordinates (as percentages 0-100) where this emotion is triggered
-3. A brief comment explaining why this element triggers this emotion
-
-Also provide:
-- Overall UX emotion score (0-100)
-- Target audience analysis
-- Self-Determination Theory scores (Autonomy, Competence, Relatedness)
-- Key findings and suggestions
-
-Return your analysis as a structured JSON object.`;
+Return your analysis as a JSON object with this exact structure:
+{
+  "emotional_triggers": [
+    {
+      "emotion_type": "JOY|DESIRE|FASCINATION|SATISFACTION|NEUTRAL|SADNESS|DISGUST|BOREDOM|DISSATISFACTION",
+      "x": 0-100,
+      "y": 0-100,
+      "comment": "Brief explanation"
+    }
+  ],
+  "overall_ux_emotion_score": 0-100,
+  "target_audience_analysis": "Description of target audience",
+  "self_determination_theory_scores": {
+    "autonomy": { "score": 0-10, "justification": "Brief explanation" },
+    "competence": { "score": 0-10, "justification": "Brief explanation" },
+    "relatedness": { "score": 0-10, "justification": "Brief explanation" }
+  },
+  "key_findings_and_suggestions": ["Finding 1", "Finding 2", ...]
+}`;
 
     const requestBody: any = {
       contents: [
@@ -89,15 +96,15 @@ Return your analysis as a structured JSON object.`;
     }
 
     // Try to parse JSON from the response
-    let analysis;
+    let parsedData;
     try {
       // Remove markdown code blocks if present
       const cleanedText = generatedText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      analysis = JSON.parse(cleanedText);
+      parsedData = JSON.parse(cleanedText);
     } catch (parseError) {
       console.error("Failed to parse Gemini response as JSON:", generatedText);
       // Return a fallback structure
-      analysis = {
+      return new Response(JSON.stringify({
         rawResponse: generatedText,
         markers: [],
         report: {
@@ -110,10 +117,62 @@ Return your analysis as a structured JSON object.`;
             relatedness: { score: 5, justification: "Analysis in progress" }
           }
         }
-      };
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(JSON.stringify(analysis), {
+    // Transform the Gemini response to our expected format
+    const markers = (parsedData.emotional_triggers || []).map((trigger: any) => ({
+      x: trigger.x || 50,
+      y: trigger.y || 50,
+      layer: 'emotions',
+      emotion: trigger.emotion_type,
+      comment: trigger.comment || '',
+    }));
+
+    // Transform SDT scores to ensure they have the right structure
+    const sdtScores = parsedData.self_determination_theory_scores || {};
+    const transformedSdtScores = {
+      autonomy: typeof sdtScores.autonomy === 'object' 
+        ? sdtScores.autonomy 
+        : { score: sdtScores.autonomy || 5, justification: "User control and choice" },
+      competence: typeof sdtScores.competence === 'object'
+        ? sdtScores.competence
+        : { score: sdtScores.competence || 5, justification: "User capability support" },
+      relatedness: typeof sdtScores.relatedness === 'object'
+        ? sdtScores.relatedness
+        : { score: sdtScores.relatedness || 5, justification: "Social connection" }
+    };
+
+    const report = {
+      overallScore: parsedData.overall_ux_emotion_score || 70,
+      summary: parsedData.target_audience_analysis || "Analysis complete",
+      targetAudience: parsedData.target_audience_analysis || "General web users",
+      audienceSplit: [
+        { label: 'Primary', percentage: 60 },
+        { label: 'Secondary', percentage: 30 },
+        { label: 'Tertiary', percentage: 10 }
+      ],
+      personas: [],
+      brandValues: [],
+      keyFindings: (parsedData.key_findings_and_suggestions || []).slice(0, 3).map((f: string) => ({
+        title: f.split(':')[0] || 'Insight',
+        description: f.split(':')[1] || f,
+        type: 'neutral'
+      })),
+      suggestions: parsedData.key_findings_and_suggestions || [],
+      layoutStructure: [],
+      sdtScores: transformedSdtScores,
+      creativeBrief: {
+        problemStatement: '',
+        targetEmotion: '',
+        howMightWe: '',
+        strategicDirection: ''
+      }
+    };
+
+    return new Response(JSON.stringify({ markers, report }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

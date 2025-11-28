@@ -108,41 +108,43 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                 {sessions.length} participant session{sessions.length !== 1 ? 's' : ''}
               </p>
             </div>
-            <div className="flex gap-2">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showAI}
-                  onChange={(e) => setShowAI(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                AI Markers
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showHumans}
-                  onChange={(e) => setShowHumans(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                Human Markers
-              </label>
-            </div>
           </header>
 
           <div className="flex-1 flex overflow-hidden">
-            <div className="flex-1 p-6">
-              <AnalysisCanvas
-                imgUrl={selectedProject.url}
-                markers={getCombinedMarkers()}
-                setMarkers={() => {}}
-                isAnalyzing={false}
-                activeLayer={activeLayer}
-                setActiveLayer={setActiveLayer}
-                layoutStructure={selectedProject.report.layoutStructure}
-                screenshot={selectedProject.screenshot}
-                interactionMode="read_only"
-              />
+            <div className="flex-1 p-6 flex flex-col gap-4">
+              <div className="flex gap-3 justify-end items-center bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200">
+                <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showAI}
+                    onChange={(e) => setShowAI(e.target.checked)}
+                    className="rounded border-gray-300 text-lem-orange focus:ring-lem-orange"
+                  />
+                  <span className="text-gray-700">AI Markers</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showHumans}
+                    onChange={(e) => setShowHumans(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">Human Markers</span>
+                </label>
+              </div>
+              <div className="flex-1">
+                <AnalysisCanvas
+                  imgUrl={selectedProject.url}
+                  markers={getCombinedMarkers()}
+                  setMarkers={() => {}}
+                  isAnalyzing={false}
+                  activeLayer={activeLayer}
+                  setActiveLayer={setActiveLayer}
+                  layoutStructure={selectedProject.report.layoutStructure}
+                  screenshot={selectedProject.screenshot}
+                  interactionMode="read_only"
+                />
+              </div>
             </div>
             <div className="w-96 bg-white border-l border-gray-200">
               <ReportPanel

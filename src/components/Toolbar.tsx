@@ -4,9 +4,10 @@ import { EmotionType } from '../types';
 
 interface ToolbarProps {
   onAddMarker: (emotion: EmotionType) => void;
+  selectedEmotion?: EmotionType | null;
 }
 
-const Toolbar = ({ onAddMarker }: ToolbarProps) => {
+const Toolbar = ({ onAddMarker, selectedEmotion }: ToolbarProps) => {
   return (
     <div className="w-24 bg-white border-r border-gray-200 flex flex-col items-center py-6 overflow-y-auto z-20 shadow-xl scrollbar-thin scrollbar-thumb-gray-200">
       <div className="mb-6 text-center flex-shrink-0 flex flex-col items-center">
@@ -29,11 +30,13 @@ const Toolbar = ({ onAddMarker }: ToolbarProps) => {
                <div className="absolute left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                 {def.label}
               </div>
-              <EmotionToken
-                emotion={def.id}
-                size="sm"
-                onClick={() => onAddMarker(def.id)}
-              />
+              <div className={`transition-all ${selectedEmotion === def.id ? 'ring-4 ring-lem-orange ring-offset-2 rounded-full scale-110' : ''}`}>
+                <EmotionToken
+                  emotion={def.id}
+                  size="sm"
+                  onClick={() => onAddMarker(def.id)}
+                />
+              </div>
             </div>
           ))}
         </div>
@@ -47,11 +50,13 @@ const Toolbar = ({ onAddMarker }: ToolbarProps) => {
                <div className="absolute left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                 {def.label}
               </div>
-              <EmotionToken
-                emotion={def.id}
-                size="sm"
-                onClick={() => onAddMarker(def.id)}
-              />
+              <div className={`transition-all ${selectedEmotion === def.id ? 'ring-4 ring-lem-orange ring-offset-2 rounded-full scale-110' : ''}`}>
+                <EmotionToken
+                  emotion={def.id}
+                  size="sm"
+                  onClick={() => onAddMarker(def.id)}
+                />
+              </div>
             </div>
           ))}
         </div>
@@ -65,11 +70,13 @@ const Toolbar = ({ onAddMarker }: ToolbarProps) => {
                <div className="absolute left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                 {def.label}
               </div>
-              <EmotionToken
-                emotion={def.id}
-                size="sm"
-                onClick={() => onAddMarker(def.id)}
-              />
+              <div className={`transition-all ${selectedEmotion === def.id ? 'ring-4 ring-lem-orange ring-offset-2 rounded-full scale-110' : ''}`}>
+                <EmotionToken
+                  emotion={def.id}
+                  size="sm"
+                  onClick={() => onAddMarker(def.id)}
+                />
+              </div>
             </div>
           ))}
         </div>

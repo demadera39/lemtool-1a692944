@@ -149,13 +149,10 @@ const Index = () => {
       
       // Auto-save project for logged-in users
       const savedProject = await createProject(user.id, targetUrl, result.report, result.markers);
-      toast.success('Analysis complete and saved!', {
-        description: 'You can now invite participants to test this design.',
-        action: {
-          label: 'View Dashboard',
-          onClick: () => setCurrentView('dashboard')
-        }
-      });
+      toast.success('Analysis complete and saved!');
+      
+      // Navigate to dashboard and open the project
+      setCurrentView('dashboard');
     } catch (error) {
       console.error("Analysis Error:", error);
       toast.error('Analysis failed.');
@@ -207,7 +204,7 @@ const Index = () => {
 
   return (
     <div className="flex h-screen w-screen bg-gray-50 text-gray-900 overflow-hidden">
-      <Toolbar onAddMarker={handleAddMarker} />
+      <Toolbar onAddMarker={handleAddMarker} selectedEmotion={null} />
 
       <div className="flex-1 flex flex-col h-full relative">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm z-10 justify-between flex-shrink-0">

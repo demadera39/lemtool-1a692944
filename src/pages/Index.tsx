@@ -6,6 +6,7 @@ import ReportPanel from '@/components/ReportPanel';
 import Dashboard from '@/components/Dashboard';
 import ParticipantView from '@/components/ParticipantView';
 import { UpgradeModal } from '@/components/UpgradeModal';
+import { PremiumUpgradeModal } from '@/components/PremiumUpgradeModal';
 import { Marker, EmotionType, User, LayerType, Project } from '@/types';
 import { analyzeWebsite } from '@/services/geminiService';
 import { supabase, signOut, createProject, getProjectById, ensureProfile } from '@/services/supabaseService';
@@ -31,6 +32,8 @@ const Index = () => {
   const [showInfoBanner, setShowInfoBanner] = useState(true);
   const [remainingAnalyses, setRemainingAnalyses] = useState<{ monthly: number; pack: number; monthlyLimit: number }>({ monthly: 0, pack: 0, monthlyLimit: 10 });
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showPremiumUpgradeModal, setShowPremiumUpgradeModal] = useState(false);
+  const [userRole, setUserRole] = useState<'free' | 'premium' | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -103,6 +106,10 @@ const Index = () => {
   const loadUserRole = async (userId: string) => {
     const remaining = await getRemainingAnalyses(userId);
     setRemainingAnalyses(remaining);
+    
+    // Get user role to determine which modal to show
+    const role = await getUserRole(userId);
+    setUserRole(role?.role || 'free');
   };
 
   const handleAnalyze = async (e: React.FormEvent) => {
@@ -145,7 +152,12 @@ const Index = () => {
     // Check if user can create analysis
     const canCreate = await canCreateAnalysis(user.id);
     if (!canCreate) {
-      setShowUpgradeModal(true);
+      // Show different modals based on user role
+      if (userRole === 'free') {
+        setShowPremiumUpgradeModal(true);
+      } else {
+        setShowUpgradeModal(true);
+      }
       return;
     }
 
@@ -227,6 +239,7 @@ const Index = () => {
 
   return (
     <div className="flex h-screen w-screen bg-gray-50 text-gray-900 overflow-hidden">
+      <PremiumUpgradeModal open={showPremiumUpgradeModal} onOpenChange={setShowPremiumUpgradeModal} />
       <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
       <Toolbar onAddMarker={handleAddMarker} selectedEmotion={null} />
 

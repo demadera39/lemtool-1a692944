@@ -84,11 +84,16 @@ const Settings = () => {
   const isPremium = userRole?.role === 'premium';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50/30">
-      <div className="absolute top-4 right-4 text-6xl opacity-20 rotate-12">😊</div>
-      <div className="absolute bottom-10 left-10 text-5xl opacity-15 -rotate-12">🎯</div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50/30 relative overflow-hidden">
+      {/* Decorative emotion stickers */}
+      <div className="absolute top-4 right-4 w-16 h-16 opacity-20 rotate-12">
+        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" alt="Joy" className="w-full h-full" />
+      </div>
+      <div className="absolute bottom-10 left-10 w-14 h-14 opacity-15 -rotate-12">
+        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/satisfaction.png" alt="Satisfaction" className="w-full h-full" />
+      </div>
       
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto px-6 py-12 relative z-10">
         <Button
           variant="ghost"
           onClick={() => navigate('/')}
@@ -134,9 +139,11 @@ const Settings = () => {
                 </p>
               )}
             </div>
-            {isPremium && (
-              <div className="text-4xl">✨</div>
-            )}
+          {isPremium && (
+            <div className="absolute -top-2 -right-2 w-8 h-8">
+              <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" alt="Premium" className="w-full h-full" />
+            </div>
+          )}
           </div>
 
           {!isPremium && (

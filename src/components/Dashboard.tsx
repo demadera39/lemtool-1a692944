@@ -143,10 +143,18 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+      {/* Decorative emotion stickers */}
+      <div className="absolute top-20 right-20 w-16 h-16 opacity-10 rotate-12">
+        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" alt="Joy" className="w-full h-full" />
+      </div>
+      <div className="absolute bottom-20 left-20 w-14 h-14 opacity-10 -rotate-12">
+        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" alt="Interest" className="w-full h-full" />
+      </div>
+      
+      <header className="bg-white border-b border-gray-200 shadow-sm relative z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M50 10C27.9086 10 10 27.9086 10 50C10 72.0914 27.9086 90 50 90C72.0914 90 90 72.0914 90 50" stroke="#F26522" strokeWidth="12" strokeLinecap="round"/>
               <path d="M50 25C36.1929 25 25 36.1929 25 50C25 63.8071 36.1929 75 50 75C63.8071 75 75 63.8071 75 50" stroke="#555555" strokeWidth="10" strokeLinecap="round"/>
@@ -155,20 +163,20 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
             <div>
               <h1 className="text-xl font-black text-gray-900">LEMtool Dashboard</h1>
               <div className="flex items-center gap-2">
-                <p className="text-sm text-gray-500">{user.email}</p>
+                <p className="text-sm text-gray-600">{user.email}</p>
                 {remainingAnalyses === -1 ? (
-                  <span className="flex items-center gap-1 text-xs font-bold text-lem-orange">
+                  <span className="flex items-center gap-1 text-xs font-bold text-lem-orange bg-orange-50 px-2 py-0.5 rounded-full">
                     <Crown size={12} />Premium
                   </span>
                 ) : (
-                  <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+                  <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
                     {remainingAnalyses} analyses left
                   </span>
                 )}
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <Button onClick={onNewAnalysis} className="bg-lem-orange hover:bg-lem-orange-dark">
               <Plus size={18} className="mr-2" />
               New Analysis
@@ -176,9 +184,9 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
             <Button variant="outline" onClick={() => window.location.href = '/settings'}>
               Settings
             </Button>
-            <Button variant="outline" onClick={onLogout}>
+            <Button variant="outline" onClick={onLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
               <LogOut size={18} className="mr-2" />
-              Logout
+              Sign Out
             </Button>
           </div>
         </div>

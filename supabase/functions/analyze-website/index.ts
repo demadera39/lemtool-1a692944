@@ -343,7 +343,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, slices, sliceHeights, totalHeight, screenshot } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
@@ -351,26 +351,19 @@ serve(async (req) => {
       throw new Error("No AI API key configured");
     }
 
-    console.log('📋 Received request:', { url });
+    console.log('📋 Received request:', { 
+      url, 
+      sliceCount: slices?.length,
+      totalHeight
+    });
 
     if (!url) {
       throw new Error('URL is required');
     }
 
-    // Capture screenshot server-side
-    console.log('📸 Capturing screenshot...');
-    const screenshotBase64 = await getScreenshotBase64(url);
-    
-    if (!screenshotBase64) {
-      throw new Error('Failed to capture screenshot');
+    if (!slices || !sliceHeights || !totalHeight) {
+      throw new Error('Screenshot data is required');
     }
-    
-    console.log('✅ Screenshot captured successfully');
-    
-    // Slice the screenshot
-    console.log('✂️ Slicing screenshot...');
-    const { slices, sliceHeights, totalHeight } = await sliceImageBase64(screenshotBase64);
-    console.log(`✅ Sliced into ${slices.length} chunks. Total Height: ${totalHeight}px`);
 
     console.log(`[ANALYZE] Analyzing ${slices.length} slices for: ${url}. Total Height: ${totalHeight}px`);
 
@@ -691,7 +684,7 @@ serve(async (req) => {
 
     console.log(`Generated ${allMarkers.length} markers across ${slices.length} slices`);
 
-    return new Response(JSON.stringify({ markers: allMarkers, report: { ...report, screenshot: screenshotBase64 } }), {
+    return new Response(JSON.stringify({ markers: allMarkers, report: { ...report, screenshot: `data:image/png;base64,${screenshot}` } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

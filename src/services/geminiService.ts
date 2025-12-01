@@ -90,17 +90,48 @@ async function sliceImageBase64(base64Full: string): Promise<{ slices: string[],
 
 export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressCallback): Promise<GeminiAnalysisResult> {
   try {
+    // Get screenshot first (client-side to avoid CORS issues)
     onProgress?.(10, 'Capturing website screenshot...');
+    const screenshot = await getWebsiteScreenshotBase64(url);
+    
+    if (!screenshot) {
+      console.error("❌ No screenshot captured - falling back to demo mode");
+      onProgress?.(100, 'Analysis complete (demo mode)');
+      
+      const { toast } = await import('@/hooks/use-toast');
+      toast({
+        title: "Screenshot Failed",
+        description: "Unable to capture screenshot. Using demo analysis.",
+        variant: "destructive",
+      });
+      
+      return generateFallbackAnalysis(url, null);
+    }
+
+    onProgress?.(30, 'Processing screenshot...');
+    console.log("Starting Slice & Conquer Analysis...");
+
+    // Slice the image into 16:9 chunks
+    const { slices, sliceHeights, totalHeight } = await sliceImageBase64(screenshot);
+    console.log(`Sliced into ${slices.length} chunks. Total Height: ${totalHeight}px`);
+
+    onProgress?.(50, 'Analyzing emotional triggers...');
     
     // Simulate progress during the long edge function call
     const progressInterval = setInterval(() => {
-      const currentProgress = Math.random() * 10 + 10; // Random between 10-20%
-      onProgress?.(Math.min(40, currentProgress), 'Capturing and processing screenshot...');
+      const currentProgress = Math.random() * 10 + 50; // Random between 50-60%
+      onProgress?.(Math.min(75, currentProgress), 'AI analyzing design elements...');
     }, 2000);
     
-    // Call the edge function - it will handle screenshot capture and slicing
+    // Call the edge function with sliced data
     const { data, error } = await supabase.functions.invoke('analyze-website', {
-      body: { url }
+      body: { 
+        url, 
+        slices,
+        sliceHeights,
+        totalHeight,
+        screenshot: screenshot.split(',')[1]
+      }
     });
 
     clearInterval(progressInterval);
@@ -117,7 +148,7 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
     if (data.rawResponse) {
       console.warn('AI returned non-JSON response, using fallback');
       onProgress?.(100, 'Analysis complete');
-      return generateFallbackAnalysis(url, null);
+      return generateFallbackAnalysis(url, screenshot);
     }
 
     // Process markers with exact coordinate clamping
@@ -135,7 +166,7 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
 
     const report: AnalysisReport = {
       ...data.report,
-      screenshot: data.screenshot || undefined
+      screenshot: screenshot || undefined
     };
 
     onProgress?.(100, 'Analysis complete');
@@ -144,7 +175,8 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
     console.error('Gemini analysis error:', error);
     onProgress?.(100, 'Analysis complete');
     // Return fallback analysis
-    return generateFallbackAnalysis(url, null);
+    const screenshot = await getWebsiteScreenshotBase64(url);
+    return generateFallbackAnalysis(url, screenshot);
   }
 }
 

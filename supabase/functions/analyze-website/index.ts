@@ -214,7 +214,7 @@ function declusterMarkers(markers: any[]): any[] {
   }));
 }
 
-async function callGeminiAPI(apiKey: string, parts: any[], prompt: string, maxTokens: number = 4096, model: string = "gemini-2.0-flash") {
+async function callGeminiAPI(apiKey: string, parts: any[], prompt: string, maxTokens: number = 4096, model: string = "gemini-2.0-flash-exp") {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {
@@ -326,9 +326,9 @@ serve(async (req) => {
     if (GEMINI_API_KEY) {
       // Use user's Gemini key first (saves Lovable AI credits)
       try {
-        console.log("Analyzing hero with user's Gemini 2.5 Flash");
-        masterResponse = await callGeminiAPI(GEMINI_API_KEY, parts, MULTIMODAL_MASTER_PROMPT, 4096, "gemini-2.5-flash-latest");
-        usedModel = 'Gemini 2.5 Flash (User Key)';
+        console.log("Analyzing hero with user's Gemini Flash");
+        masterResponse = await callGeminiAPI(GEMINI_API_KEY, parts, MULTIMODAL_MASTER_PROMPT, 4096, "gemini-2.0-flash-exp");
+        usedModel = 'Gemini 2.0 Flash (User Key)';
       } catch (error) {
         console.log("User's Gemini failed, trying Lovable AI:", error);
         
@@ -392,11 +392,13 @@ serve(async (req) => {
     }
 
     // 2. Analyze remaining slices in parallel (BODY) - Use fast, efficient model
-    const bodyPromises = slices.slice(1).map(async (slice: string) => {
+    const bodyPromises = slices.slice(1).map(async (slice: string, sliceIndex: number) => {
       const sliceParts = [
         { inline_data: { mime_type: "image/png", data: slice } },
         { text: MARKER_ONLY_PROMPT.replace(/{URL}/g, url) }
       ];
+      
+      console.log(`🔍 Analyzing body slice ${sliceIndex + 1} of ${slices.length - 1}...`);
       
       try {
         let response;
@@ -404,11 +406,11 @@ serve(async (req) => {
         // STRATEGY: Prioritize user's Gemini key for body sections (saves Lovable AI credits)
         if (GEMINI_API_KEY) {
           try {
-            response = await callGeminiAPI(GEMINI_API_KEY, sliceParts, MARKER_ONLY_PROMPT, 2048, "gemini-2.5-flash-latest");
+            response = await callGeminiAPI(GEMINI_API_KEY, sliceParts, MARKER_ONLY_PROMPT, 2048, "gemini-2.0-flash-exp");
           } catch (error) {
             // Fallback to Lovable AI if user's Gemini fails
             if (LOVABLE_API_KEY) {
-              console.log("User's Gemini failed on body slice, using Lovable AI Flash");
+              console.log(`User's Gemini failed on body slice ${sliceIndex + 1}, using Lovable AI Flash`);
               response = await callLovableAI(sliceParts, MARKER_ONLY_PROMPT, "google/gemini-2.5-flash");
             } else {
               throw error;
@@ -420,9 +422,18 @@ serve(async (req) => {
           throw new Error("No AI API key configured for body slices");
         }
         
-        return await response.json();
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!text) {
+          console.warn(`⚠️ Body slice ${sliceIndex + 1} returned empty response`);
+          return { candidates: [{ content: { parts: [{ text: '{"markers":[]}' }] } }] };
+        }
+        
+        console.log(`✓ Body slice ${sliceIndex + 1} analyzed, text length: ${text.length}`);
+        return data;
       } catch (error) {
-        console.warn("Failed to analyze body slice:", error);
+        console.error(`❌ Failed to analyze body slice ${sliceIndex + 1}:`, error);
         return { candidates: [{ content: { parts: [{ text: '{"markers":[]}' }] } }] };
       }
     });

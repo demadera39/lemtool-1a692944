@@ -13,14 +13,11 @@ interface PremiumUpgradeModalProps {
 
 export const PremiumUpgradeModal = ({ open, onOpenChange }: PremiumUpgradeModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [coupon, setCoupon] = useState('');
 
   const handleUpgrade = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: coupon ? { coupon } : {}
-      });
+      const { data, error } = await supabase.functions.invoke('create-checkout');
       
       if (error) throw error;
       
@@ -92,37 +89,22 @@ export const PremiumUpgradeModal = ({ open, onOpenChange }: PremiumUpgradeModalP
           <p className="text-xs text-muted-foreground">Cancel anytime • 10 analyses per month</p>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <label htmlFor="coupon" className="text-sm font-medium text-muted-foreground block mb-2">
-              Have a coupon code?
-            </label>
-            <Input
-              id="coupon"
-              placeholder="Enter coupon code"
-              value={coupon}
-              onChange={(e) => setCoupon(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-              disabled={isLoading}
-            >
-              Maybe Later
-            </Button>
-            <Button
-              onClick={handleUpgrade}
-              disabled={isLoading}
-              className="flex-1 bg-gradient-to-r from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] hover:opacity-90"
-            >
-              {isLoading ? 'Loading...' : 'Upgrade to Premium'}
-            </Button>
-          </div>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+            disabled={isLoading}
+          >
+            Maybe Later
+          </Button>
+          <Button
+            onClick={handleUpgrade}
+            disabled={isLoading}
+            className="flex-1 bg-gradient-to-r from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] hover:opacity-90"
+          >
+            {isLoading ? 'Loading...' : 'Upgrade to Premium'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

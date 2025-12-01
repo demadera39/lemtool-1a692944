@@ -13,8 +13,6 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
-  const [upgradeCoupon, setUpgradeCoupon] = useState('');
-  const [packCoupon, setPackCoupon] = useState('');
 
   useEffect(() => {
     loadUserData();
@@ -63,9 +61,7 @@ const Settings = () => {
   const handleUpgrade = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: upgradeCoupon ? { coupon: upgradeCoupon } : {}
-      });
+      const { data, error } = await supabase.functions.invoke('create-checkout');
       if (error) throw error;
       
       if (data.url) {
@@ -99,9 +95,7 @@ const Settings = () => {
   const handlePurchasePack = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('purchase-analysis-pack', {
-        body: packCoupon ? { coupon: packCoupon } : {}
-      });
+      const { data, error } = await supabase.functions.invoke('purchase-analysis-pack');
       if (error) throw error;
       
       if (data.url) {
@@ -208,21 +202,7 @@ const Settings = () => {
                 <span className="text-3xl font-black text-gray-900">$9.99</span>
                 <span className="text-gray-600">/month</span>
               </div>
-              <div className="space-y-3">
-                <div>
-                  <label htmlFor="upgrade-coupon" className="text-sm font-medium text-gray-700 block mb-2">
-                    Have a coupon code?
-                  </label>
-                  <Input
-                    id="upgrade-coupon"
-                    placeholder="Enter coupon code"
-                    value={upgradeCoupon}
-                    onChange={(e) => setUpgradeCoupon(e.target.value)}
-                    disabled={loading}
-                    className="mb-2"
-                  />
-                </div>
-                <Button
+              <Button
                   onClick={handleUpgrade}
                   disabled={loading}
                   className="w-full bg-lem-orange hover:bg-lem-orange-dark"
@@ -231,7 +211,6 @@ const Settings = () => {
                   {loading ? 'Processing...' : 'Upgrade Now'}
                   <ExternalLink size={18} className="ml-2" />
                 </Button>
-              </div>
             </div>
           )}
 
@@ -262,21 +241,7 @@ const Settings = () => {
                 <div className="text-xs text-gray-500">one-time</div>
               </div>
             </div>
-            <div className="space-y-3">
-              <div>
-                <label htmlFor="pack-coupon" className="text-sm font-medium text-gray-700 block mb-2">
-                  Have a coupon code?
-                </label>
-                <Input
-                  id="pack-coupon"
-                  placeholder="Enter coupon code"
-                  value={packCoupon}
-                  onChange={(e) => setPackCoupon(e.target.value)}
-                  disabled={loading}
-                  className="mb-2"
-                />
-              </div>
-              <Button
+            <Button
                 onClick={handlePurchasePack}
                 disabled={loading}
                 variant="outline"
@@ -285,7 +250,6 @@ const Settings = () => {
                 {loading ? 'Processing...' : 'Buy Pack'}
                 <ExternalLink size={18} className="ml-2" />
               </Button>
-            </div>
           </div>
           {userRole?.pack_analyses_remaining > 0 && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">

@@ -32,12 +32,6 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Get optional coupon code from request body
-    const { coupon } = await req.json().catch(() => ({}));
-    if (coupon) {
-      logStep("Coupon provided", { coupon });
-    }
-
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
     });
@@ -49,7 +43,7 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     }
 
-    const sessionParams: any = {
+    const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
@@ -59,21 +53,14 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
+      allow_promotion_codes: true,
       success_url: `${req.headers.get("origin")}/settings?pack_success=true`,
       cancel_url: `${req.headers.get("origin")}/settings`,
       metadata: {
         user_id: user.id,
         type: "analysis_pack"
       }
-    };
-
-    // Add coupon if provided
-    if (coupon) {
-      sessionParams.discounts = [{ coupon }];
-      logStep("Applied coupon to checkout", { coupon });
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    });
 
     logStep("Checkout session created", { sessionId: session.id });
 

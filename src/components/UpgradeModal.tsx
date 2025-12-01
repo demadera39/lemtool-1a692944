@@ -13,14 +13,11 @@ interface UpgradeModalProps {
 
 export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [coupon, setCoupon] = useState('');
 
   const handlePurchasePack = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('purchase-analysis-pack', {
-        body: coupon ? { coupon } : {}
-      });
+      const { data, error } = await supabase.functions.invoke('purchase-analysis-pack');
       
       if (error) throw error;
       
@@ -92,37 +89,22 @@ export const UpgradeModal = ({ open, onOpenChange }: UpgradeModalProps) => {
           <p className="text-xs text-muted-foreground">One-time payment • 5 analyses</p>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <label htmlFor="coupon" className="text-sm font-medium text-muted-foreground block mb-2">
-              Have a coupon code?
-            </label>
-            <Input
-              id="coupon"
-              placeholder="Enter coupon code"
-              value={coupon}
-              onChange={(e) => setCoupon(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-              disabled={isLoading}
-            >
-              Maybe Later
-            </Button>
-            <Button
-              onClick={handlePurchasePack}
-              disabled={isLoading}
-              className="flex-1 bg-gradient-to-r from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] hover:opacity-90"
-            >
-              {isLoading ? 'Loading...' : 'Buy Pack'}
-            </Button>
-          </div>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+            disabled={isLoading}
+          >
+            Maybe Later
+          </Button>
+          <Button
+            onClick={handlePurchasePack}
+            disabled={isLoading}
+            className="flex-1 bg-gradient-to-r from-[hsl(var(--lem-orange))] to-[hsl(var(--lem-orange-dark))] hover:opacity-90"
+          >
+            {isLoading ? 'Loading...' : 'Buy Pack'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

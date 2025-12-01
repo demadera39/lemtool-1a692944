@@ -90,40 +90,20 @@ async function sliceImageBase64(base64Full: string): Promise<{ slices: string[],
 
 export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressCallback): Promise<GeminiAnalysisResult> {
   try {
-    // Get screenshot first
-    onProgress?.(10, 'Capturing website screenshot...');
-    const screenshot = await getWebsiteScreenshotBase64(url);
-    
-    if (!screenshot) {
-      console.error("❌ No screenshot captured - falling back to demo mode");
-      onProgress?.(100, 'Analysis complete');
-      throw new Error("Failed to capture website screenshot. The screenshot service may be unavailable.");
-    }
+    onProgress?.(10, 'Preparing analysis...');
+    console.log("🚀 Starting website analysis for:", url);
 
-    onProgress?.(30, 'Processing screenshot...');
-    console.log("Starting Slice & Conquer Analysis...");
-
-    // Slice the image into 16:9 chunks
-    const { slices, sliceHeights, totalHeight } = await sliceImageBase64(screenshot);
-    console.log(`Sliced into ${slices.length} chunks. Total Height: ${totalHeight}px`);
-
-    onProgress?.(50, 'Analyzing emotional triggers...');
+    onProgress?.(30, 'Capturing screenshot and analyzing...');
     
     // Simulate progress during the long edge function call
     const progressInterval = setInterval(() => {
-      const currentProgress = Math.random() * 10 + 50; // Random between 50-60%
-      onProgress?.(Math.min(75, currentProgress), 'AI analyzing design elements...');
+      const currentProgress = Math.random() * 10 + 40; // Random between 40-50%
+      onProgress?.(Math.min(70, currentProgress), 'AI analyzing design elements...');
     }, 2000);
     
-    // Call the edge function with sliced data
+    // Call the edge function - it will handle screenshot capture server-side
     const { data, error } = await supabase.functions.invoke('analyze-website', {
-      body: { 
-        url, 
-        slices,
-        sliceHeights,
-        totalHeight,
-        screenshot: screenshot.split(',')[1]
-      }
+      body: { url }
     });
 
     clearInterval(progressInterval);
@@ -140,7 +120,7 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
     if (data.rawResponse) {
       console.warn('AI returned non-JSON response, using fallback');
       onProgress?.(100, 'Analysis complete');
-      return generateFallbackAnalysis(url, screenshot);
+      return generateFallbackAnalysis(url, data.screenshot || null);
     }
 
     // Process markers with exact coordinate clamping to match GitHub version
@@ -158,7 +138,7 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
 
     const report: AnalysisReport = {
       ...data.report,
-      screenshot: screenshot || undefined
+      screenshot: data.screenshot || undefined
     };
 
     onProgress?.(100, 'Analysis complete');
@@ -167,8 +147,7 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
     console.error('Gemini analysis error:', error);
     onProgress?.(100, 'Analysis complete');
     // Return fallback analysis
-    const screenshot = await getWebsiteScreenshotBase64(url);
-    return generateFallbackAnalysis(url, screenshot);
+    return generateFallbackAnalysis(url, null);
   }
 }
 

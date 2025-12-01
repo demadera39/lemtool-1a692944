@@ -25,6 +25,10 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Parse request body to get pack type
+    const { pack_type = 'topup' } = await req.json().catch(() => ({}));
+    logStep("Pack type requested", { pack_type });
+
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
@@ -43,12 +47,20 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     }
 
+    // Determine price ID and metadata based on pack type
+    const priceId = pack_type === 'pro' 
+      ? 'price_1SZeEYLPIlCaMmDmHXlG2QKs'  // Pro Pack: 20 analyses for €24.99
+      : 'price_1SYQvBLPIlCaMmDmIzwnm29X'; // Top-up Pack: 5 analyses for €4.99
+    
+    const analysisCount = pack_type === 'pro' ? 20 : 5;
+    logStep("Using price", { priceId, pack_type, analysisCount });
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1SYQvBLPIlCaMmDmIzwnm29X",
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -58,7 +70,9 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/settings`,
       metadata: {
         user_id: user.id,
-        type: "analysis_pack"
+        type: "analysis_pack",
+        pack_type: pack_type,
+        analysis_count: analysisCount.toString()
       }
     });
 

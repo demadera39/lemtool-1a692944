@@ -307,32 +307,71 @@ serve(async (req) => {
 
     console.log(`[ANALYZE] Starting analysis for: ${url}`);
     
-    // 1. Fetch screenshot server-side using a more reliable service
+    // 1. Fetch screenshot server-side using multiple fallback services
     console.log(`[ANALYZE] Fetching screenshot...`);
     
-    // Try ApiFlash first (more reliable, uses headless Chrome)
-    const apiflashKey = 'e680cfb3df2f4c11ae3e976c2ca50406'; // Free tier
-    const screenshotUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${apiflashKey}&url=${encodeURIComponent(url)}&width=1200&height=1800&fresh=true&response_type=image&format=png&full_page=true&delay=3`;
+    let screenshotDataUrl: string | null = null;
     
-    let screenshotResponse = await fetch(screenshotUrl);
+    // Try multiple screenshot services with timeout
+    const tryScreenshot = async (serviceUrl: string, serviceName: string): Promise<boolean> => {
+      try {
+        console.log(`[ANALYZE] Trying ${serviceName}...`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+        
+        const response = await fetch(serviceUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const arrayBuffer = await blob.arrayBuffer();
+          const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          screenshotDataUrl = `data:image/png;base64,${base64}`;
+          console.log(`[ANALYZE] ✓ Screenshot captured via ${serviceName}, size: ${base64.length} bytes`);
+          return true;
+        }
+        console.log(`[ANALYZE] ${serviceName} returned ${response.status}`);
+        return false;
+      } catch (error) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.log(`[ANALYZE] ${serviceName} failed:`, errMsg);
+        return false;
+      }
+    };
     
-    // Fallback to thum.io if ApiFlash fails
-    if (!screenshotResponse.ok) {
-      console.log(`[ANALYZE] ApiFlash failed (${screenshotResponse.status}), trying thum.io...`);
-      const thumUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
-      screenshotResponse = await fetch(thumUrl);
+    // Try ApiFlash first (headless Chrome)
+    const apiflashKey = 'e680cfb3df2f4c11ae3e976c2ca50406';
+    await tryScreenshot(
+      `https://api.apiflash.com/v1/urltoimage?access_key=${apiflashKey}&url=${encodeURIComponent(url)}&width=1200&height=1800&fresh=true&response_type=image&format=png&full_page=true&delay=2`,
+      'ApiFlash'
+    );
+    
+    // Try thum.io as fallback if ApiFlash failed
+    if (!screenshotDataUrl) {
+      await tryScreenshot(
+        `https://image.thum.io/get/width/1200/fullpage/wait/3/noanimate/${url}`,
+        'thum.io'
+      );
     }
     
-    if (!screenshotResponse.ok) {
-      throw new Error(`Screenshot services failed: ${screenshotResponse.status}`);
+    // If all screenshot services fail, return demo analysis
+    if (!screenshotDataUrl) {
+      console.log('[ANALYZE] All screenshot services failed, returning demo analysis');
+      return new Response(
+        JSON.stringify({
+          error: 'Screenshot capture failed',
+          useDemoMode: true,
+          message: 'Unable to capture website screenshot. Using demo analysis mode.'
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200, // Return 200 so frontend can handle gracefully
+        }
+      );
     }
     
-    const screenshotBlob = await screenshotResponse.blob();
-    const screenshotArrayBuffer = await screenshotBlob.arrayBuffer();
-    const screenshotBase64 = btoa(String.fromCharCode(...new Uint8Array(screenshotArrayBuffer)));
-    const screenshotDataUrl = `data:image/png;base64,${screenshotBase64}`;
     
-    console.log(`[ANALYZE] Screenshot captured, size: ${screenshotBase64.length} bytes`);
+    console.log(`[ANALYZE] Screenshot captured successfully`);
     
     // 2. Slice the screenshot into 16:9 chunks
     console.log(`[ANALYZE] Slicing screenshot...`);
@@ -660,12 +699,19 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[ANALYZE] Error:", errorMessage);
+    
+    // Return error with demo mode flag
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({
+        error: errorMessage,
+        useDemoMode: true,
+        message: 'Analysis failed. Using demo mode.'
+      }),
       {
-        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, // Return 200 so frontend handles gracefully
       }
     );
   }

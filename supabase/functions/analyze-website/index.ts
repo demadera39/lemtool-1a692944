@@ -357,35 +357,40 @@ serve(async (req) => {
       throw new Error('URL is required');
     }
 
-    // Try to capture screenshot - fallback gracefully if it fails
-    console.log('📸 Attempting screenshot capture...');
+    // Try to capture screenshot using API Flash - fallback gracefully if it fails
+    console.log('📸 Attempting screenshot capture with API Flash...');
     let screenshotDataUrl: string | null = null;
     let slices: string[] = [];
     let sliceHeights: number[] = [];
     let totalHeight = 0;
     
     try {
-      const screenshotServiceUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
-      const screenshotResponse = await fetch(screenshotServiceUrl, { 
-        signal: AbortSignal.timeout(15000) // 15 second timeout
-      });
-      
-      if (screenshotResponse.ok) {
-        const screenshotBlob = await screenshotResponse.arrayBuffer();
-        const screenshotBase64 = btoa(String.fromCharCode(...new Uint8Array(screenshotBlob)));
-        screenshotDataUrl = `data:image/png;base64,${screenshotBase64}`;
-        
-        console.log('✅ Screenshot captured, size:', screenshotBase64.length);
-        
-        // Slice the screenshot
-        const sliceResult = await sliceImageBase64(screenshotDataUrl);
-        slices = sliceResult.slices;
-        sliceHeights = sliceResult.sliceHeights;
-        totalHeight = sliceResult.totalHeight;
-        
-        console.log(`✅ Sliced into ${slices.length} chunks`);
+      const apiFlashKey = Deno.env.get('API_FLASH_KEY');
+      if (!apiFlashKey) {
+        console.warn('⚠️ API_FLASH_KEY not configured, skipping screenshot');
       } else {
-        console.warn('⚠️ Screenshot service returned:', screenshotResponse.status);
+        const screenshotServiceUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${apiFlashKey}&url=${encodeURIComponent(url)}&format=png&width=1200&full_page=true&wait_until=page_loaded&delay=2`;
+        const screenshotResponse = await fetch(screenshotServiceUrl, { 
+          signal: AbortSignal.timeout(30000) // 30 second timeout for full page
+        });
+        
+        if (screenshotResponse.ok) {
+          const screenshotBlob = await screenshotResponse.arrayBuffer();
+          const screenshotBase64 = btoa(String.fromCharCode(...new Uint8Array(screenshotBlob)));
+          screenshotDataUrl = `data:image/png;base64,${screenshotBase64}`;
+          
+          console.log('✅ Screenshot captured with API Flash, size:', screenshotBase64.length);
+          
+          // Slice the screenshot
+          const sliceResult = await sliceImageBase64(screenshotDataUrl);
+          slices = sliceResult.slices;
+          sliceHeights = sliceResult.sliceHeights;
+          totalHeight = sliceResult.totalHeight;
+          
+          console.log(`✅ Sliced into ${slices.length} chunks`);
+        } else {
+          console.warn('⚠️ API Flash returned:', screenshotResponse.status, await screenshotResponse.text());
+        }
       }
     } catch (screenshotError) {
       console.warn('⚠️ Screenshot capture failed, continuing without visual analysis:', screenshotError);

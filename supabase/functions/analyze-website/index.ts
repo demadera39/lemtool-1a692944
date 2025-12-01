@@ -357,37 +357,62 @@ serve(async (req) => {
       throw new Error('URL is required');
     }
 
-    // Capture screenshot server-side via thum.io
-    console.log('📸 Capturing screenshot...');
-    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
-    const screenshotResponse = await fetch(screenshotServiceUrl);
+    // Try to capture screenshot - fallback gracefully if it fails
+    console.log('📸 Attempting screenshot capture...');
+    let screenshotDataUrl: string | null = null;
+    let slices: string[] = [];
+    let sliceHeights: number[] = [];
+    let totalHeight = 0;
     
-    if (!screenshotResponse.ok) {
-      console.error('❌ Screenshot service failed:', screenshotResponse.status);
-      throw new Error('Failed to capture screenshot');
+    try {
+      const screenshotServiceUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
+      const screenshotResponse = await fetch(screenshotServiceUrl, { 
+        signal: AbortSignal.timeout(15000) // 15 second timeout
+      });
+      
+      if (screenshotResponse.ok) {
+        const screenshotBlob = await screenshotResponse.arrayBuffer();
+        const screenshotBase64 = btoa(String.fromCharCode(...new Uint8Array(screenshotBlob)));
+        screenshotDataUrl = `data:image/png;base64,${screenshotBase64}`;
+        
+        console.log('✅ Screenshot captured, size:', screenshotBase64.length);
+        
+        // Slice the screenshot
+        const sliceResult = await sliceImageBase64(screenshotDataUrl);
+        slices = sliceResult.slices;
+        sliceHeights = sliceResult.sliceHeights;
+        totalHeight = sliceResult.totalHeight;
+        
+        console.log(`✅ Sliced into ${slices.length} chunks`);
+      } else {
+        console.warn('⚠️ Screenshot service returned:', screenshotResponse.status);
+      }
+    } catch (screenshotError) {
+      console.warn('⚠️ Screenshot capture failed, continuing without visual analysis:', screenshotError);
     }
-    
-    const screenshotBlob = await screenshotResponse.arrayBuffer();
-    const screenshotBase64 = btoa(String.fromCharCode(...new Uint8Array(screenshotBlob)));
-    const screenshotDataUrl = `data:image/png;base64,${screenshotBase64}`;
-    
-    console.log('✅ Screenshot captured, size:', screenshotBase64.length);
-    
-    // Slice the screenshot
-    console.log('✂️ Slicing screenshot...');
-    const { slices, sliceHeights, totalHeight } = await sliceImageBase64(screenshotDataUrl);
-    console.log(`✅ Sliced into ${slices.length} chunks`);
 
-    console.log(`[ANALYZE] Analyzing ${slices.length} slices for: ${url}. Total Height: ${totalHeight}px`);
+    // If we have no slices, create a dummy slice for text-only analysis
+    if (slices.length === 0) {
+      console.log('📝 Proceeding with text-only analysis');
+      slices = [''];
+      sliceHeights = [1080];
+      totalHeight = 1080;
+    }
+
+    console.log(`[ANALYZE] Analyzing ${slices.length} slices for: ${url}`);
 
     // 1. Analyze first slice (HERO) with master prompt - Use BEST quality
     let masterResponse;
     let usedModel = 'unknown';
     
-    const parts = [
-      { inline_data: { mime_type: "image/png", data: slices[0] } },
-      { text: MULTIMODAL_MASTER_PROMPT.replace(/{URL}/g, url) }
-    ];
+    const parts = slices[0] 
+      ? [
+          { inline_data: { mime_type: "image/png", data: slices[0] } },
+          { text: MULTIMODAL_MASTER_PROMPT.replace(/{URL}/g, url) }
+        ]
+      : [
+          { text: `Analyze the website at ${url}. Since no screenshot is available, provide a general UX analysis based on common patterns.` }
+        ];
     
     // STRATEGY: Prioritize user's Gemini key to save Lovable AI credits
     // Priority: User's Gemini 2.5 Flash > Lovable AI as fallback

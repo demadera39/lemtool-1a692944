@@ -496,11 +496,16 @@ serve(async (req) => {
     bodyResponses.forEach((respData: any, index: number) => {
       try {
         const bodyText = respData.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!bodyText) return;
+        if (!bodyText) {
+          console.log(`⚠️ Slice ${index + 1} returned no text`);
+          return;
+        }
 
         const cleanedBodyText = cleanJson(bodyText);
         const bodyData = JSON.parse(cleanedBodyText);
         const rawMarkers = bodyData.markers || [];
+
+        console.log(`📍 Slice ${index + 1}: Found ${rawMarkers.length} markers (Y offset: ${currentYOffset}px / ${(currentYOffset / totalHeight * 100).toFixed(1)}%)`);
 
         const thisSliceHeight = sliceHeights[index + 1];
 
@@ -521,9 +526,13 @@ serve(async (req) => {
             layer = 'strategy';
           }
 
+          const finalY = Math.max(0, Math.min(100, globalY));
+          
+          console.log(`  - Marker: local Y=${m.y}% → global Y=${globalY.toFixed(1)}% (clamped: ${finalY.toFixed(1)}%)`);
+
           return {
             x: Math.max(1, Math.min(99, m.x || 50)),
-            y: globalY,
+            y: finalY,
             layer,
             emotion: layer === 'emotions' ? (emotionTypeMap[m.emotion?.toUpperCase()] || 'Neutral') : undefined,
             need: layer === 'needs' ? m.need : undefined,
@@ -536,7 +545,7 @@ serve(async (req) => {
         currentYOffset += thisSliceHeight;
 
       } catch (e) {
-        console.warn(`Failed to process markers for slice ${index + 1}`, e);
+        console.error(`❌ Failed to process markers for slice ${index + 1}:`, e);
       }
     });
 

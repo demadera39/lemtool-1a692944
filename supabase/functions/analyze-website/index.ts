@@ -343,7 +343,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url, slices, sliceHeights, totalHeight, screenshot } = await req.json();
+    const { url } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
@@ -351,19 +351,32 @@ serve(async (req) => {
       throw new Error("No AI API key configured");
     }
 
-    console.log('📋 Received request:', { 
-      url, 
-      sliceCount: slices?.length,
-      totalHeight
-    });
+    console.log('📋 Received request:', { url });
 
     if (!url) {
       throw new Error('URL is required');
     }
 
-    if (!slices || !sliceHeights || !totalHeight) {
-      throw new Error('Screenshot data is required');
+    // Capture screenshot server-side via thum.io
+    console.log('📸 Capturing screenshot...');
+    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
+    const screenshotResponse = await fetch(screenshotServiceUrl);
+    
+    if (!screenshotResponse.ok) {
+      console.error('❌ Screenshot service failed:', screenshotResponse.status);
+      throw new Error('Failed to capture screenshot');
     }
+    
+    const screenshotBlob = await screenshotResponse.arrayBuffer();
+    const screenshotBase64 = btoa(String.fromCharCode(...new Uint8Array(screenshotBlob)));
+    const screenshotDataUrl = `data:image/png;base64,${screenshotBase64}`;
+    
+    console.log('✅ Screenshot captured, size:', screenshotBase64.length);
+    
+    // Slice the screenshot
+    console.log('✂️ Slicing screenshot...');
+    const { slices, sliceHeights, totalHeight } = await sliceImageBase64(screenshotDataUrl);
+    console.log(`✅ Sliced into ${slices.length} chunks`);
 
     console.log(`[ANALYZE] Analyzing ${slices.length} slices for: ${url}. Total Height: ${totalHeight}px`);
 
@@ -684,9 +697,18 @@ serve(async (req) => {
 
     console.log(`Generated ${allMarkers.length} markers across ${slices.length} slices`);
 
-    return new Response(JSON.stringify({ markers: allMarkers, report: { ...report, screenshot: `data:image/png;base64,${screenshot}` } }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        markers: allMarkers,
+        report: {
+          ...report,
+          screenshot: screenshotDataUrl
+        }
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("[ANALYZE] Error:", errorMessage);

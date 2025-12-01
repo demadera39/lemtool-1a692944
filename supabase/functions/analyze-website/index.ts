@@ -65,11 +65,19 @@ Target URL: {URL}
 1. Analyze this screenshot viewport for Emotional Markers, SDT Needs, and Strategic Insights.
 2. Generate the **MASTER STRATEGIC REPORT** based on this primary visual context.
 
-**CRITICAL REQUIREMENT 1: PERSONAS**
+**CRITICAL REQUIREMENT 1: MARKER QUANTITY**
+- You **MUST** generate a **MINIMUM of 10-15 MARKERS** for this hero section.
+- Distribute markers across ALL THREE LAYERS:
+  - At least 4-5 markers with layer="emotions"
+  - At least 4-5 markers with layer="needs"
+  - At least 4-5 markers with layer="strategy"
+- Identify DISTINCT UI elements (headlines, buttons, images, forms, navigation, social proof, etc.).
+
+**CRITICAL REQUIREMENT 2: PERSONAS**
 - You **MUST** generate **4 to 5 DISTINCT PERSONAS**.
 - Do not just generate 1 or 2. We need a full spectrum of users (e.g., The Skeptic, The Power User, The Novice, The Decision Maker).
 
-**CRITICAL REQUIREMENT 2: APPRAISAL THEORY BRIEF**
+**CRITICAL REQUIREMENT 3: APPRAISAL THEORY BRIEF**
 - The "creativeBrief" must use **Appraisal Theory Statements** to guide improvements.
 - For each "actionableStep", structure it as ONE of these three types:
   1. **Goal-Based**: "GOAL: [User wants X]. FIX: [UI Change]. RESULT: Evokes [Emotion]."
@@ -78,7 +86,7 @@ Target URL: {URL}
 - Provide 3-5 specific steps in this format.
 - Also include "benchmarks" of real world examples.
 
-**CRITICAL REQUIREMENT 3: PRECISION & PLACEMENT**
+**CRITICAL REQUIREMENT 4: PRECISION & PLACEMENT**
 - **Center of Mass**: Coordinates (x,y) must range from 0-100.
   - x=0 is Left, x=100 is Right.
   - y=0 is Top, y=100 is Bottom.
@@ -133,6 +141,14 @@ Target URL: {URL}
 
 **TASK**:
 Identify specific UX/UI elements in this slice that trigger emotions, fulfill psychological needs, or represent strategic opportunities.
+
+**CRITICAL MARKER QUANTITY**:
+- You **MUST** generate a **MINIMUM of 8-12 MARKERS** for each body section slice.
+- Distribute markers across ALL THREE LAYERS:
+  - At least 3-4 markers with layer="emotions"
+  - At least 3-4 markers with layer="needs"
+  - At least 3-4 markers with layer="strategy"
+- Analyze EVERY visible UI component (cards, buttons, images, text blocks, forms, CTAs, testimonials, pricing tables, etc.).
 
 **CRITICAL COORDINATE INSTRUCTIONS**:
 - The provided image is a **SLICE** of a larger page.

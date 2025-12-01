@@ -99,6 +99,12 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
 
     onProgress?.(50, 'Analyzing emotional triggers...');
     
+    // Simulate progress during the long edge function call
+    const progressInterval = setInterval(() => {
+      const currentProgress = Math.random() * 10 + 50; // Random between 50-60%
+      onProgress?.(Math.min(75, currentProgress), 'AI analyzing design elements...');
+    }, 2000);
+    
     // Call the edge function with sliced data
     const { data, error } = await supabase.functions.invoke('analyze-website', {
       body: { 
@@ -110,6 +116,7 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
       }
     });
 
+    clearInterval(progressInterval);
     onProgress?.(80, 'Processing analysis results...');
 
     if (error) {

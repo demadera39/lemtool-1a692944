@@ -22,6 +22,11 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
+
   try {
     logStep("Function started");
 
@@ -49,14 +54,14 @@ serve(async (req) => {
 
     // Determine price ID and metadata based on pack type
     // Check if user has premium subscription for discount
-    const { data: userRole } = await supabaseClient
+    const { data: userRole } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .single();
     
     const isPremium = userRole?.role === 'premium';
-    logStep("User role checked", { isPremium });
+    logStep("User role checked", { isPremium, userRole });
     
     const priceId = pack_type === 'pro' 
       ? (isPremium ? 'price_1SZeLnLPIlCaMmDmQPR0lEvM' : 'price_1SZeEYLPIlCaMmDmHXlG2QKs')  // Pro Pack: €19.99 for premium, €24.99 for others

@@ -238,9 +238,21 @@ const Settings = () => {
               <div>
                 <h4 className="font-bold text-gray-900 text-lg">Pro Pack - 20 Analyses</h4>
                 <p className="text-sm text-gray-600">Never expires • Rolls over • Best value</p>
+                {isPremium && (
+                  <div className="mt-1 inline-block bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
+                    20% STARTER DISCOUNT
+                  </div>
+                )}
               </div>
               <div className="text-right">
-                <div className="text-2xl font-black text-gray-900">€24.99</div>
+                {isPremium ? (
+                  <>
+                    <div className="text-sm text-gray-500 line-through">€24.99</div>
+                    <div className="text-2xl font-black text-lem-orange">€19.99</div>
+                  </>
+                ) : (
+                  <div className="text-2xl font-black text-gray-900">€24.99</div>
+                )}
                 <div className="text-xs text-gray-500">one-time</div>
               </div>
             </div>
@@ -249,7 +261,7 @@ const Settings = () => {
                 disabled={loading}
                 className="w-full bg-lem-orange hover:bg-lem-orange-dark"
               >
-                {loading ? 'Processing...' : 'Buy Pro Pack'}
+                {loading ? 'Processing...' : isPremium ? 'Buy Pro Pack (20% off)' : 'Buy Pro Pack'}
                 <ExternalLink size={18} className="ml-2" />
               </Button>
           </div>

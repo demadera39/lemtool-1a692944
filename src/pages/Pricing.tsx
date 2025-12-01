@@ -149,6 +149,10 @@ const Pricing = () => {
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
+                <span className="text-white font-medium">20% off Pro Packs</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
                 <span className="text-white font-medium">AI vs Human comparison</span>
               </li>
             </ul>

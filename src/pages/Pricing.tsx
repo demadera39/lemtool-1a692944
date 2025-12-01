@@ -31,11 +31,11 @@ const Pricing = () => {
             Simple, Transparent Pricing
           </h1>
           <p className="text-xl text-gray-600">
-            Buy analysis packs that never expire • No subscriptions
+            Choose a monthly plan or buy one-time packs that never expire
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {/* Free Tier */}
           <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
             <div className="mb-6">
@@ -77,17 +77,18 @@ const Pricing = () => {
             </div>
 
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-white mb-2">Starter Pack</h2>
+              <h2 className="text-2xl font-black text-white mb-2">Starter</h2>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black text-white">€9.99</span>
+                <span className="text-orange-100 text-lg">/month</span>
               </div>
-              <p className="text-orange-100 text-sm mt-1">10 analyses • Never expire</p>
+              <p className="text-orange-100 text-sm mt-1">Recurring subscription</p>
             </div>
 
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium"><strong>10 MONTHLY analyses</strong></span>
+                <span className="text-white font-medium"><strong>10 analyses/month</strong></span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
@@ -99,7 +100,7 @@ const Pricing = () => {
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium">Participant testing links</span>
+                <span className="text-white font-medium">Participant testing</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
@@ -108,15 +109,48 @@ const Pricing = () => {
             </ul>
 
             <Button onClick={() => navigate('/auth')} className="w-full bg-white text-lem-orange hover:bg-gray-50">
-              Buy Starter Pack
+              Start Subscription
+            </Button>
+          </div>
+
+          {/* Pro Pack */}
+          <div className="bg-white rounded-2xl border-2 border-lem-orange p-8 shadow-lg">
+            <div className="mb-6">
+              <h2 className="text-2xl font-black text-gray-900 mb-2">Pro Pack</h2>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-black text-gray-900">€24.99</span>
+              </div>
+              <p className="text-gray-500 text-sm mt-1">30 analyses • Never expire</p>
+            </div>
+
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-start gap-3">
+                <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700"><strong>30 analyses</strong> one-time</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">Best value per analysis</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">All premium features</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">No recurring charges</span>
+              </li>
+            </ul>
+
+            <Button onClick={() => navigate('/auth')} variant="default" className="w-full">
+              Buy Pro Pack
             </Button>
           </div>
 
           {/* Top-up Pack */}
           <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 mb-2">Top-up Pack
-(Starter users)</h2>
+              <h2 className="text-2xl font-black text-gray-900 mb-2">Top-up</h2>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black text-gray-900">€4.99</span>
               </div>
@@ -126,8 +160,7 @@ const Pricing = () => {
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 text-sm"><strong>5 analyses</strong>Top-up Pack
-(Starter users)</span>
+                <span className="text-gray-700"><strong>5 analyses</strong> one-time</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
@@ -139,11 +172,13 @@ const Pricing = () => {
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">Buy multiple packs anytime</span>
+                <span className="text-gray-700">Stack with other packs</span>
               </li>
             </ul>
 
-            
+            <Button onClick={() => navigate('/auth')} variant="outline" className="w-full">
+              Buy Top-up Pack
+            </Button>
           </div>
         </div>
 
@@ -154,10 +189,10 @@ const Pricing = () => {
           <div className="max-w-2xl mx-auto space-y-6 text-left">
             <div className="bg-white rounded-lg p-6 border border-gray-200">
               <h4 className="font-bold text-gray-900 mb-2">
-                Do analysis packs expire?
+                What's the difference between Starter and packs?
               </h4>
               <p className="text-gray-600">
-                No! Once you purchase a pack, the analyses are yours forever. Use them at your own pace.
+                Starter is a monthly subscription (€9.99/month for 10 analyses). Pro Pack and Top-up packs are one-time purchases that never expire—buy once, use anytime.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 border border-gray-200">
@@ -165,7 +200,7 @@ const Pricing = () => {
                 Can I buy multiple packs?
               </h4>
               <p className="text-gray-600">
-                Yes! Buy as many top-up packs as you need. They all stack and never expire.
+                Yes! All one-time packs (Pro Pack and Top-up) stack together and never expire. Use them at your own pace.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 border border-gray-200">

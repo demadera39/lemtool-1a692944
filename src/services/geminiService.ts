@@ -118,6 +118,15 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
     if (data?.useDemoMode) {
       console.log('⚠️ Using demo mode due to screenshot failure:', data.message);
       onProgress?.(100, 'Analysis complete (demo mode)');
+      
+      // Show toast notification to user
+      const { toast } = await import('@/hooks/use-toast');
+      toast({
+        title: "Demo Mode",
+        description: data.message || "Screenshot capture failed. Showing demo analysis.",
+        variant: "destructive",
+      });
+      
       return generateFallbackAnalysis(url, null);
     }
     

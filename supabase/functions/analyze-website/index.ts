@@ -307,65 +307,76 @@ serve(async (req) => {
 
     console.log(`[ANALYZE] Starting analysis for: ${url}`);
     
-    // 1. Fetch screenshot server-side using multiple fallback services
+    // 1. Fetch screenshot server-side - try multiple services
     console.log(`[ANALYZE] Fetching screenshot...`);
     
     let screenshotDataUrl: string | null = null;
     
-    // Try multiple screenshot services with timeout
-    const tryScreenshot = async (serviceUrl: string, serviceName: string): Promise<boolean> => {
+    // Screenshot service helper with timeout
+    const fetchWithTimeout = async (url: string, timeout = 20000): Promise<Response> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
       try {
-        console.log(`[ANALYZE] Trying ${serviceName}...`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
-        
-        const response = await fetch(serviceUrl, { signal: controller.signal });
+        const response = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    };
+    
+    // Service 1: ScreenshotOne (most reliable)
+    try {
+      console.log('[ANALYZE] Trying ScreenshotOne...');
+      const screenshotOneUrl = `https://api.screenshotone.com/take?access_key=FyJF0aXnxh0xlA&url=${encodeURIComponent(url)}&viewport_width=1200&viewport_height=1800&device_scale_factor=1&format=png&full_page=true&fresh=true&delay=2`;
+      const response = await fetchWithTimeout(screenshotOneUrl, 20000);
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        screenshotDataUrl = `data:image/png;base64,${base64}`;
+        console.log(`[ANALYZE] ✓ Screenshot captured via ScreenshotOne`);
+      } else {
+        console.log(`[ANALYZE] ScreenshotOne returned ${response.status}`);
+      }
+    } catch (error) {
+      console.log(`[ANALYZE] ScreenshotOne failed:`, error instanceof Error ? error.message : String(error));
+    }
+    
+    // Service 2: Screenshot.guru as fallback
+    if (!screenshotDataUrl) {
+      try {
+        console.log('[ANALYZE] Trying Screenshot.guru...');
+        const guruUrl = `https://screenshot.guru/api/image/jpg?url=${encodeURIComponent(url)}&width=1200&full=1`;
+        const response = await fetchWithTimeout(guruUrl, 20000);
         
         if (response.ok) {
           const blob = await response.blob();
           const arrayBuffer = await blob.arrayBuffer();
           const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-          screenshotDataUrl = `data:image/png;base64,${base64}`;
-          console.log(`[ANALYZE] ✓ Screenshot captured via ${serviceName}, size: ${base64.length} bytes`);
-          return true;
+          screenshotDataUrl = `data:image/jpeg;base64,${base64}`;
+          console.log(`[ANALYZE] ✓ Screenshot captured via Screenshot.guru`);
+        } else {
+          console.log(`[ANALYZE] Screenshot.guru returned ${response.status}`);
         }
-        console.log(`[ANALYZE] ${serviceName} returned ${response.status}`);
-        return false;
       } catch (error) {
-        const errMsg = error instanceof Error ? error.message : String(error);
-        console.log(`[ANALYZE] ${serviceName} failed:`, errMsg);
-        return false;
+        console.log(`[ANALYZE] Screenshot.guru failed:`, error instanceof Error ? error.message : String(error));
       }
-    };
-    
-    // Try ApiFlash first (headless Chrome)
-    const apiflashKey = 'e680cfb3df2f4c11ae3e976c2ca50406';
-    await tryScreenshot(
-      `https://api.apiflash.com/v1/urltoimage?access_key=${apiflashKey}&url=${encodeURIComponent(url)}&width=1200&height=1800&fresh=true&response_type=image&format=png&full_page=true&delay=2`,
-      'ApiFlash'
-    );
-    
-    // Try thum.io as fallback if ApiFlash failed
-    if (!screenshotDataUrl) {
-      await tryScreenshot(
-        `https://image.thum.io/get/width/1200/fullpage/wait/3/noanimate/${url}`,
-        'thum.io'
-      );
     }
     
-    // If all screenshot services fail, return demo analysis
+    // If all services fail, return demo mode
     if (!screenshotDataUrl) {
       console.log('[ANALYZE] All screenshot services failed, returning demo analysis');
       return new Response(
         JSON.stringify({
-          error: 'Screenshot capture failed',
           useDemoMode: true,
-          message: 'Unable to capture website screenshot. Using demo analysis mode.'
+          message: 'Screenshot services are currently unavailable. Please try again later.'
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200, // Return 200 so frontend can handle gracefully
+          status: 200,
         }
       );
     }

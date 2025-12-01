@@ -47,9 +47,9 @@ async function sliceImageBase64(base64Full: string): Promise<{ slices: string[],
       const totalWidth = img.width;
       const totalHeight = img.height;
 
-      // We use a 16:9 aspect ratio slice height to match standard screens
-      // This ensures Gemini sees "familiar" viewports
-      const sliceHeight = Math.floor(totalWidth * (9/16));
+      // Use a fixed viewport height of 500px for better slicing coverage
+      // This creates more slices, ensuring markers are distributed across the entire page
+      const sliceHeight = 500;
 
       const slices: string[] = [];
       const sliceHeights: number[] = [];

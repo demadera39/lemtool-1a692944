@@ -48,12 +48,22 @@ serve(async (req) => {
     }
 
     // Determine price ID and metadata based on pack type
+    // Check if user has premium subscription for discount
+    const { data: userRole } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+    
+    const isPremium = userRole?.role === 'premium';
+    logStep("User role checked", { isPremium });
+    
     const priceId = pack_type === 'pro' 
-      ? 'price_1SZeEYLPIlCaMmDmHXlG2QKs'  // Pro Pack: 20 analyses for €24.99
+      ? (isPremium ? 'price_1SZeLnLPIlCaMmDmQPR0lEvM' : 'price_1SZeEYLPIlCaMmDmHXlG2QKs')  // Pro Pack: €19.99 for premium, €24.99 for others
       : 'price_1SYQvBLPIlCaMmDmIzwnm29X'; // Top-up Pack: 5 analyses for €4.99
     
     const analysisCount = pack_type === 'pro' ? 20 : 5;
-    logStep("Using price", { priceId, pack_type, analysisCount });
+    logStep("Using price", { priceId, pack_type, analysisCount, isPremium });
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

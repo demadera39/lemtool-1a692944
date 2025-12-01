@@ -24,6 +24,9 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
+    // Get optional coupon code from request body
+    const { coupon } = await req.json().catch(() => ({}));
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
     });
@@ -34,7 +37,7 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
@@ -46,7 +49,14 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${req.headers.get("origin")}/settings?success=true`,
       cancel_url: `${req.headers.get("origin")}/settings`,
-    });
+    };
+
+    // Add coupon if provided
+    if (coupon) {
+      sessionParams.discounts = [{ coupon }];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

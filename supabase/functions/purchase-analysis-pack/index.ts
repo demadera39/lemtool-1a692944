@@ -53,7 +53,6 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      allow_promotion_codes: true,
       success_url: `${req.headers.get("origin")}/settings?pack_success=true`,
       cancel_url: `${req.headers.get("origin")}/settings`,
       metadata: {

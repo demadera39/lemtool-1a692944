@@ -5,68 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Helper to capture screenshot using Puppeteer
-async function getScreenshotBase64(url: string): Promise<string | null> {
-  try {
-    console.log("🔍 Launching Puppeteer for:", url);
-    
-    // Dynamic import of Puppeteer
-    const puppeteer = await import("https://deno.land/x/puppeteer@16.2.0/mod.ts");
-    
-    const browser = await puppeteer.default.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1200, height: 800 });
-    
-    console.log("📄 Navigating to URL...");
-    await page.goto(url, { 
-      waitUntil: 'networkidle2',
-      timeout: 30000 
-    });
-    
-    console.log("📸 Capturing screenshot...");
-    const screenshot = await page.screenshot({ 
-      fullPage: true,
-      type: 'png'
-    });
-    
-    await browser.close();
-    
-    // Convert to base64
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(screenshot)));
-    const dataUrl = `data:image/png;base64,${base64}`;
-    
-    console.log("✅ Screenshot captured successfully, size:", dataUrl.length, "chars");
-    return dataUrl;
-  } catch (e) {
-    console.error("❌ Puppeteer screenshot failed:", e);
-    return null;
-  }
-}
-
-// Slice image into 16:9 aspect ratio chunks using ImageMagick-style logic
-async function sliceImageBase64(base64Full: string): Promise<{ slices: string[], sliceHeights: number[], totalHeight: number, totalWidth: number }> {
-  // This is a server-side implementation - we'll split the full image into slices
-  // For now, return single slice. In production, use image processing library
-  const base64Data = base64Full.split(',')[1] || base64Full;
-  
-  // Approximate dimensions based on typical screenshots
-  const totalWidth = 1200;
-  const totalHeight = 3000; // Estimated full page height
-  const sliceHeight = Math.floor(totalWidth * (9/16)); // 16:9 ratio
-  
-  // For simplicity, return the full image as a single slice
-  // In production, you'd use an image processing library to actually slice
-  return {
-    slices: [base64Data],
-    sliceHeights: [totalHeight],
-    totalHeight,
-    totalWidth
-  };
-}
-
 function cleanJson(text: string): string {
   if (!text) return "{}";
 
@@ -343,7 +281,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, slices, sliceHeights, totalHeight, screenshot } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
@@ -351,73 +289,20 @@ serve(async (req) => {
       throw new Error("No AI API key configured");
     }
 
-    console.log('📋 Received request:', { url });
-
-    if (!url) {
-      throw new Error('URL is required');
+    if (!slices || !sliceHeights || !totalHeight) {
+      throw new Error("Sliced image data is required");
     }
 
-    // Try to capture screenshot using API Flash - fallback gracefully if it fails
-    console.log('📸 Attempting screenshot capture with API Flash...');
-    let screenshotDataUrl: string | null = null;
-    let slices: string[] = [];
-    let sliceHeights: number[] = [];
-    let totalHeight = 0;
-    
-    try {
-      const apiFlashKey = Deno.env.get('API_FLASH_KEY');
-      if (!apiFlashKey) {
-        console.warn('⚠️ API_FLASH_KEY not configured, skipping screenshot');
-      } else {
-        const screenshotServiceUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${apiFlashKey}&url=${encodeURIComponent(url)}&format=png&width=1200&full_page=true&wait_until=page_loaded&delay=2`;
-        const screenshotResponse = await fetch(screenshotServiceUrl, { 
-          signal: AbortSignal.timeout(30000) // 30 second timeout for full page
-        });
-        
-        if (screenshotResponse.ok) {
-          const screenshotBlob = await screenshotResponse.arrayBuffer();
-          const screenshotBase64 = btoa(String.fromCharCode(...new Uint8Array(screenshotBlob)));
-          screenshotDataUrl = `data:image/png;base64,${screenshotBase64}`;
-          
-          console.log('✅ Screenshot captured with API Flash, size:', screenshotBase64.length);
-          
-          // Slice the screenshot
-          const sliceResult = await sliceImageBase64(screenshotDataUrl);
-          slices = sliceResult.slices;
-          sliceHeights = sliceResult.sliceHeights;
-          totalHeight = sliceResult.totalHeight;
-          
-          console.log(`✅ Sliced into ${slices.length} chunks`);
-        } else {
-          console.warn('⚠️ API Flash returned:', screenshotResponse.status, await screenshotResponse.text());
-        }
-      }
-    } catch (screenshotError) {
-      console.warn('⚠️ Screenshot capture failed, continuing without visual analysis:', screenshotError);
-    }
-
-    // If we have no slices, create a dummy slice for text-only analysis
-    if (slices.length === 0) {
-      console.log('📝 Proceeding with text-only analysis');
-      slices = [''];
-      sliceHeights = [1080];
-      totalHeight = 1080;
-    }
-
-    console.log(`[ANALYZE] Analyzing ${slices.length} slices for: ${url}`);
+    console.log(`Analyzing ${slices.length} slices. Total Height: ${totalHeight}px`);
 
     // 1. Analyze first slice (HERO) with master prompt - Use BEST quality
     let masterResponse;
     let usedModel = 'unknown';
     
-    const parts = slices[0] 
-      ? [
-          { inline_data: { mime_type: "image/png", data: slices[0] } },
-          { text: MULTIMODAL_MASTER_PROMPT.replace(/{URL}/g, url) }
-        ]
-      : [
-          { text: `Analyze the website at ${url}. Since no screenshot is available, provide a general UX analysis based on common patterns.` }
-        ];
+    const parts = [
+      { inline_data: { mime_type: "image/png", data: slices[0] } },
+      { text: MULTIMODAL_MASTER_PROMPT.replace(/{URL}/g, url) }
+    ];
     
     // STRATEGY: Prioritize user's Gemini key to save Lovable AI credits
     // Priority: User's Gemini 2.5 Flash > Lovable AI as fallback
@@ -727,27 +612,16 @@ serve(async (req) => {
 
     console.log(`Generated ${allMarkers.length} markers across ${slices.length} slices`);
 
-    return new Response(
-      JSON.stringify({
-        markers: allMarkers,
-        report: {
-          ...report,
-          screenshot: screenshotDataUrl
-        }
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+    return new Response(JSON.stringify({ markers: allMarkers, report }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("[ANALYZE] Error:", errorMessage);
-    
+    console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }

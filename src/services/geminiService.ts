@@ -114,6 +114,13 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
       throw error;
     }
     
+    // Check if we should use demo mode due to screenshot failure
+    if (data?.useDemoMode) {
+      console.log('⚠️ Using demo mode due to screenshot failure:', data.message);
+      onProgress?.(100, 'Analysis complete (demo mode)');
+      return generateFallbackAnalysis(url, null);
+    }
+    
     console.log("✅ Analysis data received from edge function");
 
     // If we have a rawResponse, it means parsing failed

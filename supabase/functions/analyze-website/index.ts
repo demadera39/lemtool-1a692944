@@ -307,13 +307,24 @@ serve(async (req) => {
 
     console.log(`[ANALYZE] Starting analysis for: ${url}`);
     
-    // 1. Fetch screenshot server-side (avoids CORS issues)
+    // 1. Fetch screenshot server-side using a more reliable service
     console.log(`[ANALYZE] Fetching screenshot...`);
-    const screenshotUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
-    const screenshotResponse = await fetch(screenshotUrl);
+    
+    // Try ApiFlash first (more reliable, uses headless Chrome)
+    const apiflashKey = 'e680cfb3df2f4c11ae3e976c2ca50406'; // Free tier
+    const screenshotUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${apiflashKey}&url=${encodeURIComponent(url)}&width=1200&height=1800&fresh=true&response_type=image&format=png&full_page=true&delay=3`;
+    
+    let screenshotResponse = await fetch(screenshotUrl);
+    
+    // Fallback to thum.io if ApiFlash fails
+    if (!screenshotResponse.ok) {
+      console.log(`[ANALYZE] ApiFlash failed (${screenshotResponse.status}), trying thum.io...`);
+      const thumUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
+      screenshotResponse = await fetch(thumUrl);
+    }
     
     if (!screenshotResponse.ok) {
-      throw new Error(`Screenshot service failed: ${screenshotResponse.status}`);
+      throw new Error(`Screenshot services failed: ${screenshotResponse.status}`);
     }
     
     const screenshotBlob = await screenshotResponse.blob();

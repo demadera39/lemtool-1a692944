@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,30 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const handlePendingPurchase = async () => {
+    const pendingPurchase = localStorage.getItem('pendingPurchase');
+    if (!pendingPurchase) return;
+
+    localStorage.removeItem('pendingPurchase');
+    
+    try {
+      const functionName = pendingPurchase === 'starter' ? 'create-checkout' : 'purchase-analysis-pack';
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: pendingPurchase === 'pro' ? { pack_type: 'pro' } : {}
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again from the pricing page.');
+      navigate('/pricing');
+    }
+  };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +67,10 @@ const Auth = () => {
         // If session exists immediately, user is auto-logged in
         if (signUpData.session) {
           toast.success('Welcome! Your account has been created.');
-          navigate('/');
+          await handlePendingPurchase();
+          if (!localStorage.getItem('pendingPurchase')) {
+            navigate('/');
+          }
         } else {
           // Email confirmation required
           toast.success('Account created! Please check your email to verify.');
@@ -57,7 +84,10 @@ const Auth = () => {
 
         if (error) throw error;
         toast.success('Welcome back!');
-        navigate('/');
+        await handlePendingPurchase();
+        if (!localStorage.getItem('pendingPurchase')) {
+          navigate('/');
+        }
       }
     } catch (error: any) {
       toast.error(error.message || 'Authentication failed');

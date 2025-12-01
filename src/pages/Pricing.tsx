@@ -1,9 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Check, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+
 const Pricing = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handlePurchase = async (type: 'starter' | 'pro' | 'topup') => {
+    setIsLoading(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Store intended purchase and redirect to auth
+        localStorage.setItem('pendingPurchase', type);
+        navigate('/auth');
+        return;
+      }
+
+      // User is logged in, proceed to checkout
+      await initiateCheckout(type);
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast.error('Failed to start purchase');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const initiateCheckout = async (type: 'starter' | 'pro' | 'topup') => {
+    try {
+      const functionName = type === 'starter' ? 'create-checkout' : 'purchase-analysis-pack';
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: type === 'pro' ? { pack_type: 'pro' } : {}
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout');
+    }
+  };
   return <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50 relative overflow-hidden">
       {/* Decorative emotion stickers using real emotion images */}
       <div className="absolute top-10 right-10 w-20 h-20 opacity-20 rotate-12">
@@ -65,7 +110,7 @@ const Pricing = () => {
               </li>
             </ul>
 
-            <Button onClick={() => navigate('/auth')} variant="outline" className="w-full">
+            <Button onClick={() => navigate('/auth')} variant="outline" className="w-full" disabled={isLoading}>
               Get Started Free
             </Button>
           </div>
@@ -108,8 +153,12 @@ const Pricing = () => {
               </li>
             </ul>
 
-            <Button onClick={() => navigate('/auth')} className="w-full bg-white text-lem-orange hover:bg-gray-50">
-              Start Subscription
+            <Button 
+              onClick={() => handlePurchase('starter')} 
+              className="w-full bg-white text-lem-orange hover:bg-gray-50"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Start Subscription'}
             </Button>
           </div>
 
@@ -142,8 +191,13 @@ const Pricing = () => {
               </li>
             </ul>
 
-            <Button onClick={() => navigate('/auth')} variant="default" className="w-full">
-              Buy Pro Pack
+            <Button 
+              onClick={() => handlePurchase('pro')} 
+              variant="default" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Buy Pro Pack'}
             </Button>
           </div>
 
@@ -176,8 +230,13 @@ const Pricing = () => {
               </li>
             </ul>
 
-            <Button onClick={() => navigate('/auth')} variant="outline" className="w-full">
-              Buy Top-up Pack
+            <Button 
+              onClick={() => handlePurchase('topup')} 
+              variant="outline" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Buy Top-up Pack'}
             </Button>
           </div>
         </div>

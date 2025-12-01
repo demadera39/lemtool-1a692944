@@ -79,10 +79,10 @@ const Pricing = () => {
             <div className="mb-6">
               <h2 className="text-2xl font-black text-white mb-2">Starter</h2>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-white">€9.99</span>
+                <span className="text-5xl font-black text-white">€7.99</span>
                 <span className="text-orange-100 text-lg">/month</span>
               </div>
-              <p className="text-orange-100 text-sm mt-1">Recurring subscription</p>
+              <p className="text-orange-100 text-sm mt-1">Best value • €0.80/analysis</p>
             </div>
 
             <ul className="space-y-4 mb-8">
@@ -192,7 +192,7 @@ const Pricing = () => {
                 What's the difference between Starter and packs?
               </h4>
               <p className="text-gray-600">
-                Starter is a monthly subscription (€9.99/month for 10 analyses). Pro Pack and Top-up packs are one-time purchases that never expire—buy once, use anytime.
+                Starter is a monthly subscription (€7.99/month for 10 analyses, best value at €0.80 each). Pro Pack and Top-up packs are one-time purchases that never expire—buy once, use anytime.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 border border-gray-200">

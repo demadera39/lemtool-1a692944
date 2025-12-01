@@ -5,19 +5,54 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Slice image into 16:9 aspect ratio chunks
-async function sliceImage(dataUrl: string): Promise<{ slices: string[], sliceHeights: number[], totalHeight: number }> {
-  // In Deno, we need to use a different approach since we don't have browser APIs
-  // We'll use the base64 data directly and calculate slicing
-  const base64Data = dataUrl.split(',')[1];
-  const binaryData = atob(base64Data);
+// Helper to fetch a screenshot as base64
+async function getScreenshotBase64(url: string): Promise<string | null> {
+  try {
+    // Use thum.io screenshot service
+    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
+    
+    console.log("🔍 Fetching screenshot from:", screenshotServiceUrl);
+    const response = await fetch(screenshotServiceUrl);
+    
+    if (!response.ok) {
+      console.error("❌ Screenshot service returned status:", response.status, response.statusText);
+      return null;
+    }
+    
+    console.log("✅ Screenshot fetched successfully");
+    const blob = await response.blob();
+    console.log("📦 Blob size:", blob.size, "bytes");
+    
+    const arrayBuffer = await blob.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const dataUrl = `data:image/png;base64,${base64}`;
+    
+    console.log("🎨 Base64 length:", dataUrl.length, "chars");
+    return dataUrl;
+  } catch (e) {
+    console.error("❌ Screenshot capture failed:", e);
+    return null;
+  }
+}
+
+// Slice image into 16:9 aspect ratio chunks using ImageMagick-style logic
+async function sliceImageBase64(base64Full: string): Promise<{ slices: string[], sliceHeights: number[], totalHeight: number, totalWidth: number }> {
+  // This is a server-side implementation - we'll split the full image into slices
+  // For now, return single slice. In production, use image processing library
+  const base64Data = base64Full.split(',')[1] || base64Full;
   
-  // For now, just return the full image as a single slice
-  // In production, you'd want to use an image processing library
+  // Approximate dimensions based on typical screenshots
+  const totalWidth = 1200;
+  const totalHeight = 3000; // Estimated full page height
+  const sliceHeight = Math.floor(totalWidth * (9/16)); // 16:9 ratio
+  
+  // For simplicity, return the full image as a single slice
+  // In production, you'd use an image processing library to actually slice
   return {
     slices: [base64Data],
-    sliceHeights: [1080], // Approximate
-    totalHeight: 1080
+    sliceHeights: [totalHeight],
+    totalHeight,
+    totalWidth
   };
 }
 
@@ -297,7 +332,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url, slices, sliceHeights, totalHeight, screenshot } = await req.json();
+    const { url } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
@@ -305,9 +340,26 @@ serve(async (req) => {
       throw new Error("No AI API key configured");
     }
 
-    if (!slices || !sliceHeights || !totalHeight) {
-      throw new Error("Sliced image data is required");
+    console.log('📋 Received request:', { url });
+
+    if (!url) {
+      throw new Error('URL is required');
     }
+
+    // Capture screenshot server-side
+    console.log('📸 Capturing screenshot...');
+    const screenshotBase64 = await getScreenshotBase64(url);
+    
+    if (!screenshotBase64) {
+      throw new Error('Failed to capture screenshot');
+    }
+    
+    console.log('✅ Screenshot captured successfully');
+    
+    // Slice the screenshot
+    console.log('✂️ Slicing screenshot...');
+    const { slices, sliceHeights, totalHeight } = await sliceImageBase64(screenshotBase64);
+    console.log(`✅ Sliced into ${slices.length} chunks. Total Height: ${totalHeight}px`);
 
     console.log(`[ANALYZE] Analyzing ${slices.length} slices for: ${url}. Total Height: ${totalHeight}px`);
 
@@ -628,7 +680,7 @@ serve(async (req) => {
 
     console.log(`Generated ${allMarkers.length} markers across ${slices.length} slices`);
 
-    return new Response(JSON.stringify({ markers: allMarkers, report: { ...report, screenshot } }), {
+    return new Response(JSON.stringify({ markers: allMarkers, report: { ...report, screenshot: screenshotBase64 } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

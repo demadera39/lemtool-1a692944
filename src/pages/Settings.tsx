@@ -92,10 +92,12 @@ const Settings = () => {
     }
   };
 
-  const handlePurchasePack = async () => {
+  const handlePurchasePack = async (packType: 'topup' | 'pro' = 'topup') => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('purchase-analysis-pack');
+      const { data, error } = await supabase.functions.invoke('purchase-analysis-pack', {
+        body: packType === 'pro' ? { pack_type: 'pro' } : {}
+      });
       if (error) throw error;
       
       if (data.url) {
@@ -230,10 +232,32 @@ const Settings = () => {
         <Card className="p-8 mb-6 bg-white/80 backdrop-blur-sm">
           <h3 className="text-xl font-bold text-gray-900 mb-3">Analysis Packs</h3>
           <p className="text-gray-600 mb-6">Need more analyses? Purchase packs that never expire and roll over.</p>
+          
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-lg p-6 mb-4 border-2 border-lem-orange">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h4 className="font-bold text-gray-900 text-lg">Pro Pack - 20 Analyses</h4>
+                <p className="text-sm text-gray-600">Never expires • Rolls over • Best value</p>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-black text-gray-900">€24.99</div>
+                <div className="text-xs text-gray-500">one-time</div>
+              </div>
+            </div>
+            <Button
+                onClick={() => handlePurchasePack('pro')}
+                disabled={loading}
+                className="w-full bg-lem-orange hover:bg-lem-orange-dark"
+              >
+                {loading ? 'Processing...' : 'Buy Pro Pack'}
+                <ExternalLink size={18} className="ml-2" />
+              </Button>
+          </div>
+
           <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-lg p-6 mb-4">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h4 className="font-bold text-gray-900 text-lg">5 Analysis Pack</h4>
+                <h4 className="font-bold text-gray-900 text-lg">Top-up - 5 Analyses</h4>
                 <p className="text-sm text-gray-600">Never expires • Rolls over • Works with any plan</p>
               </div>
               <div className="text-right">
@@ -242,7 +266,7 @@ const Settings = () => {
               </div>
             </div>
             <Button
-                onClick={handlePurchasePack}
+                onClick={() => handlePurchasePack('topup')}
                 disabled={loading}
                 variant="outline"
                 className="w-full"
@@ -251,6 +275,7 @@ const Settings = () => {
                 <ExternalLink size={18} className="ml-2" />
               </Button>
           </div>
+
           {userRole?.pack_analyses_remaining > 0 && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
               <p className="text-sm text-green-800">

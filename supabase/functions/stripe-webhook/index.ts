@@ -78,7 +78,11 @@ serve(async (req) => {
 
           logStep("Processing analysis pack purchase", { userId });
           
-          // Get current pack count and increment by 5
+          // Get analysis count from metadata (defaults to 5 for backward compatibility)
+          const analysisCount = parseInt(session.metadata.analysis_count || '5', 10);
+          logStep("Analysis count from metadata", { analysisCount });
+          
+          // Get current pack count and increment
           const { data: currentRole, error: fetchError } = await supabaseAdmin
             .from("user_roles")
             .select("pack_analyses_remaining")
@@ -90,7 +94,7 @@ serve(async (req) => {
             break;
           }
 
-          const newCount = (currentRole?.pack_analyses_remaining || 0) + 5;
+          const newCount = (currentRole?.pack_analyses_remaining || 0) + analysisCount;
           
           const { error: updateError } = await supabaseAdmin
             .from("user_roles")

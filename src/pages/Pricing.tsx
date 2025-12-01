@@ -79,10 +79,10 @@ const Pricing = () => {
             <div className="mb-6">
               <h2 className="text-2xl font-black text-white mb-2">Starter</h2>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-white">€7.99</span>
+                <span className="text-5xl font-black text-white">€9.99</span>
                 <span className="text-orange-100 text-lg">/month</span>
               </div>
-              <p className="text-orange-100 text-sm mt-1">Best value • €0.80/analysis</p>
+              <p className="text-orange-100 text-sm mt-1">Best value • €1.00/analysis</p>
             </div>
 
             <ul className="space-y-4 mb-8">
@@ -120,17 +120,17 @@ const Pricing = () => {
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black text-gray-900">€24.99</span>
               </div>
-              <p className="text-gray-500 text-sm mt-1">30 analyses • Never expire</p>
+              <p className="text-gray-500 text-sm mt-1">20 analyses • Never expire</p>
             </div>
 
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700"><strong>30 analyses</strong> one-time</span>
+                <span className="text-gray-700"><strong>20 analyses</strong> one-time</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">Best value per analysis</span>
+                <span className="text-gray-700">Great for bulk projects</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
@@ -192,7 +192,7 @@ const Pricing = () => {
                 What's the difference between Starter and packs?
               </h4>
               <p className="text-gray-600">
-                Starter is a monthly subscription (€7.99/month for 10 analyses, best value at €0.80 each). Pro Pack and Top-up packs are one-time purchases that never expire—buy once, use anytime.
+                Starter is a monthly subscription (€9.99/month for 10 analyses, best value at €1.00 each). Pro Pack and Top-up packs are one-time purchases that never expire—buy once, use anytime.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 border border-gray-200">

@@ -28,7 +28,7 @@ const Auth = () => {
 
     try {
       if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -38,15 +38,8 @@ const Auth = () => {
         });
 
         if (error) throw error;
-        
-        // If user session exists, email confirmation is disabled
-        if (data.session) {
-          toast.success('Account created successfully!');
-          navigate('/');
-        } else {
-          toast.success('Account created! Please check your email to verify.');
-          setMode('login');
-        }
+        toast.success('Account created! Please check your email to verify.');
+        setMode('login');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,

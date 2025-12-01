@@ -90,20 +90,48 @@ async function sliceImageBase64(base64Full: string): Promise<{ slices: string[],
 
 export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressCallback): Promise<GeminiAnalysisResult> {
   try {
-    onProgress?.(10, 'Preparing analysis...');
-    console.log("🚀 Starting website analysis for:", url);
+    // Get screenshot first (client-side to avoid CORS issues)
+    onProgress?.(10, 'Capturing website screenshot...');
+    const screenshot = await getWebsiteScreenshotBase64(url);
+    
+    if (!screenshot) {
+      console.error("❌ No screenshot captured - falling back to demo mode");
+      onProgress?.(100, 'Analysis complete (demo mode)');
+      
+      const { toast } = await import('@/hooks/use-toast');
+      toast({
+        title: "Screenshot Failed",
+        description: "Unable to capture screenshot. Using demo analysis.",
+        variant: "destructive",
+      });
+      
+      return generateFallbackAnalysis(url, null);
+    }
 
-    onProgress?.(30, 'Capturing screenshot and analyzing...');
+    onProgress?.(30, 'Processing screenshot...');
+    console.log("Starting Slice & Conquer Analysis...");
+
+    // Slice the image into 16:9 chunks
+    const { slices, sliceHeights, totalHeight } = await sliceImageBase64(screenshot);
+    console.log(`Sliced into ${slices.length} chunks. Total Height: ${totalHeight}px`);
+
+    onProgress?.(50, 'Analyzing emotional triggers...');
     
     // Simulate progress during the long edge function call
     const progressInterval = setInterval(() => {
-      const currentProgress = Math.random() * 10 + 40; // Random between 40-50%
-      onProgress?.(Math.min(70, currentProgress), 'AI analyzing design elements...');
+      const currentProgress = Math.random() * 10 + 50; // Random between 50-60%
+      onProgress?.(Math.min(75, currentProgress), 'AI analyzing design elements...');
     }, 2000);
     
-    // Call the edge function - it will handle screenshot capture server-side
+    // Call the edge function with sliced data
     const { data, error } = await supabase.functions.invoke('analyze-website', {
-      body: { url }
+      body: { 
+        url, 
+        slices,
+        sliceHeights,
+        totalHeight,
+        screenshot: screenshot.split(',')[1]
+      }
     });
 
     clearInterval(progressInterval);
@@ -114,32 +142,16 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
       throw error;
     }
     
-    // Check if we should use demo mode due to screenshot failure
-    if (data?.useDemoMode) {
-      console.log('⚠️ Using demo mode due to screenshot failure:', data.message);
-      onProgress?.(100, 'Analysis complete (demo mode)');
-      
-      // Show toast notification to user
-      const { toast } = await import('@/hooks/use-toast');
-      toast({
-        title: "Demo Mode",
-        description: data.message || "Screenshot capture failed. Showing demo analysis.",
-        variant: "destructive",
-      });
-      
-      return generateFallbackAnalysis(url, null);
-    }
-    
     console.log("✅ Analysis data received from edge function");
 
     // If we have a rawResponse, it means parsing failed
     if (data.rawResponse) {
       console.warn('AI returned non-JSON response, using fallback');
       onProgress?.(100, 'Analysis complete');
-      return generateFallbackAnalysis(url, data.screenshot || null);
+      return generateFallbackAnalysis(url, screenshot);
     }
 
-    // Process markers with exact coordinate clamping to match GitHub version
+    // Process markers with exact coordinate clamping
     const markers: Marker[] = (data.markers || []).map((m: any) => ({
       id: generateId(),
       x: Math.max(1, Math.min(99, m.x || 50)),
@@ -154,7 +166,7 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
 
     const report: AnalysisReport = {
       ...data.report,
-      screenshot: data.screenshot || undefined
+      screenshot: screenshot || undefined
     };
 
     onProgress?.(100, 'Analysis complete');
@@ -163,7 +175,8 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
     console.error('Gemini analysis error:', error);
     onProgress?.(100, 'Analysis complete');
     // Return fallback analysis
-    return generateFallbackAnalysis(url, null);
+    const screenshot = await getWebsiteScreenshotBase64(url);
+    return generateFallbackAnalysis(url, screenshot);
   }
 }
 

@@ -297,7 +297,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, slices, sliceHeights, totalHeight, screenshot } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
@@ -305,89 +305,11 @@ serve(async (req) => {
       throw new Error("No AI API key configured");
     }
 
-    console.log(`[ANALYZE] Starting analysis for: ${url}`);
-    
-    // 1. Fetch screenshot server-side - try multiple services
-    console.log(`[ANALYZE] Fetching screenshot...`);
-    
-    let screenshotDataUrl: string | null = null;
-    
-    // Screenshot service helper with timeout
-    const fetchWithTimeout = async (url: string, timeout = 20000): Promise<Response> => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-      try {
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        return response;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
-      }
-    };
-    
-    // Service 1: ScreenshotOne (most reliable)
-    try {
-      console.log('[ANALYZE] Trying ScreenshotOne...');
-      const screenshotOneUrl = `https://api.screenshotone.com/take?access_key=FyJF0aXnxh0xlA&url=${encodeURIComponent(url)}&viewport_width=1200&viewport_height=1800&device_scale_factor=1&format=png&full_page=true&fresh=true&delay=2`;
-      const response = await fetchWithTimeout(screenshotOneUrl, 20000);
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        const arrayBuffer = await blob.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-        screenshotDataUrl = `data:image/png;base64,${base64}`;
-        console.log(`[ANALYZE] ✓ Screenshot captured via ScreenshotOne`);
-      } else {
-        console.log(`[ANALYZE] ScreenshotOne returned ${response.status}`);
-      }
-    } catch (error) {
-      console.log(`[ANALYZE] ScreenshotOne failed:`, error instanceof Error ? error.message : String(error));
+    if (!slices || !sliceHeights || !totalHeight) {
+      throw new Error("Sliced image data is required");
     }
-    
-    // Service 2: Screenshot.guru as fallback
-    if (!screenshotDataUrl) {
-      try {
-        console.log('[ANALYZE] Trying Screenshot.guru...');
-        const guruUrl = `https://screenshot.guru/api/image/jpg?url=${encodeURIComponent(url)}&width=1200&full=1`;
-        const response = await fetchWithTimeout(guruUrl, 20000);
-        
-        if (response.ok) {
-          const blob = await response.blob();
-          const arrayBuffer = await blob.arrayBuffer();
-          const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-          screenshotDataUrl = `data:image/jpeg;base64,${base64}`;
-          console.log(`[ANALYZE] ✓ Screenshot captured via Screenshot.guru`);
-        } else {
-          console.log(`[ANALYZE] Screenshot.guru returned ${response.status}`);
-        }
-      } catch (error) {
-        console.log(`[ANALYZE] Screenshot.guru failed:`, error instanceof Error ? error.message : String(error));
-      }
-    }
-    
-    // If all services fail, return demo mode
-    if (!screenshotDataUrl) {
-      console.log('[ANALYZE] All screenshot services failed, returning demo analysis');
-      return new Response(
-        JSON.stringify({
-          useDemoMode: true,
-          message: 'Screenshot services are currently unavailable. Please try again later.'
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    }
-    
-    
-    console.log(`[ANALYZE] Screenshot captured successfully`);
-    
-    // 2. Slice the screenshot into 16:9 chunks
-    console.log(`[ANALYZE] Slicing screenshot...`);
-    const { slices, sliceHeights, totalHeight } = await sliceImage(screenshotDataUrl);
-    console.log(`[ANALYZE] Sliced into ${slices.length} chunks, total height: ${totalHeight}px`);
+
+    console.log(`[ANALYZE] Analyzing ${slices.length} slices for: ${url}. Total Height: ${totalHeight}px`);
 
     // 1. Analyze first slice (HERO) with master prompt - Use BEST quality
     let masterResponse;
@@ -706,23 +628,18 @@ serve(async (req) => {
 
     console.log(`Generated ${allMarkers.length} markers across ${slices.length} slices`);
 
-    return new Response(JSON.stringify({ markers: allMarkers, report }), {
+    return new Response(JSON.stringify({ markers: allMarkers, report: { ...report, screenshot } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("[ANALYZE] Error:", errorMessage);
     
-    // Return error with demo mode flag
     return new Response(
-      JSON.stringify({
-        error: errorMessage,
-        useDemoMode: true,
-        message: 'Analysis failed. Using demo mode.'
-      }),
+      JSON.stringify({ error: errorMessage }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200, // Return 200 so frontend handles gracefully
+        status: 500,
       }
     );
   }

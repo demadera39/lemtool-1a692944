@@ -17,20 +17,29 @@ async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
   try {
     const screenshotServiceUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
     
+    console.log("🔍 Fetching screenshot from:", screenshotServiceUrl);
     const response = await fetch(screenshotServiceUrl);
-    if (!response.ok) throw new Error('Screenshot fetch failed');
     
+    if (!response.ok) {
+      console.error("❌ Screenshot service returned status:", response.status, response.statusText);
+      throw new Error(`Screenshot fetch failed: ${response.status} ${response.statusText}`);
+    }
+    
+    console.log("✅ Screenshot fetched successfully");
     const blob = await response.blob();
+    console.log("📦 Blob size:", blob.size, "bytes");
+    
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
+        console.log("🎨 Base64 length:", base64.length, "chars");
         resolve(base64);
       };
       reader.readAsDataURL(blob);
     });
   } catch (e) {
-    console.warn("Screenshot capture failed:", e);
+    console.error("❌ Screenshot capture failed:", e);
     return null;
   }
 }
@@ -86,8 +95,9 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
     const screenshot = await getWebsiteScreenshotBase64(url);
     
     if (!screenshot) {
+      console.error("❌ No screenshot captured - falling back to demo mode");
       onProgress?.(100, 'Analysis complete');
-      return generateFallbackAnalysis(url, null);
+      throw new Error("Failed to capture website screenshot. The screenshot service may be unavailable.");
     }
 
     onProgress?.(30, 'Processing screenshot...');
@@ -120,9 +130,11 @@ export async function analyzeWebsite(url: string, onProgress?: AnalysisProgressC
     onProgress?.(80, 'Processing analysis results...');
 
     if (error) {
-      console.error('Analysis error:', error);
+      console.error('❌ Edge function error:', error);
       throw error;
     }
+    
+    console.log("✅ Analysis data received from edge function");
 
     // If we have a rawResponse, it means parsing failed
     if (data.rawResponse) {

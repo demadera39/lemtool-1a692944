@@ -5,32 +5,43 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Helper to fetch a screenshot as base64
+// Helper to capture screenshot using Puppeteer
 async function getScreenshotBase64(url: string): Promise<string | null> {
   try {
-    // Use thum.io screenshot service
-    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
+    console.log("🔍 Launching Puppeteer for:", url);
     
-    console.log("🔍 Fetching screenshot from:", screenshotServiceUrl);
-    const response = await fetch(screenshotServiceUrl);
+    // Dynamic import of Puppeteer
+    const puppeteer = await import("https://deno.land/x/puppeteer@16.2.0/mod.ts");
     
-    if (!response.ok) {
-      console.error("❌ Screenshot service returned status:", response.status, response.statusText);
-      return null;
-    }
+    const browser = await puppeteer.default.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
     
-    console.log("✅ Screenshot fetched successfully");
-    const blob = await response.blob();
-    console.log("📦 Blob size:", blob.size, "bytes");
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1200, height: 800 });
     
-    const arrayBuffer = await blob.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    console.log("📄 Navigating to URL...");
+    await page.goto(url, { 
+      waitUntil: 'networkidle2',
+      timeout: 30000 
+    });
+    
+    console.log("📸 Capturing screenshot...");
+    const screenshot = await page.screenshot({ 
+      fullPage: true,
+      type: 'png'
+    });
+    
+    await browser.close();
+    
+    // Convert to base64
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(screenshot)));
     const dataUrl = `data:image/png;base64,${base64}`;
     
-    console.log("🎨 Base64 length:", dataUrl.length, "chars");
+    console.log("✅ Screenshot captured successfully, size:", dataUrl.length, "chars");
     return dataUrl;
   } catch (e) {
-    console.error("❌ Screenshot capture failed:", e);
+    console.error("❌ Puppeteer screenshot failed:", e);
     return null;
   }
 }

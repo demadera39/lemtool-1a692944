@@ -190,6 +190,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   const [viewMode, setViewMode] = useState<'snapshot' | 'live' | 'presentation'>('live');
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
   const scrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastScrollTopRef = useRef<number>(0);
   const stationaryFramesRef = useRef<number>(0);
@@ -281,24 +282,33 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-      if (interactionMode === 'select_area' && containerRef.current) {
-          const rect = containerRef.current.getBoundingClientRect();
-          const x = ((e.clientX - rect.left) / rect.width) * 100;
-          const y = ((e.clientY - rect.top) / rect.height) * 100;
-          setIsSelecting(true);
-          setSelectionStart({ x, y });
-          setSelectionEnd({ x, y });
+      if (interactionMode === 'select_area') {
+          // Use imageContainerRef if available (for snapshot mode), otherwise use containerRef
+          const targetRef = imageContainerRef.current || containerRef.current;
+          if (targetRef) {
+              const rect = targetRef.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width) * 100;
+              const y = ((e.clientY - rect.top) / rect.height) * 100;
+              setIsSelecting(true);
+              setSelectionStart({ x, y });
+              setSelectionEnd({ x, y });
+              e.preventDefault(); // Prevent text selection
+          }
       } else {
           handleBackgroundClick(e);
       }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-      if (isSelecting && selectionStart && containerRef.current) {
-          const rect = containerRef.current.getBoundingClientRect();
-          const x = ((e.clientX - rect.left) / rect.width) * 100;
-          const y = ((e.clientY - rect.top) / rect.height) * 100;
-          setSelectionEnd({ x, y });
+      if (isSelecting && selectionStart) {
+          // Use imageContainerRef if available (for snapshot mode), otherwise use containerRef
+          const targetRef = imageContainerRef.current || containerRef.current;
+          if (targetRef) {
+              const rect = targetRef.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width) * 100;
+              const y = ((e.clientY - rect.top) / rect.height) * 100;
+              setSelectionEnd({ x, y });
+          }
       }
   };
 
@@ -592,8 +602,8 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
                 cursor: interactionMode === 'place_marker' ? 'crosshair' : interactionMode === 'select_area' ? 'crosshair' : 'default'
             }}
         >
-          {/* Selection overlay */}
-          {isSelecting && selectionStart && selectionEnd && (
+          {/* Selection overlay for non-snapshot modes */}
+          {isSelecting && selectionStart && selectionEnd && viewMode !== 'snapshot' && (
             <div
               className="absolute border-4 border-lem-orange bg-lem-orange/20 z-30 pointer-events-none"
               style={{
@@ -652,8 +662,27 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
             </div>
           ) : viewMode === 'snapshot' && screenshot ? (
             <div className="relative w-full max-h-[80vh] overflow-y-auto border-4 border-gray-300 rounded-lg">
-                <div className="relative w-full">
+                <div 
+                  ref={imageContainerRef}
+                  className="relative w-full"
+                  onMouseDown={interactionMode === 'select_area' ? handleMouseDown : undefined}
+                  onMouseMove={interactionMode === 'select_area' ? handleMouseMove : undefined}
+                  onMouseUp={interactionMode === 'select_area' ? handleMouseUp : undefined}
+                  onMouseLeave={interactionMode === 'select_area' ? handleMouseUp : undefined}
+                >
                   <img src={screenshot} className="w-full h-auto block" alt="Analyzed Screenshot"/>
+                  {/* Selection overlay positioned within image container */}
+                  {isSelecting && selectionStart && selectionEnd && (
+                    <div
+                      className="absolute border-4 border-lem-orange bg-lem-orange/20 z-30 pointer-events-none"
+                      style={{
+                        left: `${Math.min(selectionStart.x, selectionEnd.x)}%`,
+                        top: `${Math.min(selectionStart.y, selectionEnd.y)}%`,
+                        width: `${Math.abs(selectionEnd.x - selectionStart.x)}%`,
+                        height: `${Math.abs(selectionEnd.y - selectionStart.y)}%`,
+                      }}
+                    />
+                  )}
                   <div className="absolute inset-0 z-10 pointer-events-none">
                     {filteredMarkers.map((marker) => renderMarker(marker))}
                   </div>

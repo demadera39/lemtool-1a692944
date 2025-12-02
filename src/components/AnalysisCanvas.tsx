@@ -378,7 +378,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
       return (
         <div
           key={marker.id}
-          className="absolute z-20 pointer-events-none"
+          className={`absolute pointer-events-none ${activeMarkerId === marker.id ? 'z-50' : 'z-20'}`}
           style={{ 
             left: `${marker.x}%`, 
             top: `${marker.y}%`,
@@ -429,7 +429,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
     return (
         <div
             key={marker.id}
-            className="absolute z-20 pointer-events-none"
+            className={`absolute pointer-events-none ${activeMarkerId === marker.id ? 'z-50' : 'z-20'}`}
             style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
         >
                 <div className="relative transform -translate-x-1/2 -translate-y-1/2">

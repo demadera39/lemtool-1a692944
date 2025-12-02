@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { jwtVerify, createRemoteJWKSet } from "https://esm.sh/jose@5.2.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +14,8 @@ serve(async (req) => {
   try {
     console.log("[ADMIN-ADD-CREDITS] Starting request");
     
-    // Get auth header
+    // Since verify_jwt = true in config.toml, JWT is already verified by Supabase
+    // Get auth header to extract user info
     const authHeader = req.headers.get("Authorization");
     console.log("[ADMIN-ADD-CREDITS] Auth header present:", !!authHeader);
     
@@ -25,28 +25,24 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     console.log("[ADMIN-ADD-CREDITS] Token extracted, length:", token.length);
 
-    // Verify JWT using jose library
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const JWKS = createRemoteJWKSet(
-      new URL(`${supabaseUrl}/auth/v1/.well-known/jwks.json`)
-    );
-    
-    let authenticatedUserId: string;
-    try {
-      const { payload } = await jwtVerify(token, JWKS);
-      authenticatedUserId = payload.sub!;
-      console.log("[ADMIN-ADD-CREDITS] JWT verified, userId:", authenticatedUserId);
-    } catch (jwtError) {
-      console.error("[ADMIN-ADD-CREDITS] JWT verification failed:", jwtError);
-      throw new Error("Unauthorized");
-    }
-
     // Create service role client for admin operations
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseClient = createClient(
       supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // Get user from token using service role client
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !user) {
+      console.error("[ADMIN-ADD-CREDITS] Failed to get user:", userError);
+      throw new Error("Unauthorized");
+    }
+    
+    const authenticatedUserId = user.id;
+    console.log("[ADMIN-ADD-CREDITS] User verified, userId:", authenticatedUserId);
 
     // Check if user is admin
     console.log("[ADMIN-ADD-CREDITS] Checking admin role for user:", authenticatedUserId);

@@ -12,6 +12,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("[ADMIN-ADD-CREDITS] Starting request");
+    
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -20,22 +22,45 @@ serve(async (req) => {
 
     // Verify admin access
     const authHeader = req.headers.get("Authorization");
+    console.log("[ADMIN-ADD-CREDITS] Auth header present:", !!authHeader);
+    
     if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
+    console.log("[ADMIN-ADD-CREDITS] Verifying token");
+    
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError || !user) throw new Error("Unauthorized");
+    
+    console.log("[ADMIN-ADD-CREDITS] Auth result:", { 
+      hasUser: !!user, 
+      userId: user?.id,
+      error: userError?.message 
+    });
+    
+    if (userError || !user) {
+      console.error("[ADMIN-ADD-CREDITS] Auth failed:", userError);
+      throw new Error("Unauthorized");
+    }
 
     // Check if user is admin
-    const { data: adminCheck } = await supabaseClient
+    console.log("[ADMIN-ADD-CREDITS] Checking admin role for user:", user.id);
+    
+    const { data: adminCheck, error: roleError } = await supabaseClient
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .single();
 
+    console.log("[ADMIN-ADD-CREDITS] Role check result:", { 
+      role: adminCheck?.role, 
+      error: roleError?.message 
+    });
+
     if (adminCheck?.role !== 'admin') {
       throw new Error("Access denied. Admin only.");
     }
+    
+    console.log("[ADMIN-ADD-CREDITS] Admin verified");
 
     // Get request body
     const { userId, amount } = await req.json();

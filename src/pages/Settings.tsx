@@ -3,16 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/services/supabaseService';
 import { getUserRole } from '@/services/userRoleService';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Crown, Sparkles, ArrowLeft, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { Crown, Sparkles, ArrowLeft, ExternalLink, CheckCircle2, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { AccountManagementModal } from '@/components/AccountManagementModal';
 
 const Settings = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -323,6 +324,25 @@ const Settings = () => {
             </div>
           </div>
         </Card>
+
+        <Card className="p-6 bg-white/80 backdrop-blur-sm mt-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Account Management</h3>
+          <p className="text-gray-600 mb-4">Change your password or delete your account.</p>
+          <Button
+            variant="outline"
+            onClick={() => setAccountModalOpen(true)}
+            className="w-full"
+          >
+            <SettingsIcon size={18} className="mr-2" />
+            Manage Account
+          </Button>
+        </Card>
+
+        <AccountManagementModal
+          open={accountModalOpen}
+          onOpenChange={setAccountModalOpen}
+          userEmail={user?.email || ''}
+        />
       </div>
     </div>
   );

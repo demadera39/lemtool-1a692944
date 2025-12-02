@@ -15,23 +15,25 @@ serve(async (req) => {
   try {
     console.log("[GET-CUSTOMER-TOTAL] Starting request");
     
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    // Get and validate auth token
+    // Get auth header
     const authHeader = req.headers.get("Authorization");
     console.log("[GET-CUSTOMER-TOTAL] Auth header present:", !!authHeader);
     
     if (!authHeader) throw new Error("No authorization header");
 
-    const token = authHeader.replace("Bearer ", "");
-    console.log("[GET-CUSTOMER-TOTAL] Token length:", token.length);
-    
-    // Verify JWT by parsing it (service role key can validate any JWT)
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    // Create client with user's JWT for authentication
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
+    );
+
+    // Verify the JWT and get user
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
     
     console.log("[GET-CUSTOMER-TOTAL] User verification:", { 
       hasUser: !!user, 
@@ -44,6 +46,13 @@ serve(async (req) => {
       console.error("[GET-CUSTOMER-TOTAL] Auth failed:", userError);
       throw new Error("Unauthorized");
     }
+
+    // Create service role client for admin operations
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
 
     // Check if user is admin
     console.log("[GET-CUSTOMER-TOTAL] Checking admin role for user:", user.id);

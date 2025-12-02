@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { jwtVerify, createRemoteJWKSet } from "https://esm.sh/jose@5.2.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,13 +15,6 @@ serve(async (req) => {
   try {
     console.log("[ADMIN-ADD-CREDITS] Starting request");
     
-    // Create service role client for all operations
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
     // Get auth header
     const authHeader = req.headers.get("Authorization");
     console.log("[ADMIN-ADD-CREDITS] Auth header present:", !!authHeader);
@@ -31,28 +25,36 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     console.log("[ADMIN-ADD-CREDITS] Token extracted, length:", token.length);
 
-    // Verify the JWT using service role client
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    // Verify JWT using jose library
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const JWKS = createRemoteJWKSet(
+      new URL(`${supabaseUrl}/auth/v1/.well-known/jwks.json`)
+    );
     
-    console.log("[ADMIN-ADD-CREDITS] User verification:", { 
-      hasUser: !!user, 
-      userId: user?.id,
-      email: user?.email,
-      error: userError?.message 
-    });
-    
-    if (userError || !user) {
-      console.error("[ADMIN-ADD-CREDITS] Auth failed:", userError);
+    let authenticatedUserId: string;
+    try {
+      const { payload } = await jwtVerify(token, JWKS);
+      authenticatedUserId = payload.sub!;
+      console.log("[ADMIN-ADD-CREDITS] JWT verified, userId:", authenticatedUserId);
+    } catch (jwtError) {
+      console.error("[ADMIN-ADD-CREDITS] JWT verification failed:", jwtError);
       throw new Error("Unauthorized");
     }
 
+    // Create service role client for admin operations
+    const supabaseClient = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
     // Check if user is admin
-    console.log("[ADMIN-ADD-CREDITS] Checking admin role for user:", user.id);
+    console.log("[ADMIN-ADD-CREDITS] Checking admin role for user:", authenticatedUserId);
     
     const { data: adminCheck, error: roleError } = await supabaseClient
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('user_id', authenticatedUserId)
       .single();
 
     console.log("[ADMIN-ADD-CREDITS] Role check result:", { 

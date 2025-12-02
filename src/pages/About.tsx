@@ -18,8 +18,12 @@ const About = () => {
 
       <main className="max-w-4xl mx-auto px-6 py-16">
         <div className="text-center mb-16">
-          <div className="w-16 h-16 bg-lem-orange rounded-lg flex items-center justify-center mx-auto mb-6">
-            <BookOpen size={32} className="text-white" />
+          <div className="w-24 h-24 flex items-center justify-center mx-auto mb-6">
+            <img 
+              src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" 
+              alt="Joy emotion" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <h1 className="text-5xl font-black text-gray-900 mb-4">About LEMtool</h1>
           <p className="text-xl text-gray-600">

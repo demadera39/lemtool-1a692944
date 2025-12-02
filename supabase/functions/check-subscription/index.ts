@@ -140,29 +140,33 @@ serve(async (req) => {
       logStep("Found analysis pack purchases", { totalAnalyses: totalPackAnalyses });
     }
 
-    // Get current pack analyses from DB to avoid overwriting
+    // Get current role to preserve admin status
     const { data: currentRole } = await supabaseClient
       .from('user_roles')
-      .select('pack_analyses_remaining')
+      .select('pack_analyses_remaining, role')
       .eq('user_id', user.id)
       .maybeSingle();
     
     const currentPackAnalyses = currentRole?.pack_analyses_remaining || 0;
+    const isAdmin = currentRole?.role === 'admin';
     
     // Only update pack analyses if we found new purchases
     const newPackAnalyses = totalPackAnalyses > currentPackAnalyses ? totalPackAnalyses : currentPackAnalyses;
+
+    // Preserve admin role, otherwise set based on subscription
+    const newRole = isAdmin ? 'admin' : (hasActiveSub ? 'premium' : 'free');
 
     const { error: updateError } = await supabaseClient
       .from('user_roles')
       .upsert({
         user_id: user.id,
-        role: hasActiveSub ? 'premium' : 'free',
+        role: newRole,
         stripe_customer_id: customerId,
         stripe_subscription_id: subscriptionData?.id || null,
         subscription_status: subscriptionData?.status || null,
         subscription_start: subscriptionData?.start || null,
         subscription_end: subscriptionData?.end || null,
-        monthly_analyses_limit: hasActiveSub ? 10 : 0,
+        monthly_analyses_limit: hasActiveSub || isAdmin ? 10 : 0,
         pack_analyses_remaining: newPackAnalyses,
       }, { onConflict: 'user_id' });
     

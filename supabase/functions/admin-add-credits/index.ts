@@ -20,19 +20,18 @@ serve(async (req) => {
     
     if (!authHeader) throw new Error("No authorization header");
 
-    // Create client with user's JWT for authentication
-    const userClient = createClient(
+    // Extract token from Bearer header
+    const token = authHeader.replace("Bearer ", "");
+    console.log("[ADMIN-ADD-CREDITS] Token extracted, length:", token.length);
+
+    // Create client with ANON_KEY to verify the JWT
+    const authClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    // Verify the JWT and get user
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    // Verify the JWT by passing the token directly
+    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
     
     console.log("[ADMIN-ADD-CREDITS] User verification:", { 
       hasUser: !!user, 

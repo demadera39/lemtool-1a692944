@@ -15,15 +15,23 @@ serve(async (req) => {
     console.log("[ADMIN-ADD-CREDITS] Starting request");
     
     // Since verify_jwt = true in config.toml, JWT is already verified by Supabase
-    // Get auth header to extract user info
+    // Extract user ID from the JWT token payload
     const authHeader = req.headers.get("Authorization");
     console.log("[ADMIN-ADD-CREDITS] Auth header present:", !!authHeader);
     
     if (!authHeader) throw new Error("No authorization header");
 
-    // Extract token from Bearer header
+    // Extract token from Bearer header and decode payload
     const token = authHeader.replace("Bearer ", "");
-    console.log("[ADMIN-ADD-CREDITS] Token extracted, length:", token.length);
+    const tokenParts = token.split('.');
+    if (tokenParts.length !== 3) throw new Error("Invalid token format");
+    
+    // Decode the payload (second part of JWT)
+    const payload = JSON.parse(atob(tokenParts[1]));
+    const authenticatedUserId = payload.sub;
+    
+    if (!authenticatedUserId) throw new Error("No user ID in token");
+    console.log("[ADMIN-ADD-CREDITS] User ID from token:", authenticatedUserId);
 
     // Create service role client for admin operations
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -32,17 +40,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
-
-    // Get user from token using service role client
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-    
-    if (userError || !user) {
-      console.error("[ADMIN-ADD-CREDITS] Failed to get user:", userError);
-      throw new Error("Unauthorized");
-    }
-    
-    const authenticatedUserId = user.id;
-    console.log("[ADMIN-ADD-CREDITS] User verified, userId:", authenticatedUserId);
 
     // Check if user is admin
     console.log("[ADMIN-ADD-CREDITS] Checking admin role for user:", authenticatedUserId);

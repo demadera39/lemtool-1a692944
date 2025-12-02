@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { User, Project, TestSession } from '../types';
 import { getProjects, getProjectSessions, deleteProject, archiveProject } from '../services/supabaseService';
-import { getRemainingAnalyses } from '../services/userRoleService';
-import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown, FileText, Trash2, Archive, ArchiveRestore, Bot } from 'lucide-react';
+import { getRemainingAnalyses, getUserRole } from '../services/userRoleService';
+import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown, FileText, Trash2, Archive, ArchiveRestore, Bot, Shield } from 'lucide-react';
 import { Button } from './ui/button';
 import AnalysisCanvas from './AnalysisCanvas';
 import ReportPanel from './ReportPanel';
@@ -41,6 +41,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [projectSessions, setProjectSessions] = useState<Record<string, number>>({});
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -50,6 +51,10 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const loadUserRole = async () => {
     const remaining = await getRemainingAnalyses(user.id);
     setRemainingAnalyses(remaining);
+    
+    // Check if user is admin
+    const role = await getUserRole(user.id);
+    setIsAdmin(role?.role === 'admin');
   };
 
   useEffect(() => {
@@ -251,6 +256,12 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
             </div>
           </div>
           <div className="flex gap-3">
+            {isAdmin && (
+              <Button variant="outline" onClick={() => window.location.href = '/admin'} className="border-primary text-primary hover:bg-primary hover:text-white">
+                <Shield size={18} className="mr-2" />
+                Admin Panel
+              </Button>
+            )}
             <Button onClick={onNewAnalysis} className="bg-lem-orange hover:bg-lem-orange-dark">
               <Plus size={18} className="mr-2" />
               New Analysis

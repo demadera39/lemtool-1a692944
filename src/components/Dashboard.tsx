@@ -49,12 +49,16 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   }, [user, showArchived]);
 
   const loadUserRole = async () => {
+    console.log('Loading user role for:', user.id);
     const remaining = await getRemainingAnalyses(user.id);
+    console.log('Remaining analyses:', remaining);
     setRemainingAnalyses(remaining);
     
     // Check if user is admin
     const role = await getUserRole(user.id);
-    console.log('User role loaded:', role?.role);
+    console.log('Full user role object:', role);
+    console.log('Role value:', role?.role);
+    console.log('Is admin check:', role?.role === 'admin');
     setIsAdmin(role?.role === 'admin');
   };
 

@@ -114,9 +114,19 @@ const About = () => {
               <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">
                 <FileText size={14} className="text-lem-orange" />
               </div>
-              <p className="text-gray-700 italic">
-                Huisman, G., & Van Hout, M. (2010). The development of a graphical emotion measurement instrument using caricatured expressions: the LEMtool.
-              </p>
+              <div>
+                <p className="text-gray-700 italic">
+                  Huisman, G., & Van Hout, M. (2010). The development of a graphical emotion measurement instrument using caricatured expressions: the LEMtool.
+                </p>
+                <a 
+                  href="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/Files/LEMtoolpaper.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-lem-orange hover:underline text-xs mt-1 inline-block"
+                >
+                  Download PDF →
+                </a>
+              </div>
             </div>
             <div className="flex gap-3">
               <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">

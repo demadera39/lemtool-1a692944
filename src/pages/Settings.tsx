@@ -138,6 +138,45 @@ const Settings = () => {
           <h1 className="text-3xl font-black text-gray-900 mb-2">Account Settings</h1>
           <p className="text-gray-600">{user?.email}</p>
         </div>
+        <Card className="p-6 mb-6 bg-white/80 backdrop-blur-sm">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Usage Statistics</h3>
+          <div className="space-y-3">
+            {isPremium && (
+              <>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Monthly Analyses</span>
+                  <span className="font-bold text-gray-900">
+                    {userRole?.monthly_analyses_used || 0} / {userRole?.monthly_analyses_limit || 10}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">Resets monthly</div>
+              </>
+            )}
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Pack Analyses</span>
+              <span className="font-bold text-gray-900">
+                {userRole?.pack_analyses_remaining || 0}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Account Type</span>
+              <span className="font-bold text-gray-900">{isPremium ? 'Premium' : 'Free'}</span>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 mb-6 bg-white/80 backdrop-blur-sm">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Account Management</h3>
+          <p className="text-gray-600 mb-4">Change your password or delete your account.</p>
+          <Button
+            variant="outline"
+            onClick={() => setAccountModalOpen(true)}
+            className="w-full"
+          >
+            <SettingsIcon size={18} className="mr-2" />
+            Manage Account
+          </Button>
+        </Card>
 
         <Card className="p-8 mb-6 bg-white/80 backdrop-blur-sm">
           <div className="flex items-start justify-between mb-6">
@@ -296,46 +335,6 @@ const Settings = () => {
               </p>
             </div>
           )}
-        </Card>
-
-        <Card className="p-6 bg-white/80 backdrop-blur-sm">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Usage Statistics</h3>
-          <div className="space-y-3">
-            {isPremium && (
-              <>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Monthly Analyses</span>
-                  <span className="font-bold text-gray-900">
-                    {userRole?.monthly_analyses_used || 0} / {userRole?.monthly_analyses_limit || 10}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-500">Resets monthly</div>
-              </>
-            )}
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Pack Analyses</span>
-              <span className="font-bold text-gray-900">
-                {userRole?.pack_analyses_remaining || 0}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Account Type</span>
-              <span className="font-bold text-gray-900">{isPremium ? 'Premium' : 'Free'}</span>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 bg-white/80 backdrop-blur-sm mt-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Account Management</h3>
-          <p className="text-gray-600 mb-4">Change your password or delete your account.</p>
-          <Button
-            variant="outline"
-            onClick={() => setAccountModalOpen(true)}
-            className="w-full"
-          >
-            <SettingsIcon size={18} className="mr-2" />
-            Manage Account
-          </Button>
         </Card>
 
         <AccountManagementModal

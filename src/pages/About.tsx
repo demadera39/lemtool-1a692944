@@ -132,6 +132,24 @@ const About = () => {
               <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">
                 <FileText size={14} className="text-lem-orange" />
               </div>
+              <div>
+                <p className="text-gray-700 italic">
+                  Van Hout, M., Huisman, G., & Law, K. (2012). A digital love story: Measuring and designing for emotions in interactive visual interfaces. In <em>8th International Conference on Design & Emotion</em>. London, United Kingdom.
+                </p>
+                <a 
+                  href="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/Files/A_digital_love_story_workshop_proposal1200.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-lem-orange hover:underline text-xs mt-1 inline-block"
+                >
+                  Download PDF →
+                </a>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">
+                <FileText size={14} className="text-lem-orange" />
+              </div>
               <p className="text-gray-700 italic">
                 Van Hout, M., et al. Measuring emotions in visual and interaction design. SusaGroup.
               </p>

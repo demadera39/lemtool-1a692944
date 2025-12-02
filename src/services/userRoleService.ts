@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface UserRole {
   id: string;
   user_id: string;
-  role: 'free' | 'premium';
+  role: 'free' | 'premium' | 'admin';
   analyses_used: number;
   analyses_limit: number;
   monthly_analyses_used: number;

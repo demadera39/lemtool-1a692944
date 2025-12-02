@@ -33,7 +33,7 @@ const Index = () => {
   const [remainingAnalyses, setRemainingAnalyses] = useState<{ monthly: number; pack: number; monthlyLimit: number }>({ monthly: 0, pack: 0, monthlyLimit: 10 });
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPremiumUpgradeModal, setShowPremiumUpgradeModal] = useState(false);
-  const [userRole, setUserRole] = useState<'free' | 'premium' | null>(null);
+  const [userRole, setUserRole] = useState<'free' | 'premium' | 'admin' | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

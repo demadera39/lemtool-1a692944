@@ -185,13 +185,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       reset_monthly_analyses_if_needed: {
         Args: { _user_id: string }
         Returns: undefined
       }
     }
     Enums: {
-      app_role: "free" | "premium"
+      app_role: "free" | "premium" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -319,7 +320,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["free", "premium"],
+      app_role: ["free", "premium", "admin"],
     },
   },
 } as const

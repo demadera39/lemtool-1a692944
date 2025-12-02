@@ -54,6 +54,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
     
     // Check if user is admin
     const role = await getUserRole(user.id);
+    console.log('User role loaded:', role?.role);
     setIsAdmin(role?.role === 'admin');
   };
 
@@ -242,16 +243,24 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
               <h1 className="text-xl font-black text-gray-900">LEMtool Dashboard</h1>
               <div className="flex items-center gap-2">
                 <p className="text-sm text-gray-600">{user.email}</p>
-                {remainingAnalyses.monthly >= 0 && (
-                  <span className="flex items-center gap-1 text-xs font-bold text-lem-orange bg-orange-50 px-2 py-0.5 rounded-full">
-                    <Crown size={12} />{remainingAnalyses.monthly}/{remainingAnalyses.monthlyLimit} monthly
+                {isAdmin ? (
+                  <span className="flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    <Crown size={12} />Unlimited
                   </span>
+                ) : (
+                  <>
+                    {remainingAnalyses.monthly >= 0 && (
+                      <span className="flex items-center gap-1 text-xs font-bold text-lem-orange bg-orange-50 px-2 py-0.5 rounded-full">
+                        <Crown size={12} />{remainingAnalyses.monthly}/{remainingAnalyses.monthlyLimit} monthly
+                      </span>
+                    )}
+                    {remainingAnalyses.pack > 0 && (
+                      <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {remainingAnalyses.pack} pack
+                      </span>
+                    )}
+                  </>
                 )}
-                {remainingAnalyses.pack > 0 ? (
-                  <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
-                    {remainingAnalyses.pack} pack
-                  </span>
-                ) : null}
               </div>
             </div>
           </div>

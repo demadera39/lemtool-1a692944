@@ -29,7 +29,7 @@ const About = () => {
 
         <div className="bg-white rounded-2xl p-8 shadow-lg mb-8">
           <p className="text-gray-700 leading-relaxed text-lg">
-            The <strong>Layered Emotion Measurement (LEM) tool</strong> is a visual instrument designed to measure human emotions in interactive digital environments. Unlike traditional surveys that rely on text, LEM uses a visual language to capture immediate, intuitive emotional responses.
+            The <strong>Layered Emotion Measurement (LEM) tool</strong> is a visual instrument designed to measure human emotions in interactive digital environments. Unlike traditional surveys that rely on text, LEM uses a visual language to capture immediate, intuitive emotional responses. The LEM emotion images are <strong>fully scientifically validated</strong> as non-verbal response stimuli for emotional experiences.
           </p>
         </div>
 
@@ -92,9 +92,19 @@ const About = () => {
               <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">
                 <FileText size={14} className="text-lem-orange" />
               </div>
-              <p className="text-gray-700 italic">
-                Huisman, G., van Hout, M., van Dijk, B., van der Geest, T., & Heylen, D. (2013). LEMtool - Measuring Emotions in Visual Interfaces. In <em>CHI '13: Proceedings of the SIGCHI Conference on Human Factors in Computing Systems</em> (pp. 351–360). Paris, France: ACM. DOI: 10.1145/2470654.2470706
-              </p>
+              <div>
+                <p className="text-gray-700 italic">
+                  Huisman, G., van Hout, M., van Dijk, B., van der Geest, T., & Heylen, D. (2013). LEMtool - Measuring Emotions in Visual Interfaces. In <em>CHI '13: Proceedings of the SIGCHI Conference on Human Factors in Computing Systems</em> (pp. 351–360). Paris, France: ACM. DOI: 10.1145/2470654.2470706
+                </p>
+                <a 
+                  href="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/Files/p351-huisman.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-lem-orange hover:underline text-xs mt-1 inline-block"
+                >
+                  Download PDF →
+                </a>
+              </div>
             </div>
             <div className="flex gap-3">
               <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">

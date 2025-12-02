@@ -42,7 +42,7 @@ const About = () => {
           </div>
           
           <p className="text-gray-700 leading-relaxed mb-4">
-            The LEMtool was originally conceptualized and developed by researchers at <strong>SusaGroup</strong> (notably by Marco van Hout and colleagues) in the Netherlands. It emerged from the need to go beyond standard usability testing and understand the <em>emotional experience</em> of users on the web.
+            The LEMtool was originally conceptualized and developed by researchers at <strong>SusaGroup</strong> and the <strong>University of Twente</strong> (notably by Marco van Hout together with colleagues Gijs Huisman, Kevin Capota, David Guiza, Lars Rengersen, and Bas Jansen) in the Netherlands. It emerged from the need to go beyond standard usability testing and understand the <em>emotional experience</em> of users on the web.
           </p>
           
           <p className="text-gray-700 leading-relaxed">
@@ -88,6 +88,14 @@ const About = () => {
             KEY REFERENCES
           </h3>
           <div className="space-y-3 text-sm">
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">
+                <FileText size={14} className="text-lem-orange" />
+              </div>
+              <p className="text-gray-700 italic">
+                Huisman, G., van Hout, M., van Dijk, B., van der Geest, T., & Heylen, D. (2013). LEMtool - Measuring Emotions in Visual Interfaces. In <em>CHI '13: Proceedings of the SIGCHI Conference on Human Factors in Computing Systems</em> (pp. 351–360). Paris, France: ACM. DOI: 10.1145/2470654.2470706
+              </p>
+            </div>
             <div className="flex gap-3">
               <div className="flex-shrink-0 w-6 h-6 bg-white rounded flex items-center justify-center">
                 <FileText size={14} className="text-lem-orange" />

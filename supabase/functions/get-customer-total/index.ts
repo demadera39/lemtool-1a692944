@@ -15,6 +15,13 @@ serve(async (req) => {
   try {
     console.log("[GET-CUSTOMER-TOTAL] Starting request");
     
+    // Use anon key client to verify the JWT
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+    
+    // Use service role client for admin operations
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -28,9 +35,10 @@ serve(async (req) => {
     if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
-    console.log("[GET-CUSTOMER-TOTAL] Verifying token");
+    console.log("[GET-CUSTOMER-TOTAL] Verifying token with anon client");
     
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    // Verify JWT with anon client
+    const { data: { user }, error: userError } = await authClient.auth.getUser(token);
     
     console.log("[GET-CUSTOMER-TOTAL] Auth result:", { 
       hasUser: !!user, 

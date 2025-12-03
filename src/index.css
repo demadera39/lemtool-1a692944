@@ -145,6 +145,19 @@ All colors MUST be HSL.
     animation: pulse-strong 1s ease-in-out infinite;
   }
 
+  @keyframes gentle-scroll {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    45%, 55% {
+      transform: translateY(-40%);
+    }
+  }
+
+  .animate-gentle-scroll {
+    animation: gentle-scroll 25s ease-in-out infinite;
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }

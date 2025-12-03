@@ -290,6 +290,14 @@ const Index = () => {
                     <span className="text-gray-500">0 analyses left</span>
                   )}
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentView('dashboard')}
+                  className="text-sm"
+                >
+                  Dashboard
+                </Button>
                 <div className="relative group">
                   <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
                     <UserIcon size={18} className="text-gray-600" />
@@ -297,15 +305,8 @@ const Index = () => {
                   </button>
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                     <button
-                      onClick={() => setCurrentView('dashboard')}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
-                    >
-                      <UserIcon size={16} />
-                      Dashboard
-                    </button>
-                    <button
                       onClick={() => navigate('/settings')}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
                     >
                       <SettingsIcon size={16} />
                       Settings

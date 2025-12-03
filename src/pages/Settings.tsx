@@ -160,7 +160,7 @@ const Settings = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Account Type</span>
-              <span className="font-bold text-gray-900">{isPremium ? 'Premium' : 'Free'}</span>
+              <span className="font-bold text-gray-900">{isPremium ? 'Premium' : 'Free Trial'}</span>
             </div>
           </div>
         </Card>
@@ -190,7 +190,7 @@ const Settings = () => {
                 ) : (
                   <>
                     <Sparkles className="text-gray-400" size={28} />
-                    Free Plan
+                    Free Trial
                   </>
                 )}
               </h2>

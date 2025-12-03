@@ -287,12 +287,16 @@ const Admin = () => {
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             user.role === 'premium' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                           }`}>
-                            {user.role}
+                            {user.role === 'free' ? 'trial' : user.role}
                           </span>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col text-sm">
-                            <span>{user.monthly_analyses_used}/{user.monthly_analyses_limit} monthly</span>
+                            {user.role === 'free' ? (
+                              <span>{user.monthly_analyses_used}/{user.monthly_analyses_limit} trial</span>
+                            ) : (
+                              <span>{user.monthly_analyses_used}/{user.monthly_analyses_limit} monthly</span>
+                            )}
                             <span className="text-muted-foreground">{user.pack_analyses_remaining} pack</span>
                           </div>
                         </TableCell>

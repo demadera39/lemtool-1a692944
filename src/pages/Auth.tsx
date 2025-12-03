@@ -1,20 +1,47 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
+import { createProject, ensureProfile } from '@/services/supabaseService';
+import { incrementAnalysisCount } from '@/services/userRoleService';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handlePendingAnalysis = async (userId: string, userEmail: string, userName?: string) => {
+    const pendingAnalysisStr = localStorage.getItem('pendingAnalysis');
+    if (!pendingAnalysisStr) return false;
+
+    try {
+      const pendingAnalysis = JSON.parse(pendingAnalysisStr);
+      localStorage.removeItem('pendingAnalysis');
+      
+      // Ensure profile exists
+      await ensureProfile(userId, userEmail, userName);
+      
+      // Save the preview analysis as a real project
+      await createProject(userId, pendingAnalysis.url, pendingAnalysis.report, pendingAnalysis.markers);
+      await incrementAnalysisCount(userId);
+      
+      toast.success('Your analysis has been saved to your dashboard!');
+      return true;
+    } catch (error) {
+      console.error('Error saving pending analysis:', error);
+      return false;
+    }
+  };
 
   const handlePendingPurchase = async () => {
     const pendingPurchase = localStorage.getItem('pendingPurchase');
@@ -67,6 +94,8 @@ const Auth = () => {
         // If session exists immediately, user is auto-logged in
         if (signUpData.session) {
           toast.success('Welcome! Your account has been created.');
+          // First handle any pending analysis from preview mode
+          await handlePendingAnalysis(signUpData.session.user.id, email, name);
           await handlePendingPurchase();
           if (!localStorage.getItem('pendingPurchase')) {
             navigate('/');
@@ -83,6 +112,13 @@ const Auth = () => {
         });
 
         if (error) throw error;
+        
+        // Get user info for pending analysis
+        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
+        if (loggedInUser) {
+          await handlePendingAnalysis(loggedInUser.id, loggedInUser.email!, loggedInUser.user_metadata?.full_name);
+        }
+        
         toast.success('Welcome back!');
         await handlePendingPurchase();
         if (!localStorage.getItem('pendingPurchase')) {

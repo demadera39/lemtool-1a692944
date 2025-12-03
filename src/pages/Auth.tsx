@@ -8,20 +8,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 import { createProject, ensureProfile } from '@/services/supabaseService';
 import { incrementAnalysisCount } from '@/services/userRoleService';
-
-// Helper to fetch a fresh screenshot for the URL
-const fetchScreenshot = async (url: string): Promise<string | null> => {
-  try {
-    const { data, error } = await supabase.functions.invoke('analyze-website', {
-      body: { url, screenshotOnly: true }
-    });
-    if (error) throw error;
-    return data?.screenshot || null;
-  } catch (e) {
-    console.error('Failed to fetch screenshot:', e);
-    return null;
-  }
-};
+import { analyzeWebsite } from '@/services/geminiService';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -45,23 +32,21 @@ const Auth = () => {
       // Ensure profile exists
       await ensureProfile(userId, userEmail, userName);
       
-      // Fetch a fresh screenshot since we couldn't store it in localStorage
-      const screenshot = await fetchScreenshot(pendingAnalysis.url);
+      // Re-run the full analysis to get all slices and markers
+      toast.info('Saving your analysis...', { duration: 10000, id: 'pending-analysis' });
+      const result = await analyzeWebsite(pendingAnalysis.url);
       
-      // Add screenshot to the report
-      const reportWithScreenshot = {
-        ...pendingAnalysis.report,
-        screenshot
-      };
-      
-      // Save the preview analysis as a real project
-      await createProject(userId, pendingAnalysis.url, reportWithScreenshot, pendingAnalysis.markers);
+      // Save the full analysis as a project
+      await createProject(userId, pendingAnalysis.url, result.report, result.markers);
       await incrementAnalysisCount(userId);
       
+      toast.dismiss('pending-analysis');
       toast.success('Your analysis has been saved to your dashboard!');
       return true;
     } catch (error) {
       console.error('Error saving pending analysis:', error);
+      toast.dismiss('pending-analysis');
+      toast.error('Failed to save analysis. Please try again.');
       return false;
     }
   };

@@ -405,7 +405,16 @@ const Index = () => {
                     <p className="text-gray-600 mb-6">
                       Sign up for free to get detailed analysis, all markers, and participant testing features!
                     </p>
-                    <Button onClick={() => navigate('/auth')} className="w-full bg-lem-orange hover:bg-lem-orange-dark mb-3">
+                    <Button onClick={() => {
+                      // Store preview analysis for restoration after signup
+                      localStorage.setItem('pendingAnalysis', JSON.stringify({
+                        url: validUrl,
+                        markers,
+                        report,
+                        screenshot: report?.screenshot
+                      }));
+                      navigate('/auth?mode=signup');
+                    }} className="w-full bg-lem-orange hover:bg-lem-orange-dark mb-3">
                       Get Started Free
                     </Button>
                     <p className="text-xs text-gray-500">3 free analyses • No credit card required</p>

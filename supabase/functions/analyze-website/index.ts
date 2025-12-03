@@ -297,7 +297,35 @@ serve(async (req) => {
   }
 
   try {
-    const { url, slices, sliceHeights, totalHeight, screenshot } = await req.json();
+    const { url, slices, sliceHeights, totalHeight, screenshot, screenshotOnly } = await req.json();
+    
+    // SCREENSHOT ONLY MODE: Just capture and return a screenshot without full analysis
+    if (screenshotOnly && url) {
+      console.log(`Screenshot only mode for: ${url}`);
+      const API_FLASH_KEY = Deno.env.get("API_FLASH_KEY");
+      
+      if (!API_FLASH_KEY) {
+        return new Response(JSON.stringify({ screenshot: null }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      
+      try {
+        const apiFlashUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${API_FLASH_KEY}&url=${encodeURIComponent(url)}&format=png&width=1280&height=800&quality=80&response_type=json`;
+        const screenshotResponse = await fetch(apiFlashUrl);
+        const screenshotData = await screenshotResponse.json();
+        
+        return new Response(JSON.stringify({ screenshot: screenshotData.url || null }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      } catch (e) {
+        console.error("Screenshot capture failed:", e);
+        return new Response(JSON.stringify({ screenshot: null }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+    
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 

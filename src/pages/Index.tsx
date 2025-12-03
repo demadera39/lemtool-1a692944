@@ -27,6 +27,7 @@ const Index = () => {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [report, setReport] = useState<any>(null);
+  const [fullAnalysisForRestore, setFullAnalysisForRestore] = useState<{ markers: Marker[]; report: any } | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [validUrl, setValidUrl] = useState('');
   const [user, setUser] = useState<User | null>(null);
@@ -136,7 +137,9 @@ const Index = () => {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
           setAnalysisProgress(progress);
         });
-        // Keep more emotion markers for preview (teaser showing richness of analysis)
+        // Store FULL analysis for potential restoration after signup
+        setFullAnalysisForRestore({ markers: result.markers, report: result.report });
+        // Keep more emotion markers for preview display (teaser showing richness of analysis)
         const emotionMarkers = result.markers.filter(m => m.layer === 'emotions' && m.emotion).slice(0, 25);
         setMarkers(emotionMarkers);
         // Create preview report with limited data
@@ -406,12 +409,13 @@ const Index = () => {
                       Sign up for free to get detailed analysis, all markers, and participant testing features!
                     </p>
                     <Button onClick={() => {
-                      // Store preview analysis for restoration after signup (exclude screenshot to avoid quota issues)
+                      // Store FULL preview analysis for restoration after signup (exclude screenshot to avoid quota issues)
                       try {
+                        const dataToStore = fullAnalysisForRestore || { markers, report };
                         const pendingData = {
                           url: validUrl,
-                          markers,
-                          report: report ? { ...report, screenshot: undefined } : null
+                          markers: dataToStore.markers,
+                          report: dataToStore.report ? { ...dataToStore.report, screenshot: undefined, isPreview: undefined } : null
                         };
                         localStorage.setItem('pendingAnalysis', JSON.stringify(pendingData));
                       } catch (e) {

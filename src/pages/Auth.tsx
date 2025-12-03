@@ -9,6 +9,20 @@ import { Eye, EyeOff } from 'lucide-react';
 import { createProject, ensureProfile } from '@/services/supabaseService';
 import { incrementAnalysisCount } from '@/services/userRoleService';
 
+// Helper to fetch a fresh screenshot for the URL
+const fetchScreenshot = async (url: string): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('analyze-website', {
+      body: { url, screenshotOnly: true }
+    });
+    if (error) throw error;
+    return data?.screenshot || null;
+  } catch (e) {
+    console.error('Failed to fetch screenshot:', e);
+    return null;
+  }
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -31,8 +45,17 @@ const Auth = () => {
       // Ensure profile exists
       await ensureProfile(userId, userEmail, userName);
       
+      // Fetch a fresh screenshot since we couldn't store it in localStorage
+      const screenshot = await fetchScreenshot(pendingAnalysis.url);
+      
+      // Add screenshot to the report
+      const reportWithScreenshot = {
+        ...pendingAnalysis.report,
+        screenshot
+      };
+      
       // Save the preview analysis as a real project
-      await createProject(userId, pendingAnalysis.url, pendingAnalysis.report, pendingAnalysis.markers);
+      await createProject(userId, pendingAnalysis.url, reportWithScreenshot, pendingAnalysis.markers);
       await incrementAnalysisCount(userId);
       
       toast.success('Your analysis has been saved to your dashboard!');

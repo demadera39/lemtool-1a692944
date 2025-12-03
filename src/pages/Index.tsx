@@ -5,6 +5,7 @@ import AnalysisCanvas from '@/components/AnalysisCanvas';
 import ReportPanel from '@/components/ReportPanel';
 import Dashboard from '@/components/Dashboard';
 import ParticipantView from '@/components/ParticipantView';
+import EmotionToken from '@/components/EmotionToken';
 import { UpgradeModal } from '@/components/UpgradeModal';
 import { PremiumUpgradeModal } from '@/components/PremiumUpgradeModal';
 import { Marker, EmotionType, User, LayerType, Project } from '@/types';
@@ -135,9 +136,9 @@ const Index = () => {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
           setAnalysisProgress(progress);
         });
-        // Keep more markers for preview (teaser showing richness of analysis)
-        const previewMarkers = result.markers.slice(0, 20);
-        setMarkers(previewMarkers);
+        // Keep more emotion markers for preview (teaser showing richness of analysis)
+        const emotionMarkers = result.markers.filter(m => m.layer === 'emotions' && m.emotion).slice(0, 25);
+        setMarkers(emotionMarkers);
         // Create preview report with limited data
         setReport({ ...result.report, isPreview: true });
         toast.info('Preview mode - Sign up for full analysis!');
@@ -361,26 +362,17 @@ const Index = () => {
                       className="w-full h-auto"
                     />
                     {/* Overlay markers on the scrolling screenshot */}
-                    {markers.filter(m => m.layer === 'emotions' && m.emotion).map(marker => {
-                      const emotionDef = marker.emotion ? EMOTIONS[marker.emotion] : null;
-                      return (
-                        <div
-                          key={marker.id}
-                          className="absolute -translate-x-1/2 -translate-y-1/2"
-                          style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-                        >
-                          {emotionDef ? (
-                            <img 
-                              src={emotionDef.src}
-                              alt={emotionDef.label}
-                              className="w-12 h-12 drop-shadow-lg"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full border-2 border-white/50 bg-lem-orange/60" />
-                          )}
+                    {markers.filter(m => m.layer === 'emotions' && m.emotion).map(marker => (
+                      <div
+                        key={marker.id}
+                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                        style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                      >
+                        <div className="transform scale-150 origin-center">
+                          <EmotionToken emotion={marker.emotion!} size="lg" />
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="w-full h-full p-6">

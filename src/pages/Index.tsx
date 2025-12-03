@@ -351,19 +351,39 @@ const Index = () => {
                 <p className="mb-6">Enter a URL above. AI will analyze emotional triggers.</p>
               </div>
             ) : (
-              <div className={`w-full h-full relative p-6 ${report?.isPreview && !user ? 'overflow-hidden' : ''}`}>
-                <div className={report?.isPreview && !user ? 'animate-gentle-scroll' : ''}>
-                  <AnalysisCanvas 
-                    imgUrl={validUrl} 
-                    markers={markers} 
-                    setMarkers={setMarkers} 
-                    isAnalyzing={isAnalyzing} 
-                    activeLayer={activeLayer} 
-                    setActiveLayer={setActiveLayer} 
-                    screenshot={report?.screenshot}
-                    analysisProgress={analysisProgress}
-                  />
-                </div>
+              <div className={`w-full h-full relative ${report?.isPreview && !user ? 'overflow-hidden' : ''}`}>
+                {report?.isPreview && !user && report?.screenshot ? (
+                  <div className="animate-gentle-scroll w-full">
+                    <img 
+                      src={report.screenshot} 
+                      alt="Website preview" 
+                      className="w-full h-auto"
+                    />
+                    {/* Overlay markers on the scrolling screenshot */}
+                    <div className="absolute inset-0">
+                      {markers.map(marker => (
+                        <div
+                          key={marker.id}
+                          className="absolute w-8 h-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/50 bg-lem-orange/60"
+                          style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-full p-6">
+                    <AnalysisCanvas 
+                      imgUrl={validUrl} 
+                      markers={markers} 
+                      setMarkers={setMarkers} 
+                      isAnalyzing={isAnalyzing} 
+                      activeLayer={activeLayer} 
+                      setActiveLayer={setActiveLayer} 
+                      screenshot={report?.screenshot}
+                      analysisProgress={analysisProgress}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>

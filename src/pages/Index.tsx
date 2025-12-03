@@ -351,17 +351,19 @@ const Index = () => {
                 <p className="mb-6">Enter a URL above. AI will analyze emotional triggers.</p>
               </div>
             ) : (
-              <div className="w-full h-full relative p-6">
-                <AnalysisCanvas 
-                  imgUrl={validUrl} 
-                  markers={markers} 
-                  setMarkers={setMarkers} 
-                  isAnalyzing={isAnalyzing} 
-                  activeLayer={activeLayer} 
-                  setActiveLayer={setActiveLayer} 
-                  screenshot={report?.screenshot}
-                  analysisProgress={analysisProgress}
-                />
+              <div className={`w-full h-full relative p-6 ${report?.isPreview && !user ? 'overflow-hidden' : ''}`}>
+                <div className={report?.isPreview && !user ? 'animate-gentle-scroll' : ''}>
+                  <AnalysisCanvas 
+                    imgUrl={validUrl} 
+                    markers={markers} 
+                    setMarkers={setMarkers} 
+                    isAnalyzing={isAnalyzing} 
+                    activeLayer={activeLayer} 
+                    setActiveLayer={setActiveLayer} 
+                    screenshot={report?.screenshot}
+                    analysisProgress={analysisProgress}
+                  />
+                </div>
               </div>
             )}
           </div>

@@ -8,6 +8,7 @@ import ParticipantView from '@/components/ParticipantView';
 import { UpgradeModal } from '@/components/UpgradeModal';
 import { PremiumUpgradeModal } from '@/components/PremiumUpgradeModal';
 import { Marker, EmotionType, User, LayerType, Project } from '@/types';
+import { EMOTIONS } from '@/constants';
 import { analyzeWebsite } from '@/services/geminiService';
 import { supabase, signOut, createProject, getProjectById, ensureProfile } from '@/services/supabaseService';
 import { getUserRole, canCreateAnalysis, incrementAnalysisCount, getRemainingAnalyses } from '@/services/userRoleService';
@@ -134,9 +135,9 @@ const Index = () => {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
           setAnalysisProgress(progress);
         });
-        // Limit markers for anonymous users
-        const limitedMarkers = result.markers.slice(0, 4);
-        setMarkers(limitedMarkers);
+        // Keep more markers for preview (teaser showing richness of analysis)
+        const previewMarkers = result.markers.slice(0, 20);
+        setMarkers(previewMarkers);
         // Create preview report with limited data
         setReport({ ...result.report, isPreview: true });
         toast.info('Preview mode - Sign up for full analysis!');
@@ -360,23 +361,26 @@ const Index = () => {
                       className="w-full h-auto"
                     />
                     {/* Overlay markers on the scrolling screenshot */}
-                    {markers.map(marker => (
-                      <div
-                        key={marker.id}
-                        className="absolute -translate-x-1/2 -translate-y-1/2"
-                        style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-                      >
-                        {marker.emotion ? (
-                          <img 
-                            src={`https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/${marker.emotion}.png`}
-                            alt={marker.emotion}
-                            className="w-10 h-10 drop-shadow-lg"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full border-2 border-white/50 bg-lem-orange/60" />
-                        )}
-                      </div>
-                    ))}
+                    {markers.filter(m => m.layer === 'emotions' && m.emotion).map(marker => {
+                      const emotionDef = marker.emotion ? EMOTIONS[marker.emotion] : null;
+                      return (
+                        <div
+                          key={marker.id}
+                          className="absolute -translate-x-1/2 -translate-y-1/2"
+                          style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                        >
+                          {emotionDef ? (
+                            <img 
+                              src={emotionDef.src}
+                              alt={emotionDef.label}
+                              className="w-12 h-12 drop-shadow-lg"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full border-2 border-white/50 bg-lem-orange/60" />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="w-full h-full p-6">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -233,7 +233,11 @@ const Auth = () => {
 
         {mode === 'signup' && (
           <p className="mt-4 text-xs text-gray-500 text-center">
-            By signing up, you agree to our Terms of Service and Privacy Policy.
+            By signing up, you agree to our{' '}
+            <Link to="/terms" className="text-lem-orange hover:underline">Terms of Service</Link>
+            {' '}and{' '}
+            <Link to="/privacy" className="text-lem-orange hover:underline">Privacy Policy</Link>.
+            <br />
             You'll start with 3 free analyses.
           </p>
         )}

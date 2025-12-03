@@ -406,13 +406,17 @@ const Index = () => {
                       Sign up for free to get detailed analysis, all markers, and participant testing features!
                     </p>
                     <Button onClick={() => {
-                      // Store preview analysis for restoration after signup
-                      localStorage.setItem('pendingAnalysis', JSON.stringify({
-                        url: validUrl,
-                        markers,
-                        report,
-                        screenshot: report?.screenshot
-                      }));
+                      // Store preview analysis for restoration after signup (exclude screenshot to avoid quota issues)
+                      try {
+                        const pendingData = {
+                          url: validUrl,
+                          markers,
+                          report: report ? { ...report, screenshot: undefined } : null
+                        };
+                        localStorage.setItem('pendingAnalysis', JSON.stringify(pendingData));
+                      } catch (e) {
+                        console.warn('Could not save pending analysis to localStorage:', e);
+                      }
                       navigate('/auth?mode=signup');
                     }} className="w-full bg-lem-orange hover:bg-lem-orange-dark mb-3">
                       Get Started Free

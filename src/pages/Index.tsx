@@ -353,22 +353,30 @@ const Index = () => {
             ) : (
               <div className={`w-full h-full relative ${report?.isPreview && !user ? 'overflow-hidden' : ''}`}>
                 {report?.isPreview && !user && report?.screenshot ? (
-                  <div className="animate-gentle-scroll w-full">
+                  <div className="animate-gentle-scroll w-full relative">
                     <img 
                       src={report.screenshot} 
                       alt="Website preview" 
                       className="w-full h-auto"
                     />
                     {/* Overlay markers on the scrolling screenshot */}
-                    <div className="absolute inset-0">
-                      {markers.map(marker => (
-                        <div
-                          key={marker.id}
-                          className="absolute w-8 h-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/50 bg-lem-orange/60"
-                          style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-                        />
-                      ))}
-                    </div>
+                    {markers.map(marker => (
+                      <div
+                        key={marker.id}
+                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                        style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                      >
+                        {marker.emotion ? (
+                          <img 
+                            src={`https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/${marker.emotion}.png`}
+                            alt={marker.emotion}
+                            className="w-10 h-10 drop-shadow-lg"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full border-2 border-white/50 bg-lem-orange/60" />
+                        )}
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="w-full h-full p-6">

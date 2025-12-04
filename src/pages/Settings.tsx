@@ -112,7 +112,7 @@ const Settings = () => {
     }
   };
 
-  const isPremium = userRole?.role === 'premium';
+  const isPremium = userRole?.role === 'premium' || userRole?.role === 'admin' || userRole?.subscription_status === 'active';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50/30 relative overflow-hidden">

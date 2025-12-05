@@ -41,7 +41,7 @@ const LandingHero = ({ onAnalyze, isAnalyzing }: LandingHeroProps) => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/30 relative overflow-hidden">
       {/* Example analysis preview - faded background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] opacity-[0.06]">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[700px] opacity-[0.15]">
           <div className="relative w-full h-full rounded-2xl overflow-hidden">
             {/* Mock website preview */}
             <div className="absolute inset-0 bg-gradient-to-b from-card to-muted rounded-2xl">
@@ -68,72 +68,72 @@ const LandingHero = ({ onAnalyze, isAnalyzing }: LandingHeroProps) => {
                 </div>
               </div>
 
-              {/* Emotion markers with speech bubbles */}
-              <div className="absolute top-20 left-[12%] animate-float-drift" style={{ animationDelay: '0s', animationDuration: '8s' }}>
-                <div className="relative">
-                  <EmotionToken emotion={EmotionType.JOY} size="sm" />
-                  <div className="absolute -top-8 left-6 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
-                    Clear value proposition
+              {/* Emotion markers with speech bubbles - scaled up */}
+              <div className="absolute top-16 left-[10%] animate-float-drift" style={{ animationDelay: '0s', animationDuration: '8s' }}>
+                <div className="relative scale-125">
+                  <EmotionToken emotion={EmotionType.JOY} size="md" />
+                  <div className="absolute -top-10 left-8 bg-white rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                    Clear value proposition ✓
                   </div>
                 </div>
               </div>
-              <div className="absolute top-32 right-[18%] animate-float-drift" style={{ animationDelay: '1.5s', animationDuration: '7s' }}>
-                <div className="relative">
-                  <EmotionToken emotion={EmotionType.FASCINATION} size="sm" />
-                  <div className="absolute -top-8 -left-12 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
+              <div className="absolute top-24 right-[15%] animate-float-drift" style={{ animationDelay: '1.5s', animationDuration: '7s' }}>
+                <div className="relative scale-125">
+                  <EmotionToken emotion={EmotionType.FASCINATION} size="md" />
+                  <div className="absolute -top-10 -left-16 bg-white rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
                     Engaging visuals
                   </div>
                 </div>
               </div>
-              <div className="absolute top-52 left-[28%] animate-float-drift" style={{ animationDelay: '0.8s', animationDuration: '9s' }}>
-                <div className="relative">
-                  <EmotionToken emotion={EmotionType.DESIRE} size="sm" />
-                  <div className="absolute -top-8 left-6 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
-                    Strong CTA
+              <div className="absolute top-56 left-[25%] animate-float-drift" style={{ animationDelay: '0.8s', animationDuration: '9s' }}>
+                <div className="relative scale-125">
+                  <EmotionToken emotion={EmotionType.DESIRE} size="md" />
+                  <div className="absolute -top-10 left-8 bg-white rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                    Strong CTA detected
                   </div>
                 </div>
               </div>
 
-              {/* Needs markers (diamond shape) */}
-              <div className="absolute top-44 right-[32%] animate-float-drift" style={{ animationDelay: '2s', animationDuration: '7.5s' }}>
+              {/* Needs markers (diamond shape) - larger and more visible */}
+              <div className="absolute top-40 right-[28%] animate-float-drift" style={{ animationDelay: '2s', animationDuration: '7.5s' }}>
                 <div className="relative">
-                  <div className="w-5 h-5 bg-blue-500 rotate-45 rounded-sm shadow-md" />
-                  <div className="absolute -top-8 -left-8 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
-                    <span className="text-blue-500 font-semibold">Autonomy:</span> User control
+                  <div className="w-7 h-7 bg-blue-500 rotate-45 rounded-sm shadow-lg ring-2 ring-blue-300" />
+                  <div className="absolute -top-10 -left-12 bg-white rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                    <span className="text-blue-600 font-bold">Autonomy:</span> User control
                   </div>
                 </div>
               </div>
-              <div className="absolute bottom-36 left-[22%] animate-float-drift" style={{ animationDelay: '1s', animationDuration: '8.5s' }}>
+              <div className="absolute bottom-32 left-[18%] animate-float-drift" style={{ animationDelay: '1s', animationDuration: '8.5s' }}>
                 <div className="relative">
-                  <div className="w-5 h-5 bg-emerald-500 rotate-45 rounded-sm shadow-md" />
-                  <div className="absolute -top-8 left-6 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
-                    <span className="text-emerald-500 font-semibold">Competence:</span> Easy to use
+                  <div className="w-7 h-7 bg-emerald-500 rotate-45 rounded-sm shadow-lg ring-2 ring-emerald-300" />
+                  <div className="absolute -top-10 left-8 bg-white rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                    <span className="text-emerald-600 font-bold">Competence:</span> Easy navigation
                   </div>
                 </div>
               </div>
-              <div className="absolute bottom-48 right-[25%] animate-float-drift" style={{ animationDelay: '2.5s', animationDuration: '7s' }}>
+              <div className="absolute bottom-44 right-[22%] animate-float-drift" style={{ animationDelay: '2.5s', animationDuration: '7s' }}>
                 <div className="relative">
-                  <div className="w-5 h-5 bg-purple-500 rotate-45 rounded-sm shadow-md" />
-                  <div className="absolute -top-8 -left-10 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
-                    <span className="text-purple-500 font-semibold">Relatedness:</span> Social proof
+                  <div className="w-7 h-7 bg-violet-500 rotate-45 rounded-sm shadow-lg ring-2 ring-violet-300" />
+                  <div className="absolute -top-10 -left-14 bg-white rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                    <span className="text-violet-600 font-bold">Relatedness:</span> Social proof
                   </div>
                 </div>
               </div>
 
-              {/* Strategy markers (star shape) */}
-              <div className="absolute top-36 left-[48%] animate-float-drift" style={{ animationDelay: '0.5s', animationDuration: '9s' }}>
+              {/* Strategy markers (star shape) - larger */}
+              <div className="absolute top-32 left-[45%] animate-float-drift" style={{ animationDelay: '0.5s', animationDuration: '9s' }}>
                 <div className="relative">
-                  <div className="text-amber-500 text-lg">★</div>
-                  <div className="absolute -top-8 left-4 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
-                    <span className="text-amber-500 font-semibold">Opportunity:</span> Add testimonials
+                  <div className="text-amber-500 text-2xl drop-shadow-md">★</div>
+                  <div className="absolute -top-10 left-6 bg-white rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                    <span className="text-amber-600 font-bold">Opportunity:</span> Add testimonials
                   </div>
                 </div>
               </div>
-              <div className="absolute bottom-28 left-[45%] animate-float-drift" style={{ animationDelay: '1.8s', animationDuration: '8s' }}>
+              <div className="absolute bottom-24 left-[42%] animate-float-drift" style={{ animationDelay: '1.8s', animationDuration: '8s' }}>
                 <div className="relative">
-                  <div className="text-rose-500 text-lg">★</div>
-                  <div className="absolute -top-8 -left-6 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
-                    <span className="text-rose-500 font-semibold">Pain Point:</span> Loading speed
+                  <div className="text-rose-500 text-2xl drop-shadow-md">★</div>
+                  <div className="absolute -top-10 -left-8 bg-white rounded-lg px-3 py-2 text-xs text-foreground whitespace-nowrap shadow-lg border border-border/50">
+                    <span className="text-rose-600 font-bold">Pain Point:</span> Slow load time
                   </div>
                 </div>
               </div>

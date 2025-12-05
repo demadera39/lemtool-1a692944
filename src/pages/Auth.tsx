@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Sparkles } from 'lucide-react';
 import { createProject, ensureProfile } from '@/services/supabaseService';
 import { incrementAnalysisCount } from '@/services/userRoleService';
 import { analyzeWebsite } from '@/services/geminiService';
+import EmotionToken from '@/components/EmotionToken';
+import { EmotionType } from '@/types';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -29,14 +31,11 @@ const Auth = () => {
       const pendingAnalysis = JSON.parse(pendingAnalysisStr);
       localStorage.removeItem('pendingAnalysis');
       
-      // Ensure profile exists
       await ensureProfile(userId, userEmail, userName);
       
-      // Re-run the full analysis to get all slices and markers
       toast.info('Saving your analysis...', { duration: 10000, id: 'pending-analysis' });
       const result = await analyzeWebsite(pendingAnalysis.url);
       
-      // Save the full analysis as a project
       await createProject(userId, pendingAnalysis.url, result.report, result.markers);
       await incrementAnalysisCount(userId);
       
@@ -98,18 +97,14 @@ const Auth = () => {
 
         if (error) throw error;
         
-        // Check if email confirmation is disabled (auto-confirm)
-        // If session exists immediately, user is auto-logged in
         if (signUpData.session) {
           toast.success('Welcome! Your account has been created.');
-          // First handle any pending analysis from preview mode
           await handlePendingAnalysis(signUpData.session.user.id, email, name);
           await handlePendingPurchase();
           if (!localStorage.getItem('pendingPurchase')) {
             navigate('/');
           }
         } else {
-          // Email confirmation required
           toast.success('Account created! Please check your email to verify.');
           setMode('login');
         }
@@ -121,7 +116,6 @@ const Auth = () => {
 
         if (error) throw error;
         
-        // Get user info for pending analysis
         const { data: { user: loggedInUser } } = await supabase.auth.getUser();
         if (loggedInUser) {
           await handlePendingAnalysis(loggedInUser.id, loggedInUser.email!, loggedInUser.user_metadata?.full_name);
@@ -141,18 +135,36 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/30 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Floating emotion tokens */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[15%] left-[10%] opacity-10 animate-float-drift" style={{ animationDuration: '8s' }}>
+          <EmotionToken emotion={EmotionType.JOY} size="lg" />
+        </div>
+        <div className="absolute top-[25%] right-[15%] opacity-10 animate-float-drift" style={{ animationDuration: '7s', animationDelay: '1s' }}>
+          <EmotionToken emotion={EmotionType.FASCINATION} size="lg" />
+        </div>
+        <div className="absolute bottom-[20%] left-[15%] opacity-10 animate-float-drift" style={{ animationDuration: '6s', animationDelay: '2s' }}>
+          <EmotionToken emotion={EmotionType.SATISFACTION} size="lg" />
+        </div>
+        <div className="absolute bottom-[30%] right-[10%] opacity-10 animate-float-drift" style={{ animationDuration: '9s', animationDelay: '0.5s' }}>
+          <EmotionToken emotion={EmotionType.DESIRE} size="lg" />
+        </div>
+      </div>
+
+      {/* Gradient orbs */}
+      <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-accent/20 rounded-full blur-3xl" />
+
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-8 relative z-10 border border-border">
         <div className="text-center mb-8">
-          <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4">
-            <path d="M50 10C27.9086 10 10 27.9086 10 50C10 72.0914 27.9086 90 50 90C72.0914 90 90 72.0914 90 50" stroke="#F26522" strokeWidth="12" strokeLinecap="round"/>
-            <path d="M50 25C36.1929 25 25 36.1929 25 50C25 63.8071 36.1929 75 50 75C63.8071 75 75 63.8071 75 50" stroke="#555555" strokeWidth="10" strokeLinecap="round"/>
-            <path d="M50 40C44.4772 40 40 44.4772 40 50C40 55.5228 44.4772 60 50 60" stroke="#F26522" strokeWidth="8" strokeLinecap="round"/>
-          </svg>
-          <h1 className="text-3xl font-black text-gray-900 mb-2">
-            {mode === 'login' ? 'Welcome Back' : 'Join LEMtool'}
+          <button onClick={() => navigate('/')} className="inline-block mb-4 hover:opacity-80 transition-opacity">
+            <img src="/lem-logo.svg" alt="LEM" className="w-16 h-16 mx-auto" />
+          </button>
+          <h1 className="text-3xl font-black text-foreground mb-2">
+            {mode === 'login' ? 'Welcome Back' : 'Join LEMTOOL'}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             {mode === 'login' ? 'Sign in to your account' : 'Create your free account'}
           </p>
         </div>
@@ -160,7 +172,7 @@ const Auth = () => {
         <form onSubmit={handleEmailSubmit} className="space-y-4">
           {mode === 'signup' && (
             <div>
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="text-foreground">Full Name</Label>
               <Input
                 id="name"
                 type="text"
@@ -168,12 +180,13 @@ const Auth = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
+                className="mt-1.5"
               />
             </div>
           )}
 
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-foreground">Email</Label>
             <Input
               id="email"
               type="email"
@@ -182,12 +195,13 @@ const Auth = () => {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               required
+              className="mt-1.5"
             />
           </div>
 
           <div>
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
+            <Label htmlFor="password" className="text-foreground">Password</Label>
+            <div className="relative mt-1.5">
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
@@ -201,7 +215,7 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -210,7 +224,8 @@ const Auth = () => {
 
           <Button
             type="submit"
-            className="w-full bg-lem-orange hover:bg-lem-orange-dark"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+            size="lg"
             disabled={isLoading}
           >
             {isLoading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
@@ -218,13 +233,13 @@ const Auth = () => {
         </form>
 
         <div className="mt-6 text-center text-sm">
-          <span className="text-gray-600">
+          <span className="text-muted-foreground">
             {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
           </span>
           <button
             type="button"
             onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-            className="text-lem-orange font-bold hover:underline"
+            className="text-primary font-bold hover:underline"
             disabled={isLoading}
           >
             {mode === 'login' ? 'Sign up' : 'Sign in'}
@@ -232,14 +247,18 @@ const Auth = () => {
         </div>
 
         {mode === 'signup' && (
-          <p className="mt-4 text-xs text-gray-500 text-center">
-            By signing up, you agree to our{' '}
-            <Link to="/terms" className="text-lem-orange hover:underline">Terms of Service</Link>
-            {' '}and{' '}
-            <Link to="/privacy" className="text-lem-orange hover:underline">Privacy Policy</Link>.
-            <br />
-            You'll start with 3 free analyses.
-          </p>
+          <div className="mt-6 pt-6 border-t border-border">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-3">
+              <Sparkles size={16} className="text-primary" />
+              <span>Start with 3 free analyses</span>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              By signing up, you agree to our{' '}
+              <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
+              {' '}and{' '}
+              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+            </p>
+          </div>
         )}
       </div>
     </div>

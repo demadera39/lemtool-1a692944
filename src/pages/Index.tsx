@@ -441,15 +441,53 @@ const Index = () => {
             <div className={`w-full h-full relative ${(report?.isPreview && !user) || isAnalyzing ? 'overflow-hidden' : ''}`}>
               {/* Scrolling background during analysis */}
               {isAnalyzing && previewScreenshot && (
-                <div className="absolute inset-0 overflow-hidden">
-                  <div className="animate-gentle-scroll w-full blur-[2px] opacity-70">
-                    <img 
-                      src={previewScreenshot} 
-                      alt="Website preview" 
-                      className="w-full h-auto"
-                    />
+                <>
+                  <div className="absolute inset-0 overflow-hidden">
+                    <div className="animate-gentle-scroll w-full blur-[2px] opacity-80">
+                      <img 
+                        src={previewScreenshot} 
+                        alt="Website preview" 
+                        className="w-full h-auto"
+                        onError={(e) => {
+                          // Fallback if thum.io fails
+                          console.log('Preview image failed to load');
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
+                  {/* Loading overlay on top of scrolling background */}
+                  <div className="absolute inset-0 bg-background/30 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center">
+                    <div className="bg-card rounded-3xl p-10 shadow-2xl border border-border flex flex-col items-center max-w-md">
+                      <div className="relative w-28 h-28 flex items-center justify-center mb-6">
+                        <svg className="absolute inset-0 w-full h-full z-10 -rotate-90" viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="40" stroke="hsl(var(--muted))" strokeWidth="6" fill="none" />
+                          <circle 
+                            cx="50" cy="50" r="40" 
+                            stroke="hsl(var(--primary))" 
+                            strokeWidth="6" 
+                            fill="none" 
+                            strokeLinecap="round"
+                            style={{ 
+                              strokeDasharray: 251.2, 
+                              strokeDashoffset: 251.2 - (analysisProgress / 100) * 251.2, 
+                              transition: 'stroke-dashoffset 0.5s ease' 
+                            }}
+                          />
+                        </svg>
+                        <div className="relative z-20 transform scale-90">
+                          <EmotionToken emotion={EmotionType.JOY} size="lg" />
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <h3 className="font-bold text-xl text-foreground mb-2">Analyzing emotions...</h3>
+                        <p className="text-sm text-muted-foreground mb-4">Analyzing UX & emotional triggers</p>
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-2xl font-black text-primary">{analysisProgress}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
               )}
               
               {report?.isPreview && !user && report?.screenshot ? (
@@ -497,7 +535,7 @@ const Index = () => {
                     </div>
                   </div>
                 </>
-              ) : (
+              ) : !isAnalyzing && (
                 <div className="w-full h-full p-6 relative z-10">
                   <AnalysisCanvas 
                     imgUrl={validUrl} 

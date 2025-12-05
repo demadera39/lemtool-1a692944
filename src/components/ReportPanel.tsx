@@ -1,5 +1,5 @@
 import { AnalysisReport, Marker, LayerType } from '../types';
-import { Award, Users, Target, Lightbulb, TrendingUp, Brain, Lock, Map, Grid3x3, MapPin, Heart, AlertTriangle } from 'lucide-react';
+import { Award, Users, Target, Lightbulb, TrendingUp, Brain, Lock, Map, Grid3x3, MapPin, Heart, AlertTriangle, Sparkles, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
@@ -30,46 +30,27 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
   const [areaViewSource, setAreaViewSource] = useState<'all' | 'ai' | 'human'>('all');
   const [areaViewMode, setAreaViewMode] = useState<'heatmap' | 'points'>('heatmap');
   
-  // Get unique sessions from markers
   const sessions = Array.from(new Set(markers.filter(m => m.sessionId).map(m => m.sessionId)));
   
   const getFilteredAreas = () => {
     let filtered = areaMarkers.filter(m => m.layer === areaViewLayer);
-    
-    if (areaViewSource === 'ai') {
-      filtered = filtered.filter(m => m.source === 'AI');
-    } else if (areaViewSource === 'human') {
-      filtered = filtered.filter(m => m.source === 'HUMAN');
-    }
-    
+    if (areaViewSource === 'ai') filtered = filtered.filter(m => m.source === 'AI');
+    else if (areaViewSource === 'human') filtered = filtered.filter(m => m.source === 'HUMAN');
     if (selectedSession !== 'all') {
-      if (selectedSession === 'ai') {
-        filtered = filtered.filter(m => m.source === 'AI');
-      } else {
-        filtered = filtered.filter(m => m.sessionId === selectedSession);
-      }
+      if (selectedSession === 'ai') filtered = filtered.filter(m => m.source === 'AI');
+      else filtered = filtered.filter(m => m.sessionId === selectedSession);
     }
-    
     return filtered;
   };
   
   const getFilteredPoints = () => {
     let filtered = markers.filter(m => !m.isArea && m.layer === areaViewLayer);
-    
-    if (areaViewSource === 'ai') {
-      filtered = filtered.filter(m => m.source === 'AI');
-    } else if (areaViewSource === 'human') {
-      filtered = filtered.filter(m => m.source === 'HUMAN');
-    }
-    
+    if (areaViewSource === 'ai') filtered = filtered.filter(m => m.source === 'AI');
+    else if (areaViewSource === 'human') filtered = filtered.filter(m => m.source === 'HUMAN');
     if (selectedSession !== 'all') {
-      if (selectedSession === 'ai') {
-        filtered = filtered.filter(m => m.source === 'AI');
-      } else {
-        filtered = filtered.filter(m => m.sessionId === selectedSession);
-      }
+      if (selectedSession === 'ai') filtered = filtered.filter(m => m.source === 'AI');
+      else filtered = filtered.filter(m => m.sessionId === selectedSession);
     }
-    
     return filtered;
   };
   
@@ -78,47 +59,57 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
 
   if (isAnalyzing) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-8 text-center text-gray-500">
-        <div className="w-16 h-16 border-4 border-lem-orange border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="font-bold text-lg">Analyzing website...</p>
-        <p className="text-sm mt-1">This may take a few moments</p>
+      <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-card">
+        <div className="relative w-20 h-20 mb-6">
+          <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary" size={24} />
+        </div>
+        <p className="font-bold text-lg text-foreground">Analyzing website...</p>
+        <p className="text-sm mt-1 text-muted-foreground">This may take a few moments</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-white">
-      <div className="p-6 border-b border-gray-200 flex-shrink-0">
-        <h2 className="text-2xl font-black text-gray-900 mb-4">Summary</h2>
+    <div className="h-full flex flex-col overflow-hidden bg-card">
+      <div className="p-5 border-b border-border flex-shrink-0">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="text-primary" size={20} />
+          <h2 className="text-xl font-bold text-foreground">Analysis Report</h2>
+        </div>
         {currentUrl && (
-          <p className="text-xs text-gray-500 truncate mb-4">{currentUrl}</p>
+          <p className="text-xs text-muted-foreground truncate mb-4 bg-muted px-3 py-1.5 rounded-lg">{currentUrl}</p>
         )}
         
         {report && (
-          <div className="bg-gray-900 text-white rounded-lg p-6 mb-4">
-            <div className="flex items-end justify-between mb-2">
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">UX Emotion Score</p>
-                <p className="text-5xl font-black">{report.overallScore}/100</p>
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-black text-lem-orange">{emotionMarkers.length + needsMarkers.length + strategyMarkers.length}</p>
-                <p className="text-xs text-gray-400 uppercase">Total Insights</p>
+          <div className="bg-gradient-to-br from-foreground to-foreground/90 text-background rounded-2xl p-5 mb-4 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl"></div>
+            <div className="relative z-10">
+              <div className="flex items-end justify-between mb-3">
+                <div>
+                  <p className="text-xs text-background/60 uppercase tracking-wider mb-1">UX Emotion Score</p>
+                  <p className="text-5xl font-black">{report.overallScore}<span className="text-2xl text-background/60">/100</span></p>
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-black text-primary">{emotionMarkers.length + needsMarkers.length + strategyMarkers.length}</p>
+                  <p className="text-xs text-background/60 uppercase">Total Insights</p>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
+        <div className="flex gap-1 bg-muted/50 p-1 rounded-xl overflow-x-auto">
           <button
             onClick={() => {
               setActiveLayer('emotions');
               setShowAreaView(false);
             }}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
+            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
               activeLayer === 'emotions' && !showAreaView
-                ? 'text-lem-orange border-b-2 border-lem-orange'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-card text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Emotions
@@ -128,10 +119,10 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
               setActiveLayer('needs');
               setShowAreaView(false);
             }}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
+            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
               activeLayer === 'needs' && !showAreaView
-                ? 'text-lem-orange border-b-2 border-lem-orange'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-card text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Psych Needs
@@ -141,20 +132,20 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
               setActiveLayer('strategy');
               setShowAreaView(false);
             }}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
+            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
               activeLayer === 'strategy' && !showAreaView
-                ? 'text-lem-orange border-b-2 border-lem-orange'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-card text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Strategy
           </button>
           <button
             onClick={() => setShowAreaView(true)}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
+            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
               showAreaView
-                ? 'text-lem-orange border-b-2 border-lem-orange'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-card text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Area View
@@ -162,31 +153,31 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
         {!report ? (
-          <div className="text-center text-gray-500 py-12">
+          <div className="text-center text-muted-foreground py-12">
             <Brain size={48} className="mx-auto mb-4 opacity-30" />
-            <p className="font-medium">No analysis yet</p>
+            <p className="font-medium text-foreground">No analysis yet</p>
             <p className="text-sm mt-1">Enter a URL and click Analyze</p>
           </div>
         ) : (
           <>
-            <Card>
-              <CardHeader>
+            <Card className="border-border bg-card/50">
+              <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Target className="text-lem-orange" size={18} />
+                  <Target className="text-primary" size={18} />
                   Summary
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">{report.summary}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{report.summary}</p>
               </CardContent>
             </Card>
 
             {activeLayer === 'emotions' && !showAreaView && (
               <>
-                <Card>
-                  <CardHeader>
+                <Card className="border-border bg-card/50">
+                  <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Users className="text-lem-orange" size={18} />
                       Target Audience

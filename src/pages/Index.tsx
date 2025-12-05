@@ -428,7 +428,21 @@ const Index = () => {
 
         <div className="flex-1 flex overflow-hidden relative">
           <div className="flex-1 bg-muted/50 relative flex flex-col overflow-hidden">
-            <div className={`w-full h-full relative ${report?.isPreview && !user ? 'overflow-hidden' : ''}`}>
+            <div className={`w-full h-full relative ${(report?.isPreview && !user) || isAnalyzing ? 'overflow-hidden' : ''}`}>
+              {/* Scrolling background during analysis */}
+              {isAnalyzing && validUrl && (
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="animate-gentle-scroll w-full h-[300%] opacity-30 blur-sm">
+                    <iframe
+                      src={validUrl}
+                      className="w-full h-full border-0 pointer-events-none"
+                      title="Website preview"
+                      sandbox="allow-same-origin"
+                    />
+                  </div>
+                </div>
+              )}
+              
               {report?.isPreview && !user && report?.screenshot ? (
                 <div className="animate-gentle-scroll w-full relative">
                   <img 
@@ -450,7 +464,7 @@ const Index = () => {
                   ))}
                 </div>
               ) : (
-                <div className="w-full h-full p-6">
+                <div className="w-full h-full p-6 relative z-10">
                   <AnalysisCanvas 
                     imgUrl={validUrl} 
                     markers={markers} 

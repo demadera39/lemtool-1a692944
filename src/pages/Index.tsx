@@ -29,6 +29,7 @@ const Index = () => {
   const [report, setReport] = useState<any>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [validUrl, setValidUrl] = useState('');
+  const [previewScreenshot, setPreviewScreenshot] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [activeLayer, setActiveLayer] = useState<LayerType>('emotions');
   const [showInfoBanner, setShowInfoBanner] = useState(true);
@@ -136,6 +137,10 @@ const Index = () => {
       setMarkers([]);
       setReport(null);
       setActiveLayer('emotions');
+      
+      // Load preview screenshot immediately
+      const previewUrl = `https://image.thum.io/get/width/1200/crop/2000/maxAge/0/${encodeURIComponent(targetUrl)}`;
+      setPreviewScreenshot(previewUrl);
 
       try {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -176,6 +181,10 @@ const Index = () => {
     setMarkers([]);
     setReport(null);
     setActiveLayer('emotions');
+    
+    // Load preview screenshot immediately for logged in users too
+    const previewUrl = `https://image.thum.io/get/width/1200/crop/2000/maxAge/0/${encodeURIComponent(targetUrl)}`;
+    setPreviewScreenshot(previewUrl);
 
     try {
       const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -248,12 +257,13 @@ const Index = () => {
   if (!hasStarted) {
     const handleHeroAnalyze = (inputUrl: string) => {
       setUrl(inputUrl);
-      // Trigger the form submission logic
-      const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-      setUrl(inputUrl);
       // Directly call analysis logic
       let targetUrl = inputUrl.trim();
       if (!targetUrl.match(/^https?:\/\//i)) targetUrl = 'https://' + targetUrl;
+      
+      // Load preview screenshot immediately
+      const previewUrl = `https://image.thum.io/get/width/1200/crop/2000/maxAge/0/${encodeURIComponent(targetUrl)}`;
+      setPreviewScreenshot(previewUrl);
       
       if (!user) {
         // Anonymous preview mode
@@ -428,7 +438,20 @@ const Index = () => {
 
         <div className="flex-1 flex overflow-hidden relative">
           <div className="flex-1 bg-muted/50 relative flex flex-col overflow-hidden">
-            <div className={`w-full h-full relative ${report?.isPreview && !user ? 'overflow-hidden' : ''}`}>
+            <div className={`w-full h-full relative ${(report?.isPreview && !user) || isAnalyzing ? 'overflow-hidden' : ''}`}>
+              {/* Scrolling background during analysis */}
+              {isAnalyzing && previewScreenshot && (
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="animate-gentle-scroll w-full blur-[2px] opacity-70">
+                    <img 
+                      src={previewScreenshot} 
+                      alt="Website preview" 
+                      className="w-full h-auto"
+                    />
+                  </div>
+                </div>
+              )}
+              
               {report?.isPreview && !user && report?.screenshot ? (
                 <>
                   {/* Scrolling background with subtle blur */}

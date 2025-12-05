@@ -100,22 +100,6 @@ const Auth = () => {
     }
   };
 
-  const retryWithBackoff = async <T,>(
-    fn: () => Promise<T>,
-    retries = 2,
-    delay = 1000
-  ): Promise<T> => {
-    try {
-      return await fn();
-    } catch (error: any) {
-      if (retries > 0 && error.message?.includes('fetch')) {
-        await new Promise(r => setTimeout(r, delay));
-        return retryWithBackoff(fn, retries - 1, delay * 2);
-      }
-      throw error;
-    }
-  };
-
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -127,54 +111,61 @@ const Auth = () => {
 
     try {
       if (mode === 'signup') {
-        const { data: signUpData, error } = await retryWithBackoff(() =>
-          supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: { full_name: name },
-              emailRedirectTo: `${window.location.origin}/`
-            }
-          })
-        );
+        const { data: signUpData, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: name },
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
         
         if (signUpData?.session) {
           toast.success('Welcome! Your account has been created.');
-          await handlePendingAnalysis(signUpData.session.user.id, email, name);
-          await handlePendingPurchase();
-          if (!localStorage.getItem('pendingPurchase')) {
-            navigate('/');
-          }
-        } else {
+          // Handle pending actions in background
+          handlePendingAnalysis(signUpData.session.user.id, email, name);
+          handlePendingPurchase();
+          // Navigation is handled by onAuthStateChange
+        } else if (signUpData?.user && !signUpData?.session) {
           toast.success('Account created! Please check your email to verify.');
           setMode('login');
         }
       } else {
-        const { data, error } = await retryWithBackoff(() =>
-          supabase.auth.signInWithPassword({
-            email,
-            password
-          })
-        );
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
         
         if (data?.user) {
           toast.success('Welcome back!');
+          // Handle pending actions in background
           handlePendingAnalysis(data.user.id, data.user.email!, data.user.user_metadata?.full_name);
           handlePendingPurchase();
-          navigate('/');
+          // Navigation is handled by onAuthStateChange
         }
       }
     } catch (error: any) {
       console.error('Auth error:', error);
-      const message = error.message?.includes('fetch') 
-        ? 'Network error. Please check your connection and try again.'
-        : error.message === 'Invalid login credentials'
-        ? 'Invalid email or password.'
-        : error.message || 'Authentication failed';
+      let message = 'Authentication failed';
+      
+      if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        message = 'Network error. Please check your connection and try again.';
+      } else if (error.message === 'Invalid login credentials') {
+        message = 'Invalid email or password.';
+      } else if (error.message?.includes('already registered')) {
+        message = 'This email is already registered. Please sign in instead.';
+      } else if (error.message) {
+        message = error.message;
+      }
+      
       toast.error(message);
     } finally {
       setIsLoading(false);

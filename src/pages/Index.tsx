@@ -428,41 +428,52 @@ const Index = () => {
 
         <div className="flex-1 flex overflow-hidden relative">
           <div className="flex-1 bg-muted/50 relative flex flex-col overflow-hidden">
-            <div className={`w-full h-full relative ${(report?.isPreview && !user) || isAnalyzing ? 'overflow-hidden' : ''}`}>
-              {/* Scrolling background during analysis */}
-              {isAnalyzing && validUrl && (
-                <div className="absolute inset-0 overflow-hidden">
-                  <div className="animate-gentle-scroll w-full h-[300%] opacity-30 blur-sm">
-                    <iframe
-                      src={validUrl}
-                      className="w-full h-full border-0 pointer-events-none"
-                      title="Website preview"
-                      sandbox="allow-same-origin"
-                    />
-                  </div>
-                </div>
-              )}
-              
+            <div className={`w-full h-full relative ${report?.isPreview && !user ? 'overflow-hidden' : ''}`}>
               {report?.isPreview && !user && report?.screenshot ? (
-                <div className="animate-gentle-scroll w-full relative">
-                  <img 
-                    src={report.screenshot} 
-                    alt="Website preview" 
-                    className="w-full h-auto"
-                  />
-                  {/* Overlay markers on the scrolling screenshot */}
-                  {markers.filter(m => m.layer === 'emotions' && m.emotion).map(marker => (
-                    <div
-                      key={marker.id}
-                      className="absolute -translate-x-1/2 -translate-y-1/2"
-                      style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-                    >
-                      <div className="transform scale-150 origin-center">
-                        <EmotionToken emotion={marker.emotion!} size="lg" />
+                <>
+                  {/* Scrolling background with subtle blur */}
+                  <div className="animate-gentle-scroll w-full relative blur-[2px]">
+                    <img 
+                      src={report.screenshot} 
+                      alt="Website preview" 
+                      className="w-full h-auto"
+                    />
+                    {/* Overlay markers on the scrolling screenshot */}
+                    {markers.filter(m => m.layer === 'emotions' && m.emotion).map(marker => (
+                      <div
+                        key={marker.id}
+                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                        style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                      >
+                        <div className="transform scale-150 origin-center">
+                          <EmotionToken emotion={marker.emotion!} size="lg" />
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                  
+                  {/* Centered Unlock Full Report overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[1px] z-30">
+                    <div className="bg-card rounded-2xl shadow-2xl p-8 max-w-md text-center border border-border">
+                      <Lock size={48} className="mx-auto mb-4 text-primary" />
+                      <h3 className="text-2xl font-black text-foreground mb-2">Unlock Full Report</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Sign up for free to get detailed analysis, all markers, and participant testing features!
+                      </p>
+                      <Button onClick={() => {
+                        try {
+                          localStorage.setItem('pendingAnalysis', JSON.stringify({ url: validUrl }));
+                        } catch (e) {
+                          console.warn('Could not save pending analysis to localStorage:', e);
+                        }
+                        navigate('/auth?mode=signup');
+                      }} className="w-full bg-primary hover:bg-primary/90 mb-3">
+                        Get Started Free
+                      </Button>
+                      <p className="text-xs text-muted-foreground">3 free analyses • No credit card required</p>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                </>
               ) : (
                 <div className="w-full h-full p-6 relative z-10">
                   <AnalysisCanvas 
@@ -481,37 +492,9 @@ const Index = () => {
           </div>
 
           <div className={`w-96 h-full shadow-xl z-20 bg-card border-l border-border flex-shrink-0 transition-all duration-500 ease-out ${
-            report && !isAnalyzing ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+            report && !isAnalyzing && !(report?.isPreview && !user) ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'
           }`}>
-            {report?.isPreview && !user ? (
-              <div className="h-full flex flex-col">
-                <div className="flex-1 blur-sm pointer-events-none">
-                  <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} screenshot={report?.screenshot} />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm">
-                  <div className="bg-card rounded-2xl shadow-2xl p-8 max-w-md text-center border border-border">
-                    <Lock size={48} className="mx-auto mb-4 text-primary" />
-                    <h3 className="text-2xl font-black text-foreground mb-2">Unlock Full Report</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Sign up for free to get detailed analysis, all markers, and participant testing features!
-                    </p>
-                    <Button onClick={() => {
-                      try {
-                        localStorage.setItem('pendingAnalysis', JSON.stringify({ url: validUrl }));
-                      } catch (e) {
-                        console.warn('Could not save pending analysis to localStorage:', e);
-                      }
-                      navigate('/auth?mode=signup');
-                    }} className="w-full bg-primary hover:bg-primary/90 mb-3">
-                      Get Started Free
-                    </Button>
-                    <p className="text-xs text-muted-foreground">3 free analyses • No credit card required</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} screenshot={report?.screenshot} />
-            )}
+            <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} screenshot={report?.screenshot} />
           </div>
         </div>
       </div>

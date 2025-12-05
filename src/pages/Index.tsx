@@ -138,12 +138,14 @@ const Index = () => {
       setReport(null);
       setActiveLayer('emotions');
       
-      // Preload preview screenshot
-      const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-      const img = new Image();
-      img.onload = () => setPreviewScreenshot(screenshotUrl);
-      img.onerror = () => console.warn('Preview screenshot failed to load');
-      img.src = screenshotUrl;
+      // Fetch screenshot via edge function for background preview
+      fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://mczraxqtdmyexhfxcxvp.supabase.co'}/functions/v1/analyze-website`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: targetUrl, screenshotOnly: true })
+      }).then(res => res.json()).then(data => {
+        if (data.screenshot) setPreviewScreenshot(data.screenshot);
+      }).catch(() => console.warn('Preview screenshot failed'));
 
       try {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -185,12 +187,14 @@ const Index = () => {
     setReport(null);
     setActiveLayer('emotions');
     
-    // Preload preview screenshot
-    const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-    const img = new Image();
-    img.onload = () => setPreviewScreenshot(screenshotUrl);
-    img.onerror = () => console.warn('Preview screenshot failed to load');
-    img.src = screenshotUrl;
+    // Fetch screenshot via edge function for background preview
+    fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://mczraxqtdmyexhfxcxvp.supabase.co'}/functions/v1/analyze-website`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: targetUrl, screenshotOnly: true })
+    }).then(res => res.json()).then(data => {
+      if (data.screenshot) setPreviewScreenshot(data.screenshot);
+    }).catch(() => console.warn('Preview screenshot failed'));
 
     try {
       const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -453,11 +457,6 @@ const Index = () => {
                     src={previewScreenshot} 
                     alt="" 
                     className="min-w-full w-screen h-auto"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      console.warn('Preview image failed to load');
-                      e.currentTarget.style.display = 'none';
-                    }}
                   />
                 </div>
               </div>

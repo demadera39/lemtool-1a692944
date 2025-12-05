@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Toolbar from '@/components/Toolbar';
 import AnalysisCanvas from '@/components/AnalysisCanvas';
 import ReportPanel from '@/components/ReportPanel';
@@ -20,7 +20,19 @@ import { toast } from 'sonner';
 
 const Index = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<'landing' | 'dashboard' | 'participant'>('landing');
+
+  // Handle URL query param for dashboard view
+  useEffect(() => {
+    if (searchParams.get('view') === 'dashboard') {
+      setCurrentView('dashboard');
+      // Reset analysis state when going to dashboard
+      setHasStarted(false);
+      setMarkers([]);
+      setReport(null);
+    }
+  }, [searchParams]);
   const [testProject, setTestProject] = useState<Project | null>(null);
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);

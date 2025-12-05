@@ -338,10 +338,13 @@ const Index = () => {
       <Toolbar onAddMarker={handleAddMarker} selectedEmotion={null} />
 
       <div className="flex-1 flex flex-col h-full relative">
-        <header className="h-14 bg-card border-b border-border flex items-center px-4 shadow-sm z-10 justify-between flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <img src="/lem-logo.svg" alt="LEM" className="w-6 h-6" />
-            <span className="font-bold text-foreground">LEMTOOL</span>
+        <header className="h-20 bg-card border-b border-border flex items-center px-6 shadow-sm z-10 justify-between flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <img src="/lem-logo.svg" alt="LEM" className="w-10 h-10" />
+            <div className="flex flex-col">
+              <span className="font-black text-foreground text-lg leading-tight">LEMTOOL</span>
+              <span className="text-[10px] text-muted-foreground tracking-wide">Emotional UX Analysis</span>
+            </div>
           </div>
 
           <form onSubmit={handleAnalyze} className="flex-1 max-w-xl mx-auto flex items-center gap-2">
@@ -463,7 +466,9 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="w-96 h-full shadow-xl z-20 bg-card border-l border-border flex-shrink-0">
+          <div className={`w-96 h-full shadow-xl z-20 bg-card border-l border-border flex-shrink-0 transition-all duration-500 ease-out ${
+            report && !isAnalyzing ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+          }`}>
             {report?.isPreview && !user ? (
               <div className="h-full flex flex-col">
                 <div className="flex-1 blur-sm pointer-events-none">

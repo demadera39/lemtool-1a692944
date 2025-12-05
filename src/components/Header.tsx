@@ -83,7 +83,7 @@ const Header = ({ variant = 'default' }: HeaderProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/?view=dashboard')}
                 className="text-sm"
               >
                 Dashboard

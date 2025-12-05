@@ -138,8 +138,9 @@ const Index = () => {
       setReport(null);
       setActiveLayer('emotions');
       
-      // Load preview screenshot immediately - use fullpage for scrolling effect (don't encode URL)
-      const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/5/noanimate/${targetUrl}`;
+      // Load preview screenshot immediately - use same URL format as geminiService (wait/8)
+      const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
+      console.log('Setting preview URL:', previewUrl);
       setPreviewScreenshot(previewUrl);
 
       try {
@@ -182,8 +183,9 @@ const Index = () => {
     setReport(null);
     setActiveLayer('emotions');
     
-    // Load preview screenshot immediately for logged in users too (don't encode URL)
-    const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/5/noanimate/${targetUrl}`;
+    // Load preview screenshot immediately for logged in users too (same URL as geminiService)
+    const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
+    console.log('Setting preview URL:', previewUrl);
     setPreviewScreenshot(previewUrl);
 
     try {
@@ -442,15 +444,21 @@ const Index = () => {
               {/* Scrolling background during analysis */}
               {isAnalyzing && previewScreenshot && (
                 <>
-                  <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute inset-0 overflow-hidden bg-muted">
                     <div className="animate-gentle-scroll w-full blur-[2px] opacity-80">
                       <img 
                         src={previewScreenshot} 
                         alt="Website preview" 
-                        className="w-full h-auto"
+                        className="w-full h-auto min-h-[200vh]"
+                        style={{ objectFit: 'cover', objectPosition: 'top' }}
+                        onLoad={() => console.log('Preview image loaded successfully')}
                         onError={(e) => {
-                          // Fallback if thum.io fails
-                          console.log('Preview image failed to load');
+                          console.log('Preview image failed to load, using fallback');
+                          // Try without fullpage as fallback
+                          const target = e.target as HTMLImageElement;
+                          if (!target.src.includes('crop')) {
+                            target.src = target.src.replace('maxheight/8000/fullpage/', 'crop/4000/');
+                          }
                         }}
                       />
                     </div>

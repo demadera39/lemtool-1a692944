@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Search, Sparkles, Zap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmotionToken from '@/components/EmotionToken';
+import Header from '@/components/Header';
 import { EmotionType } from '@/types';
 
 interface LandingHeroProps {
   onAnalyze: (url: string) => void;
   isAnalyzing: boolean;
-  user: { id: string; email: string; name?: string } | null;
 }
 
 // More floating emotions with varied positions and timing
@@ -28,8 +27,7 @@ const floatingEmotions = [
   { emotion: EmotionType.SATISFACTION, x: '80%', y: '82%', size: 'sm', duration: 7.2, delay: 1.8 },
 ];
 
-const LandingHero = ({ onAnalyze, isAnalyzing, user }: LandingHeroProps) => {
-  const navigate = useNavigate();
+const LandingHero = ({ onAnalyze, isAnalyzing }: LandingHeroProps) => {
   const [url, setUrl] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -170,46 +168,7 @@ const LandingHero = ({ onAnalyze, isAnalyzing, user }: LandingHeroProps) => {
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary/8 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '4s' }} />
 
-      {/* Header */}
-      <header className="relative z-10 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
-          <img src="/lem-logo.svg" alt="LEM" className="w-8 h-8" />
-          <span className="font-bold text-xl text-foreground">LEMTOOL</span>
-        </div>
-        
-        <nav className="hidden md:flex items-center gap-6">
-          <button 
-            onClick={() => navigate('/about')} 
-            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-          >
-            About
-          </button>
-          <button 
-            onClick={() => navigate('/pricing')} 
-            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-          >
-            Pricing
-          </button>
-          <button 
-            onClick={() => navigate('/support')} 
-            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-          >
-            Support
-          </button>
-        </nav>
-
-        <div className="flex items-center gap-3">
-          {user ? (
-            <Button onClick={() => navigate('/')} variant="outline" size="sm">
-              Dashboard
-            </Button>
-          ) : (
-            <Button onClick={() => navigate('/auth')} size="sm" className="bg-primary hover:bg-primary/90">
-              Sign In
-            </Button>
-          )}
-        </div>
-      </header>
+      <Header variant="transparent" />
 
       {/* Hero Content */}
       <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-6 pb-20">

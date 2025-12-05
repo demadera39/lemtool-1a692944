@@ -9,15 +9,8 @@ interface ToolbarProps {
 
 const Toolbar = ({ onAddMarker, selectedEmotion }: ToolbarProps) => {
   return (
-    <div className="w-20 bg-card border-r border-border flex flex-col items-center py-4 overflow-y-auto z-20 shadow-lg">
-      {/* Logo */}
-      <div className="mb-4 text-center flex-shrink-0 flex flex-col items-center pb-4 border-b border-border w-full">
-        <img src="/lem-logo.svg" alt="LEM" className="w-10 h-10 mb-1" />
-        <h1 className="font-black text-primary text-base tracking-tighter leading-none">LEM</h1>
-        <span className="text-[8px] font-medium text-muted-foreground tracking-wider mt-0.5">by METODIC</span>
-      </div>
-
-      <div className="flex-1 w-full flex flex-col items-center gap-3 px-2">
+    <div className="w-24 bg-card border-r border-border flex flex-col items-center pt-6 pb-4 overflow-y-auto z-20 shadow-lg">
+      <div className="flex-1 w-full flex flex-col items-center gap-3 px-3">
         {/* Positive emotions */}
         <div className="space-y-2 text-center w-full">
           <span className="text-[9px] uppercase font-bold text-primary/70 block">Positive</span>

@@ -138,16 +138,12 @@ const Index = () => {
       setReport(null);
       setActiveLayer('emotions');
       
-      // Load preview screenshot as blob URL to avoid CORS issues
+      // Load preview screenshot as blob URL (non-blocking)
       const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-      try {
-        const response = await fetch(screenshotUrl);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        setPreviewScreenshot(blobUrl);
-      } catch (e) {
-        console.warn('Preview screenshot failed:', e);
-      }
+      fetch(screenshotUrl)
+        .then(response => response.blob())
+        .then(blob => setPreviewScreenshot(URL.createObjectURL(blob)))
+        .catch(e => console.warn('Preview screenshot failed:', e));
 
       try {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -189,16 +185,12 @@ const Index = () => {
     setReport(null);
     setActiveLayer('emotions');
     
-    // Load preview screenshot as blob URL to avoid CORS issues
+    // Load preview screenshot as blob URL (non-blocking)
     const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-    try {
-      const previewResponse = await fetch(screenshotUrl);
-      const blob = await previewResponse.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      setPreviewScreenshot(blobUrl);
-    } catch (e) {
-      console.warn('Preview screenshot failed:', e);
-    }
+    fetch(screenshotUrl)
+      .then(response => response.blob())
+      .then(blob => setPreviewScreenshot(URL.createObjectURL(blob)))
+      .catch(e => console.warn('Preview screenshot failed:', e));
 
     try {
       const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -453,19 +445,22 @@ const Index = () => {
         <div className="flex-1 flex overflow-hidden relative">
           <div className="flex-1 bg-muted/50 relative flex flex-col overflow-hidden">
             <div className={`w-full h-full relative ${(report?.isPreview && !user) || isAnalyzing ? 'overflow-hidden' : ''}`}>
-              {/* Scrolling background during analysis */}
-              {isAnalyzing && previewScreenshot && (
+              {/* Analysis loading state - full screen centered */}
+              {isAnalyzing && (
                 <>
-                  <div className="absolute inset-0 overflow-hidden">
-                    <div className="animate-gentle-scroll w-full blur-[2px] opacity-80">
-                      <img 
-                        src={previewScreenshot} 
-                        alt="Website preview" 
-                        className="w-full h-auto"
-                      />
+                  {/* Scrolling background when available */}
+                  {previewScreenshot && (
+                    <div className="absolute inset-0 overflow-hidden">
+                      <div className="animate-gentle-scroll w-full blur-[2px] opacity-80">
+                        <img 
+                          src={previewScreenshot} 
+                          alt="Website preview" 
+                          className="w-full h-auto"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  {/* Loading overlay on top of scrolling background */}
+                  )}
+                  {/* Loading overlay - always centered */}
                   <div className="absolute inset-0 bg-background/30 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center">
                     <div className="bg-card rounded-3xl p-10 shadow-2xl border border-border flex flex-col items-center max-w-md">
                       <div className="relative w-28 h-28 flex items-center justify-center mb-6">

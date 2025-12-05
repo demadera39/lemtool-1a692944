@@ -109,55 +109,70 @@ const Auth = () => {
 
     setIsLoading(true);
 
-    try {
-      if (mode === 'signup') {
-        const { data: signUpData, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: name },
-            emailRedirectTo: `${window.location.origin}/`
+    // Simple retry function for network errors
+    const attemptAuth = async (retries = 2): Promise<void> => {
+      try {
+        if (mode === 'signup') {
+          const { data: signUpData, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { full_name: name },
+              emailRedirectTo: `${window.location.origin}/`
+            }
+          });
+
+          if (error) {
+            // Retry on network errors
+            if ((error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('Failed')) && retries > 0) {
+              await new Promise(r => setTimeout(r, 1000));
+              return attemptAuth(retries - 1);
+            }
+            throw error;
           }
-        });
+          
+          if (signUpData?.session) {
+            toast.success('Welcome! Your account has been created.');
+            handlePendingAnalysis(signUpData.session.user.id, email, name);
+            handlePendingPurchase();
+          } else if (signUpData?.user && !signUpData?.session) {
+            toast.success('Account created! Please check your email to verify.');
+            setMode('login');
+          }
+        } else {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
 
-        if (error) {
-          throw error;
+          if (error) {
+            // Retry on network errors
+            if ((error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('Failed')) && retries > 0) {
+              await new Promise(r => setTimeout(r, 1000));
+              return attemptAuth(retries - 1);
+            }
+            throw error;
+          }
+          
+          if (data?.user) {
+            toast.success('Welcome back!');
+            handlePendingAnalysis(data.user.id, data.user.email!, data.user.user_metadata?.full_name);
+            handlePendingPurchase();
+          }
         }
-        
-        if (signUpData?.session) {
-          toast.success('Welcome! Your account has been created.');
-          // Handle pending actions in background
-          handlePendingAnalysis(signUpData.session.user.id, email, name);
-          handlePendingPurchase();
-          // Navigation is handled by onAuthStateChange
-        } else if (signUpData?.user && !signUpData?.session) {
-          toast.success('Account created! Please check your email to verify.');
-          setMode('login');
-        }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) {
-          throw error;
-        }
-        
-        if (data?.user) {
-          toast.success('Welcome back!');
-          // Handle pending actions in background
-          handlePendingAnalysis(data.user.id, data.user.email!, data.user.user_metadata?.full_name);
-          handlePendingPurchase();
-          // Navigation is handled by onAuthStateChange
-        }
+      } catch (error: any) {
+        throw error;
       }
+    };
+
+    try {
+      await attemptAuth();
     } catch (error: any) {
       console.error('Auth error:', error);
       let message = 'Authentication failed';
       
-      if (error.message?.includes('fetch') || error.message?.includes('network')) {
-        message = 'Network error. Please check your connection and try again.';
+      if (error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('Failed')) {
+        message = 'Network error. Please wait a moment and try again.';
       } else if (error.message === 'Invalid login credentials') {
         message = 'Invalid email or password.';
       } else if (error.message?.includes('already registered')) {

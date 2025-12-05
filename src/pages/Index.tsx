@@ -138,8 +138,8 @@ const Index = () => {
       setReport(null);
       setActiveLayer('emotions');
       
-      // Load preview screenshot immediately - use fullpage for scrolling effect
-      const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/5/noanimate/${encodeURIComponent(targetUrl)}`;
+      // Load preview screenshot immediately - use fullpage for scrolling effect (don't encode URL)
+      const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/5/noanimate/${targetUrl}`;
       setPreviewScreenshot(previewUrl);
 
       try {
@@ -182,8 +182,8 @@ const Index = () => {
     setReport(null);
     setActiveLayer('emotions');
     
-    // Load preview screenshot immediately for logged in users too - use fullpage for scrolling effect
-    const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/5/noanimate/${encodeURIComponent(targetUrl)}`;
+    // Load preview screenshot immediately for logged in users too (don't encode URL)
+    const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/5/noanimate/${targetUrl}`;
     setPreviewScreenshot(previewUrl);
 
     try {

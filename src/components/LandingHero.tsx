@@ -43,7 +43,7 @@ const LandingHero = ({ onAnalyze, isAnalyzing, user }: LandingHeroProps) => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/30 relative overflow-hidden">
       {/* Example analysis preview - faded background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] opacity-[0.04]">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] opacity-[0.06]">
           <div className="relative w-full h-full rounded-2xl overflow-hidden">
             {/* Mock website preview */}
             <div className="absolute inset-0 bg-gradient-to-b from-card to-muted rounded-2xl">
@@ -69,24 +69,75 @@ const LandingHero = ({ onAnalyze, isAnalyzing, user }: LandingHeroProps) => {
                   <div className="h-3 w-4/6 bg-muted/15 rounded" />
                 </div>
               </div>
-              {/* Mock emotion markers scattered on preview */}
-              <div className="absolute top-20 left-[15%] opacity-60">
-                <EmotionToken emotion={EmotionType.JOY} size="sm" />
+
+              {/* Emotion markers with speech bubbles */}
+              <div className="absolute top-20 left-[12%] animate-float-drift" style={{ animationDelay: '0s', animationDuration: '8s' }}>
+                <div className="relative">
+                  <EmotionToken emotion={EmotionType.JOY} size="sm" />
+                  <div className="absolute -top-8 left-6 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
+                    Clear value proposition
+                  </div>
+                </div>
               </div>
-              <div className="absolute top-28 right-[20%] opacity-60">
-                <EmotionToken emotion={EmotionType.FASCINATION} size="sm" />
+              <div className="absolute top-32 right-[18%] animate-float-drift" style={{ animationDelay: '1.5s', animationDuration: '7s' }}>
+                <div className="relative">
+                  <EmotionToken emotion={EmotionType.FASCINATION} size="sm" />
+                  <div className="absolute -top-8 -left-12 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
+                    Engaging visuals
+                  </div>
+                </div>
               </div>
-              <div className="absolute top-48 left-[30%] opacity-60">
-                <EmotionToken emotion={EmotionType.DESIRE} size="sm" />
+              <div className="absolute top-52 left-[28%] animate-float-drift" style={{ animationDelay: '0.8s', animationDuration: '9s' }}>
+                <div className="relative">
+                  <EmotionToken emotion={EmotionType.DESIRE} size="sm" />
+                  <div className="absolute -top-8 left-6 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
+                    Strong CTA
+                  </div>
+                </div>
               </div>
-              <div className="absolute top-56 right-[35%] opacity-60">
-                <EmotionToken emotion={EmotionType.SATISFACTION} size="sm" />
+
+              {/* Needs markers (diamond shape) */}
+              <div className="absolute top-44 right-[32%] animate-float-drift" style={{ animationDelay: '2s', animationDuration: '7.5s' }}>
+                <div className="relative">
+                  <div className="w-5 h-5 bg-blue-500 rotate-45 rounded-sm shadow-md" />
+                  <div className="absolute -top-8 -left-8 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
+                    <span className="text-blue-500 font-semibold">Autonomy:</span> User control
+                  </div>
+                </div>
               </div>
-              <div className="absolute bottom-32 left-[25%] opacity-60">
-                <EmotionToken emotion={EmotionType.JOY} size="sm" />
+              <div className="absolute bottom-36 left-[22%] animate-float-drift" style={{ animationDelay: '1s', animationDuration: '8.5s' }}>
+                <div className="relative">
+                  <div className="w-5 h-5 bg-emerald-500 rotate-45 rounded-sm shadow-md" />
+                  <div className="absolute -top-8 left-6 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
+                    <span className="text-emerald-500 font-semibold">Competence:</span> Easy to use
+                  </div>
+                </div>
               </div>
-              <div className="absolute bottom-40 right-[28%] opacity-60">
-                <EmotionToken emotion={EmotionType.DESIRE} size="sm" />
+              <div className="absolute bottom-48 right-[25%] animate-float-drift" style={{ animationDelay: '2.5s', animationDuration: '7s' }}>
+                <div className="relative">
+                  <div className="w-5 h-5 bg-purple-500 rotate-45 rounded-sm shadow-md" />
+                  <div className="absolute -top-8 -left-10 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
+                    <span className="text-purple-500 font-semibold">Relatedness:</span> Social proof
+                  </div>
+                </div>
+              </div>
+
+              {/* Strategy markers (star shape) */}
+              <div className="absolute top-36 left-[48%] animate-float-drift" style={{ animationDelay: '0.5s', animationDuration: '9s' }}>
+                <div className="relative">
+                  <div className="text-amber-500 text-lg">★</div>
+                  <div className="absolute -top-8 left-4 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
+                    <span className="text-amber-500 font-semibold">Opportunity:</span> Add testimonials
+                  </div>
+                </div>
+              </div>
+              <div className="absolute bottom-28 left-[45%] animate-float-drift" style={{ animationDelay: '1.8s', animationDuration: '8s' }}>
+                <div className="relative">
+                  <div className="text-rose-500 text-lg">★</div>
+                  <div className="absolute -top-8 -left-6 bg-card/90 rounded-lg px-2 py-1 text-[9px] text-foreground/80 whitespace-nowrap shadow-sm border border-border/30">
+                    <span className="text-rose-500 font-semibold">Pain Point:</span> Loading speed
+                  </div>
+                </div>
               </div>
             </div>
           </div>

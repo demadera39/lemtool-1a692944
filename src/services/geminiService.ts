@@ -15,7 +15,11 @@ function generateId(): string {
 // Helper to fetch a screenshot as base64
 async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
   try {
-    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/fullpage/wait/5/noanimate/${url}`;
+    // Use maxheight parameter to capture tall pages (up to 10000px)
+    // This ensures we get the full page content for long pages like apple.com
+    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${url}`;
+    
+    console.log('Capturing screenshot with maxheight/8000:', url);
     
     const response = await fetch(screenshotServiceUrl);
     if (!response.ok) throw new Error('Screenshot fetch failed');
@@ -25,6 +29,12 @@ async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
+        // Log the image dimensions for debugging
+        const img = new Image();
+        img.onload = () => {
+          console.log(`Screenshot captured: ${img.width}x${img.height}px`);
+        };
+        img.src = base64;
         resolve(base64);
       };
       reader.readAsDataURL(blob);

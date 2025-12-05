@@ -139,7 +139,7 @@ const Index = () => {
       setActiveLayer('emotions');
       
       // Fetch full-page screenshot via thum.io for background preview (with blob URL to handle CORS)
-      const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${encodeURIComponent(targetUrl)}`;
+      const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
       fetch(screenshotUrl).then(res => res.blob()).then(blob => {
         const blobUrl = URL.createObjectURL(blob);
         setPreviewScreenshot(blobUrl);
@@ -186,7 +186,7 @@ const Index = () => {
     setActiveLayer('emotions');
     
     // Fetch full-page screenshot via thum.io for background preview (with blob URL to handle CORS)
-    const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${encodeURIComponent(targetUrl)}`;
+    const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
     fetch(screenshotUrl).then(res => res.blob()).then(blob => {
       const blobUrl = URL.createObjectURL(blob);
       setPreviewScreenshot(blobUrl);
@@ -268,7 +268,7 @@ const Index = () => {
       if (!targetUrl.match(/^https?:\/\//i)) targetUrl = 'https://' + targetUrl;
       
       // Fetch full-page screenshot via thum.io for background preview (with blob URL to handle CORS)
-      const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${encodeURIComponent(targetUrl)}`;
+      const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
       fetch(screenshotUrl).then(res => res.blob()).then(blob => {
         const blobUrl = URL.createObjectURL(blob);
         setPreviewScreenshot(blobUrl);

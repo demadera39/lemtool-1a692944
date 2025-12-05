@@ -9,74 +9,81 @@ interface ToolbarProps {
 
 const Toolbar = ({ onAddMarker, selectedEmotion }: ToolbarProps) => {
   return (
-    <div className="w-24 bg-white border-r border-gray-200 flex flex-col items-center py-6 overflow-y-auto z-20 shadow-xl scrollbar-thin scrollbar-thumb-gray-200">
-      <div className="mb-6 text-center flex-shrink-0 flex flex-col items-center">
-        <div className="mb-2">
-            <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 10C27.9086 10 10 27.9086 10 50C10 72.0914 27.9086 90 50 90C72.0914 90 90 72.0914 90 50" stroke="#F26522" strokeWidth="12" strokeLinecap="round"/>
-                <path d="M50 25C36.1929 25 25 36.1929 25 50C25 63.8071 36.1929 75 50 75C63.8071 75 75 63.8071 75 50" stroke="#555555" strokeWidth="10" strokeLinecap="round"/>
-                <path d="M50 40C44.4772 40 40 44.4772 40 50C40 55.5228 44.4772 60 50 60" stroke="#F26522" strokeWidth="8" strokeLinecap="round"/>
-            </svg>
-        </div>
-        <h1 className="font-black text-lem-orange text-xl tracking-tighter leading-none">LEM</h1>
-        <span className="text-[9px] font-bold text-gray-500 tracking-wider mt-1">by METODIC</span>
+    <div className="w-20 bg-card border-r border-border flex flex-col items-center py-4 overflow-y-auto z-20 shadow-lg">
+      {/* Logo */}
+      <div className="mb-4 text-center flex-shrink-0 flex flex-col items-center pb-4 border-b border-border w-full">
+        <img src="/lem-logo.svg" alt="LEM" className="w-10 h-10 mb-1" />
+        <h1 className="font-black text-primary text-base tracking-tighter leading-none">LEM</h1>
+        <span className="text-[8px] font-medium text-muted-foreground tracking-wider mt-0.5">by METODIC</span>
       </div>
 
-      <div className="flex-1 w-full flex flex-col items-center gap-4">
-        <div className="space-y-3 text-center w-full">
-          <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Positive</span>
+      <div className="flex-1 w-full flex flex-col items-center gap-3 px-2">
+        {/* Positive emotions */}
+        <div className="space-y-2 text-center w-full">
+          <span className="text-[9px] uppercase font-bold text-primary/70 block">Positive</span>
           {Object.values(EMOTIONS).filter(e => e.category === 'Positive').map((def) => (
             <div key={def.id} className="flex flex-col items-center group relative">
-               <div className="absolute left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+              <div className="absolute left-full ml-2 bg-foreground text-background text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-lg">
                 {def.label}
               </div>
-              <div className={`transition-all ${selectedEmotion === def.id ? 'ring-4 ring-lem-orange ring-offset-2 rounded-full scale-110' : ''}`}>
-                <EmotionToken
-                  emotion={def.id}
-                  size="sm"
-                  onClick={() => onAddMarker(def.id)}
-                />
-              </div>
+              <button
+                onClick={() => onAddMarker(def.id)}
+                className={`transition-all rounded-full p-0.5 ${
+                  selectedEmotion === def.id 
+                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-card scale-110' 
+                    : 'hover:scale-105'
+                }`}
+              >
+                <EmotionToken emotion={def.id} size="sm" />
+              </button>
             </div>
           ))}
         </div>
 
-        <div className="w-12 h-px bg-gray-200 my-1"></div>
+        <div className="w-10 h-px bg-border my-1"></div>
 
-        <div className="space-y-3 text-center w-full">
-          <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Neutral</span>
+        {/* Neutral emotions */}
+        <div className="space-y-2 text-center w-full">
+          <span className="text-[9px] uppercase font-bold text-muted-foreground block">Neutral</span>
           {Object.values(EMOTIONS).filter(e => e.category === 'Neutral').map((def) => (
             <div key={def.id} className="flex flex-col items-center group relative">
-               <div className="absolute left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+              <div className="absolute left-full ml-2 bg-foreground text-background text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-lg">
                 {def.label}
               </div>
-              <div className={`transition-all ${selectedEmotion === def.id ? 'ring-4 ring-lem-orange ring-offset-2 rounded-full scale-110' : ''}`}>
-                <EmotionToken
-                  emotion={def.id}
-                  size="sm"
-                  onClick={() => onAddMarker(def.id)}
-                />
-              </div>
+              <button
+                onClick={() => onAddMarker(def.id)}
+                className={`transition-all rounded-full p-0.5 ${
+                  selectedEmotion === def.id 
+                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-card scale-110' 
+                    : 'hover:scale-105'
+                }`}
+              >
+                <EmotionToken emotion={def.id} size="sm" />
+              </button>
             </div>
           ))}
         </div>
 
-        <div className="w-12 h-px bg-gray-200 my-1"></div>
+        <div className="w-10 h-px bg-border my-1"></div>
 
-        <div className="space-y-3 text-center w-full">
-          <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Negative</span>
+        {/* Negative emotions */}
+        <div className="space-y-2 text-center w-full">
+          <span className="text-[9px] uppercase font-bold text-destructive/70 block">Negative</span>
           {Object.values(EMOTIONS).filter(e => e.category === 'Negative').map((def) => (
             <div key={def.id} className="flex flex-col items-center group relative">
-               <div className="absolute left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+              <div className="absolute left-full ml-2 bg-foreground text-background text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-lg">
                 {def.label}
               </div>
-              <div className={`transition-all ${selectedEmotion === def.id ? 'ring-4 ring-lem-orange ring-offset-2 rounded-full scale-110' : ''}`}>
-                <EmotionToken
-                  emotion={def.id}
-                  size="sm"
-                  onClick={() => onAddMarker(def.id)}
-                />
-              </div>
+              <button
+                onClick={() => onAddMarker(def.id)}
+                className={`transition-all rounded-full p-0.5 ${
+                  selectedEmotion === def.id 
+                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-card scale-110' 
+                    : 'hover:scale-105'
+                }`}
+              >
+                <EmotionToken emotion={def.id} size="sm" />
+              </button>
             </div>
           ))}
         </div>

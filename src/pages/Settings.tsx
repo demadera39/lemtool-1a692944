@@ -4,9 +4,10 @@ import { supabase } from '@/services/supabaseService';
 import { getUserRole } from '@/services/userRoleService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Crown, Sparkles, ArrowLeft, ExternalLink, CheckCircle2, Settings as SettingsIcon } from 'lucide-react';
+import { Crown, Sparkles, ExternalLink, CheckCircle2, Settings as SettingsIcon, Package, Zap, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AccountManagementModal } from '@/components/AccountManagementModal';
+import Header from '@/components/Header';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -115,144 +116,145 @@ const Settings = () => {
   const isPremium = userRole?.role === 'premium' || userRole?.role === 'admin' || userRole?.subscription_status === 'active';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50/30 relative overflow-hidden">
-      {/* Decorative emotion stickers */}
-      <div className="absolute top-4 right-4 w-16 h-16 opacity-20 rotate-12">
-        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" alt="Joy" className="w-full h-full" />
-      </div>
-      <div className="absolute bottom-10 left-10 w-14 h-14 opacity-15 -rotate-12">
-        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/satisfaction.png" alt="Satisfaction" className="w-full h-full" />
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
       
-      <div className="max-w-4xl mx-auto px-6 py-12 relative z-10">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/')}
-          className="mb-6"
-        >
-          <ArrowLeft size={18} className="mr-2" />
-          Back to Dashboard
-        </Button>
-
-        <div className="mb-8">
-          <h1 className="text-3xl font-black text-gray-900 mb-2">Account Settings</h1>
-          <p className="text-gray-600">{user?.email}</p>
+      <main className="max-w-4xl mx-auto px-6 py-12">
+        <div className="mb-10">
+          <h1 className="text-4xl font-black text-foreground mb-2">Account Settings</h1>
+          <p className="text-muted-foreground text-lg">{user?.email}</p>
         </div>
-        <Card className="p-6 mb-6 bg-white/80 backdrop-blur-sm">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Usage Statistics</h3>
-          <div className="space-y-3">
-            {isPremium && (
-              <>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Monthly Analyses</span>
-                  <span className="font-bold text-gray-900">
-                    {userRole?.monthly_analyses_used || 0} / {userRole?.monthly_analyses_limit || 10}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-500">Resets monthly</div>
-              </>
-            )}
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Pack Analyses</span>
-              <span className="font-bold text-gray-900">
-                {userRole?.pack_analyses_remaining || 0}
-              </span>
+
+        {/* Usage Stats Card */}
+        <Card className="p-6 mb-6 bg-card border-border">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <BarChart3 className="text-primary" size={24} />
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Account Type</span>
-              <span className="font-bold text-gray-900">{isPremium ? 'Premium' : 'Free Trial'}</span>
+            <h3 className="text-xl font-bold text-foreground">Usage Statistics</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {isPremium && (
+              <div className="bg-muted/50 rounded-xl p-4">
+                <p className="text-sm text-muted-foreground mb-1">Monthly Analyses</p>
+                <p className="text-3xl font-black text-foreground">
+                  {userRole?.monthly_analyses_used || 0}
+                  <span className="text-lg text-muted-foreground font-normal">/{userRole?.monthly_analyses_limit || 10}</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">Resets monthly</p>
+              </div>
+            )}
+            <div className="bg-muted/50 rounded-xl p-4">
+              <p className="text-sm text-muted-foreground mb-1">Pack Analyses</p>
+              <p className="text-3xl font-black text-primary">
+                {userRole?.pack_analyses_remaining || 0}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Never expires</p>
+            </div>
+            <div className="bg-muted/50 rounded-xl p-4">
+              <p className="text-sm text-muted-foreground mb-1">Account Type</p>
+              <p className="text-xl font-bold text-foreground flex items-center gap-2">
+                {isPremium ? (
+                  <>
+                    <Crown className="text-primary" size={20} />
+                    Premium
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="text-muted-foreground" size={20} />
+                    Free Trial
+                  </>
+                )}
+              </p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-6 mb-6 bg-white/80 backdrop-blur-sm">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Account Management</h3>
-          <p className="text-gray-600 mb-4">Change your password or delete your account.</p>
+        {/* Account Management Card */}
+        <Card className="p-6 mb-6 bg-card border-border">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-muted rounded-lg">
+              <SettingsIcon className="text-muted-foreground" size={24} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-foreground">Account Management</h3>
+              <p className="text-sm text-muted-foreground">Change your password or delete your account</p>
+            </div>
+          </div>
           <Button
             variant="outline"
             onClick={() => setAccountModalOpen(true)}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <SettingsIcon size={18} className="mr-2" />
             Manage Account
           </Button>
         </Card>
 
-        <Card className="p-8 mb-6 bg-white/80 backdrop-blur-sm">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                {isPremium ? (
-                  <>
-                    <Crown className="text-lem-orange" size={28} />
-                    Premium Plan
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="text-gray-400" size={28} />
-                    Free Trial
-                  </>
-                )}
-              </h2>
-              {isPremium ? (
-                <p className="text-gray-600">
-                  10 analyses per month • Participant testing • Priority support
-                  {userRole?.subscription_end && (
-                    <span className="block text-sm text-gray-500 mt-1">
-                      Renews on {new Date(userRole.subscription_end).toLocaleDateString()}
-                    </span>
-                  )}
-                </p>
-              ) : (
-                <p className="text-gray-600">
-                  Limited features • No monthly analyses
-                </p>
-              )}
-            </div>
+        {/* Subscription Card */}
+        <Card className="p-8 mb-6 bg-card border-border overflow-hidden relative">
           {isPremium && (
-            <div className="absolute -top-2 -right-2 w-8 h-8">
-              <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" alt="Premium" className="w-full h-full" />
+            <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-bl-lg">
+              ACTIVE
             </div>
           )}
+          
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-xl ${isPremium ? 'bg-primary/10' : 'bg-muted'}`}>
+                {isPremium ? (
+                  <Crown className="text-primary" size={32} />
+                ) : (
+                  <Sparkles className="text-muted-foreground" size={32} />
+                )}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">
+                  {isPremium ? 'Starter Plan' : 'Free Trial'}
+                </h2>
+                {isPremium ? (
+                  <p className="text-muted-foreground">
+                    10 analyses/month • Participant testing • Priority support
+                    {userRole?.subscription_end && (
+                      <span className="block text-sm mt-1">
+                        Renews on {new Date(userRole.subscription_end).toLocaleDateString()}
+                      </span>
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">Limited features • No monthly analyses</p>
+                )}
+              </div>
+            </div>
           </div>
 
           {!isPremium && (
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-lg p-6 mb-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <Crown className="text-lem-orange" size={24} />
-                Upgrade to Premium
+            <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent rounded-xl p-6 mb-6 border border-primary/20">
+              <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <Zap className="text-primary" size={24} />
+                Upgrade to Starter
               </h3>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-center gap-2 text-gray-700">
-                  <CheckCircle2 size={18} className="text-lem-orange flex-shrink-0" />
-                  10 emotion analyses per month (renews monthly)
-                </li>
-                <li className="flex items-center gap-2 text-gray-700">
-                  <CheckCircle2 size={18} className="text-lem-orange flex-shrink-0" />
-                  Participant testing with unlimited sessions
-                </li>
-                <li className="flex items-center gap-2 text-gray-700">
-                  <CheckCircle2 size={18} className="text-lem-orange flex-shrink-0" />
-                  Advanced reporting and analytics
-                </li>
-                <li className="flex items-center gap-2 text-gray-700">
-                  <CheckCircle2 size={18} className="text-lem-orange flex-shrink-0" />
-                  Priority email support
-                </li>
+              <ul className="space-y-3 mb-6">
+                {['10 emotion analyses per month', 'Participant testing with unlimited sessions', 'Advanced reporting and analytics', 'Priority email support'].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-foreground">
+                    <CheckCircle2 size={18} className="text-primary flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-3xl font-black text-gray-900">$9.99</span>
-                <span className="text-gray-600">/month</span>
+              <div className="flex items-baseline gap-2 mb-6">
+                <span className="text-4xl font-black text-foreground">€9.99</span>
+                <span className="text-muted-foreground">/month</span>
               </div>
               <Button
-                  onClick={handleUpgrade}
-                  disabled={loading}
-                  className="w-full bg-lem-orange hover:bg-lem-orange-dark"
-                  size="lg"
-                >
-                  {loading ? 'Processing...' : 'Upgrade Now'}
-                  <ExternalLink size={18} className="ml-2" />
-                </Button>
+                onClick={handleUpgrade}
+                disabled={loading}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                size="lg"
+              >
+                {loading ? 'Processing...' : 'Upgrade Now'}
+                <ExternalLink size={18} className="ml-2" />
+              </Button>
             </div>
           )}
 
@@ -269,55 +271,69 @@ const Settings = () => {
           )}
         </Card>
 
-        <Card className="p-8 mb-6 bg-white/80 backdrop-blur-sm">
-          <h3 className="text-xl font-bold text-gray-900 mb-3">Analysis Packs</h3>
-          <p className="text-gray-600 mb-6">Need more analyses? Purchase packs that never expire and roll over.</p>
-          
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-lg p-6 mb-4 border-2 border-lem-orange">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h4 className="font-bold text-gray-900 text-lg">Pro Pack - 20 Analyses</h4>
-                <p className="text-sm text-gray-600">Never expires • Rolls over • Best value</p>
-                {isPremium && (
-                  <div className="mt-1 inline-block bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
-                    20% STARTER DISCOUNT
-                  </div>
-                )}
-              </div>
-              <div className="text-right">
-                {isPremium ? (
-                  <>
-                    <div className="text-sm text-gray-500 line-through">€24.99</div>
-                    <div className="text-2xl font-black text-lem-orange">€19.99</div>
-                  </>
-                ) : (
-                  <div className="text-2xl font-black text-gray-900">€24.99</div>
-                )}
-                <div className="text-xs text-gray-500">one-time</div>
-              </div>
+        {/* Analysis Packs Card */}
+        <Card className="p-8 bg-card border-border">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Package className="text-primary" size={24} />
             </div>
-            <Button
+            <div>
+              <h3 className="text-xl font-bold text-foreground">Analysis Packs</h3>
+              <p className="text-sm text-muted-foreground">Purchase packs that never expire</p>
+            </div>
+          </div>
+          
+          <div className="grid gap-4">
+            {/* Pro Pack */}
+            <div className="bg-gradient-to-br from-primary/5 to-accent rounded-xl p-6 border-2 border-primary">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-bold text-foreground text-lg">Pro Pack</h4>
+                    <span className="bg-primary/20 text-primary text-xs font-bold px-2 py-0.5 rounded">BEST VALUE</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">20 Analyses • Never expires</p>
+                  {isPremium && (
+                    <div className="mt-2 inline-block bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
+                      20% STARTER DISCOUNT
+                    </div>
+                  )}
+                </div>
+                <div className="text-right">
+                  {isPremium ? (
+                    <>
+                      <div className="text-sm text-muted-foreground line-through">€24.99</div>
+                      <div className="text-3xl font-black text-primary">€19.99</div>
+                    </>
+                  ) : (
+                    <div className="text-3xl font-black text-foreground">€24.99</div>
+                  )}
+                  <div className="text-xs text-muted-foreground">one-time</div>
+                </div>
+              </div>
+              <Button
                 onClick={() => handlePurchasePack('pro')}
                 disabled={loading}
-                className="w-full bg-lem-orange hover:bg-lem-orange-dark"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {loading ? 'Processing...' : isPremium ? 'Buy Pro Pack (20% off)' : 'Buy Pro Pack'}
                 <ExternalLink size={18} className="ml-2" />
               </Button>
-          </div>
-
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-lg p-6 mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h4 className="font-bold text-gray-900 text-lg">Top-up - 5 Analyses</h4>
-                <p className="text-sm text-gray-600">Never expires • Rolls over • Works with any plan</p>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-black text-gray-900">€4.99</div>
-                <div className="text-xs text-gray-500">one-time</div>
-              </div>
             </div>
-            <Button
+
+            {/* Top-up Pack */}
+            <div className="bg-muted/30 rounded-xl p-6 border border-border">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="font-bold text-foreground text-lg">Top-up Pack</h4>
+                  <p className="text-sm text-muted-foreground">5 Analyses • Never expires</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-black text-foreground">€4.99</div>
+                  <div className="text-xs text-muted-foreground">one-time</div>
+                </div>
+              </div>
+              <Button
                 onClick={() => handlePurchasePack('topup')}
                 disabled={loading}
                 variant="outline"
@@ -326,10 +342,11 @@ const Settings = () => {
                 {loading ? 'Processing...' : 'Buy Pack'}
                 <ExternalLink size={18} className="ml-2" />
               </Button>
+            </div>
           </div>
 
           {userRole?.pack_analyses_remaining > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+            <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4 text-center">
               <p className="text-sm text-green-800">
                 You have <span className="font-bold">{userRole.pack_analyses_remaining}</span> pack analyses available
               </p>
@@ -342,7 +359,7 @@ const Settings = () => {
           onOpenChange={setAccountModalOpen}
           userEmail={user?.email || ''}
         />
-      </div>
+      </main>
     </div>
   );
 };

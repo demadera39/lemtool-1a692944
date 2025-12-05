@@ -226,27 +226,18 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
-      {/* Decorative emotion stickers */}
-      <div className="absolute top-20 right-20 w-16 h-16 opacity-10 rotate-12">
-        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" alt="Joy" className="w-full h-full" />
-      </div>
-      <div className="absolute bottom-20 left-20 w-14 h-14 opacity-10 -rotate-12">
-        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" alt="Interest" className="w-full h-full" />
-      </div>
-      
-      <header className="bg-white border-b border-gray-200 shadow-sm relative z-10">
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="bg-card border-b border-border sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M50 10C27.9086 10 10 27.9086 10 50C10 72.0914 27.9086 90 50 90C72.0914 90 90 72.0914 90 50" stroke="#F26522" strokeWidth="12" strokeLinecap="round"/>
-              <path d="M50 25C36.1929 25 25 36.1929 25 50C25 63.8071 36.1929 75 50 75C63.8071 75 75 63.8071 75 50" stroke="#555555" strokeWidth="10" strokeLinecap="round"/>
-              <path d="M50 40C44.4772 40 40 44.4772 40 50C40 55.5228 44.4772 60 50 60" stroke="#F26522" strokeWidth="8" strokeLinecap="round"/>
-            </svg>
+            <button onClick={() => window.location.href = '/'} className="hover:opacity-80 transition-opacity">
+              <img src="/lem-logo.svg" alt="LEM" className="w-10 h-10" />
+            </button>
             <div>
-              <h1 className="text-xl font-black text-gray-900">LEMtool Dashboard</h1>
+              <h1 className="text-xl font-black text-foreground">Dashboard</h1>
               <div className="flex items-center gap-2">
-                <p className="text-sm text-gray-600">{user.email}</p>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
                 {isAdmin ? (
                   <span className="flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                     <Crown size={12} />Unlimited
@@ -254,13 +245,13 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                 ) : (
                   <>
                     {remainingAnalyses.monthly >= 0 && (
-                      <span className="flex items-center gap-1 text-xs font-bold text-lem-orange bg-orange-50 px-2 py-0.5 rounded-full">
-                        <Crown size={12} />{remainingAnalyses.monthly}/{remainingAnalyses.monthlyLimit} monthly
+                      <span className="flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                        {remainingAnalyses.monthly}/{remainingAnalyses.monthlyLimit} monthly
                       </span>
                     )}
                     {remainingAnalyses.pack > 0 && (
-                      <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
-                        {remainingAnalyses.pack} pack
+                      <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                        +{remainingAnalyses.pack} pack
                       </span>
                     )}
                   </>
@@ -270,31 +261,30 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
           </div>
           <div className="flex gap-3">
             {isAdmin && (
-              <Button variant="outline" onClick={() => window.location.href = '/admin'} className="border-primary text-primary hover:bg-primary hover:text-white">
+              <Button variant="outline" onClick={() => window.location.href = '/admin'} className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                 <Shield size={18} className="mr-2" />
-                Admin Panel
+                Admin
               </Button>
             )}
-            <Button onClick={onNewAnalysis} className="bg-lem-orange hover:bg-lem-orange-dark">
+            <Button onClick={onNewAnalysis} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <Plus size={18} className="mr-2" />
               New Analysis
             </Button>
             <Button variant="outline" onClick={() => window.location.href = '/settings'}>
               Settings
             </Button>
-            <Button variant="outline" onClick={onLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
-              <LogOut size={18} className="mr-2" />
-              Sign Out
+            <Button variant="outline" onClick={onLogout} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+              <LogOut size={18} />
             </Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Projects</h2>
-            <p className="text-gray-600">Manage your website analyses and participant testing sessions</p>
+            <h2 className="text-3xl font-bold text-foreground mb-1">Your Projects</h2>
+            <p className="text-muted-foreground">Manage your website analyses and participant testing sessions</p>
           </div>
           <Button
             variant="outline"
@@ -308,16 +298,18 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
         </div>
 
         {projects.length === 0 ? (
-          <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-            <Layout size={48} className="mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
+          <div className="bg-card rounded-2xl border-2 border-dashed border-border p-16 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center">
+              <Layout size={32} className="text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-bold text-foreground mb-2">
               {showArchived ? 'No archived projects' : 'No projects yet'}
             </h3>
-            <p className="text-gray-600 mb-6">
-              {showArchived ? 'Archive projects to see them here' : 'Create your first analysis to get started'}
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+              {showArchived ? 'Archive projects to see them here' : 'Create your first analysis to discover the emotional impact of any website'}
             </p>
             {!showArchived && (
-              <Button onClick={onNewAnalysis} className="bg-lem-orange hover:bg-lem-orange-dark">
+              <Button onClick={onNewAnalysis} className="bg-primary hover:bg-primary/90 text-primary-foreground" size="lg">
                 <Plus size={18} className="mr-2" />
                 New Analysis
               </Button>
@@ -326,36 +318,36 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <div key={project.id} className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                {project.screenshot && (
-                  <img
-                    src={project.screenshot}
-                    alt={project.url}
-                    className="w-full h-40 object-cover object-top"
-                  />
-                )}
-                <div className="p-4">
-                  <h3 className="font-bold text-gray-900 mb-1 truncate">{project.url}</h3>
+              <div key={project.id} className="bg-card rounded-xl border border-border shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 overflow-hidden group">
+                <div className="relative">
+                  {project.screenshot && (
+                    <img
+                      src={project.screenshot}
+                      alt={project.url}
+                      className="w-full h-44 object-cover object-top group-hover:scale-[1.02] transition-transform duration-300"
+                    />
+                  )}
+                  <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg">
+                    <span className="font-black text-primary text-sm">{project.report.overallScore}/100</span>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <h3 className="font-bold text-foreground mb-2 truncate text-lg">{project.url}</h3>
                   <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="secondary" className="text-xs flex items-center gap-1 bg-orange-100 text-orange-700">
+                    <Badge variant="secondary" className="text-xs flex items-center gap-1 bg-primary/10 text-primary">
                       <Bot size={10} />
-                      Tested by AI
+                      AI Analysis
                     </Badge>
                     {projectSessions[project.id] > 0 && (
-                      <Badge variant="secondary" className="text-xs flex items-center gap-1 bg-blue-100 text-blue-700">
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1 bg-blue-500/10 text-blue-600">
                         <Users size={10} />
-                        {projectSessions[project.id]} {projectSessions[project.id] === 1 ? 'Human' : 'Humans'}
+                        {projectSessions[project.id]} {projectSessions[project.id] === 1 ? 'Participant' : 'Participants'}
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={12} />
-                      {new Date(project.created_at).toLocaleDateString()}
-                    </span>
-                    <span className="font-bold text-lem-orange">
-                      {project.report.overallScore}/100
-                    </span>
+                  <div className="flex items-center text-xs text-muted-foreground mb-4">
+                    <Calendar size={12} className="mr-1" />
+                    {new Date(project.created_at).toLocaleDateString()}
                   </div>
                   <div className="flex flex-col gap-2">
                     <div className="flex gap-2">
@@ -381,47 +373,37 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                     </div>
                     <Button
                       size="sm"
-                      className="w-full bg-lem-orange hover:bg-lem-orange-dark"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                       onClick={() => {
                         setSelectedProject(project);
                         setViewMode('fullreport');
                       }}
                     >
                       <FileText size={14} className="mr-2" />
-                      Full Report & PDF
+                      Full Report
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => copyTestLink(project.id)}
-                    >
-                      <ExternalLink size={14} className="mr-2" />
-                      Copy Participant Link
-                    </Button>
-                    <div className="flex gap-2 mt-2">
+                    <div className="flex gap-2">
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="flex-1 text-gray-600 hover:text-gray-900"
-                        onClick={() => handleArchiveProject(project)}
+                        variant="ghost"
+                        className="flex-1 text-muted-foreground hover:text-foreground"
+                        onClick={() => copyTestLink(project.id)}
                       >
-                        {project.archived ? (
-                          <>
-                            <ArchiveRestore size={14} className="mr-1" />
-                            Restore
-                          </>
-                        ) : (
-                          <>
-                            <Archive size={14} className="mr-1" />
-                            Archive
-                          </>
-                        )}
+                        <ExternalLink size={14} className="mr-1" />
+                        Share
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        variant="ghost"
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={() => handleArchiveProject(project)}
+                      >
+                        {project.archived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-muted-foreground hover:text-destructive"
                         onClick={() => {
                           setProjectToDelete(project);
                           setDeleteDialogOpen(true);
@@ -451,7 +433,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteProject}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
               Delete
             </AlertDialogAction>

@@ -138,13 +138,11 @@ const Index = () => {
       setReport(null);
       setActiveLayer('emotions');
       
-      // Fetch screenshot via edge function for background preview
-      fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://mczraxqtdmyexhfxcxvp.supabase.co'}/functions/v1/analyze-website`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: targetUrl, screenshotOnly: true })
-      }).then(res => res.json()).then(data => {
-        if (data.screenshot) setPreviewScreenshot(data.screenshot);
+      // Fetch full-page screenshot via thum.io for background preview (with blob URL to handle CORS)
+      const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${encodeURIComponent(targetUrl)}`;
+      fetch(screenshotUrl).then(res => res.blob()).then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        setPreviewScreenshot(blobUrl);
       }).catch(() => console.warn('Preview screenshot failed'));
 
       try {
@@ -187,13 +185,11 @@ const Index = () => {
     setReport(null);
     setActiveLayer('emotions');
     
-    // Fetch screenshot via edge function for background preview
-    fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://mczraxqtdmyexhfxcxvp.supabase.co'}/functions/v1/analyze-website`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: targetUrl, screenshotOnly: true })
-    }).then(res => res.json()).then(data => {
-      if (data.screenshot) setPreviewScreenshot(data.screenshot);
+    // Fetch full-page screenshot via thum.io for background preview (with blob URL to handle CORS)
+    const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${encodeURIComponent(targetUrl)}`;
+    fetch(screenshotUrl).then(res => res.blob()).then(blob => {
+      const blobUrl = URL.createObjectURL(blob);
+      setPreviewScreenshot(blobUrl);
     }).catch(() => console.warn('Preview screenshot failed'));
 
     try {
@@ -271,13 +267,11 @@ const Index = () => {
       let targetUrl = inputUrl.trim();
       if (!targetUrl.match(/^https?:\/\//i)) targetUrl = 'https://' + targetUrl;
       
-      // Fetch full-page screenshot via edge function for background preview
-      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-website`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: targetUrl, screenshotOnly: true })
-      }).then(res => res.json()).then(data => {
-        if (data.screenshot) setPreviewScreenshot(data.screenshot);
+      // Fetch full-page screenshot via thum.io for background preview (with blob URL to handle CORS)
+      const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${encodeURIComponent(targetUrl)}`;
+      fetch(screenshotUrl).then(res => res.blob()).then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        setPreviewScreenshot(blobUrl);
       }).catch(() => console.warn('Preview screenshot failed'));
       
       if (!user) {

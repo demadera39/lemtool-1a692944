@@ -138,9 +138,12 @@ const Index = () => {
       setReport(null);
       setActiveLayer('emotions');
       
-      // Set preview screenshot URL directly (thum.io doesn't support CORS fetch)
+      // Preload preview screenshot
       const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-      setPreviewScreenshot(screenshotUrl);
+      const img = new Image();
+      img.onload = () => setPreviewScreenshot(screenshotUrl);
+      img.onerror = () => console.warn('Preview screenshot failed to load');
+      img.src = screenshotUrl;
 
       try {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -182,9 +185,12 @@ const Index = () => {
     setReport(null);
     setActiveLayer('emotions');
     
-    // Set preview screenshot URL directly (thum.io doesn't support CORS fetch)
+    // Preload preview screenshot
     const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-    setPreviewScreenshot(screenshotUrl);
+    const img = new Image();
+    img.onload = () => setPreviewScreenshot(screenshotUrl);
+    img.onerror = () => console.warn('Preview screenshot failed to load');
+    img.src = screenshotUrl;
 
     try {
       const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -445,8 +451,13 @@ const Index = () => {
                 <div className="animate-gentle-scroll min-w-full blur-[2px] opacity-80">
                   <img 
                     src={previewScreenshot} 
-                    alt="Website preview" 
+                    alt="" 
                     className="min-w-full w-screen h-auto"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      console.warn('Preview image failed to load');
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 </div>
               </div>

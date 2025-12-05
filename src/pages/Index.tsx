@@ -444,22 +444,12 @@ const Index = () => {
               {/* Scrolling background during analysis */}
               {isAnalyzing && previewScreenshot && (
                 <>
-                  <div className="absolute inset-0 overflow-hidden bg-muted">
+                  <div className="absolute inset-0 overflow-hidden">
                     <div className="animate-gentle-scroll w-full blur-[2px] opacity-80">
                       <img 
                         src={previewScreenshot} 
                         alt="Website preview" 
-                        className="w-full h-auto min-h-[200vh]"
-                        style={{ objectFit: 'cover', objectPosition: 'top' }}
-                        onLoad={() => console.log('Preview image loaded successfully')}
-                        onError={(e) => {
-                          console.log('Preview image failed to load, using fallback');
-                          // Try without fullpage as fallback
-                          const target = e.target as HTMLImageElement;
-                          if (!target.src.includes('crop')) {
-                            target.src = target.src.replace('maxheight/8000/fullpage/', 'crop/4000/');
-                          }
-                        }}
+                        className="w-full h-auto"
                       />
                     </div>
                   </div>

@@ -138,12 +138,9 @@ const Index = () => {
       setReport(null);
       setActiveLayer('emotions');
       
-      // Load preview screenshot as blob URL (non-blocking)
+      // Set preview screenshot URL directly (thum.io doesn't support CORS fetch)
       const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-      fetch(screenshotUrl)
-        .then(response => response.blob())
-        .then(blob => setPreviewScreenshot(URL.createObjectURL(blob)))
-        .catch(e => console.warn('Preview screenshot failed:', e));
+      setPreviewScreenshot(screenshotUrl);
 
       try {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -185,12 +182,9 @@ const Index = () => {
     setReport(null);
     setActiveLayer('emotions');
     
-    // Load preview screenshot as blob URL (non-blocking)
+    // Set preview screenshot URL directly (thum.io doesn't support CORS fetch)
     const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-    fetch(screenshotUrl)
-      .then(response => response.blob())
-      .then(blob => setPreviewScreenshot(URL.createObjectURL(blob)))
-      .catch(e => console.warn('Preview screenshot failed:', e));
+    setPreviewScreenshot(screenshotUrl);
 
     try {
       const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -442,58 +436,59 @@ const Index = () => {
           </div>
         )}
 
+        {/* Full-screen analysis loading overlay */}
+        {isAnalyzing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Scrolling background when available */}
+            {previewScreenshot && (
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="animate-gentle-scroll w-full blur-[2px] opacity-80">
+                  <img 
+                    src={previewScreenshot} 
+                    alt="Website preview" 
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              </div>
+            )}
+            {/* Semi-transparent overlay */}
+            <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px]" />
+            {/* Loading card */}
+            <div className="relative z-10 bg-card rounded-3xl p-10 shadow-2xl border border-border flex flex-col items-center max-w-md">
+              <div className="relative w-28 h-28 flex items-center justify-center mb-6">
+                <svg className="absolute inset-0 w-full h-full z-10 -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" stroke="hsl(var(--muted))" strokeWidth="6" fill="none" />
+                  <circle 
+                    cx="50" cy="50" r="40" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth="6" 
+                    fill="none" 
+                    strokeLinecap="round"
+                    style={{ 
+                      strokeDasharray: 251.2, 
+                      strokeDashoffset: 251.2 - (analysisProgress / 100) * 251.2, 
+                      transition: 'stroke-dashoffset 0.5s ease' 
+                    }}
+                  />
+                </svg>
+                <div className="relative z-20 transform scale-90">
+                  <EmotionToken emotion={EmotionType.JOY} size="lg" />
+                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="font-bold text-xl text-foreground mb-2">Analyzing emotions...</h3>
+                <p className="text-sm text-muted-foreground mb-4">Analyzing UX & emotional triggers</p>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-2xl font-black text-primary">{analysisProgress}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 flex overflow-hidden relative">
           <div className="flex-1 bg-muted/50 relative flex flex-col overflow-hidden">
-            <div className={`w-full h-full relative ${(report?.isPreview && !user) || isAnalyzing ? 'overflow-hidden' : ''}`}>
-              {/* Analysis loading state - full screen centered */}
-              {isAnalyzing && (
-                <>
-                  {/* Scrolling background when available */}
-                  {previewScreenshot && (
-                    <div className="absolute inset-0 overflow-hidden">
-                      <div className="animate-gentle-scroll w-full blur-[2px] opacity-80">
-                        <img 
-                          src={previewScreenshot} 
-                          alt="Website preview" 
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {/* Loading overlay - always centered */}
-                  <div className="absolute inset-0 bg-background/30 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center">
-                    <div className="bg-card rounded-3xl p-10 shadow-2xl border border-border flex flex-col items-center max-w-md">
-                      <div className="relative w-28 h-28 flex items-center justify-center mb-6">
-                        <svg className="absolute inset-0 w-full h-full z-10 -rotate-90" viewBox="0 0 100 100">
-                          <circle cx="50" cy="50" r="40" stroke="hsl(var(--muted))" strokeWidth="6" fill="none" />
-                          <circle 
-                            cx="50" cy="50" r="40" 
-                            stroke="hsl(var(--primary))" 
-                            strokeWidth="6" 
-                            fill="none" 
-                            strokeLinecap="round"
-                            style={{ 
-                              strokeDasharray: 251.2, 
-                              strokeDashoffset: 251.2 - (analysisProgress / 100) * 251.2, 
-                              transition: 'stroke-dashoffset 0.5s ease' 
-                            }}
-                          />
-                        </svg>
-                        <div className="relative z-20 transform scale-90">
-                          <EmotionToken emotion={EmotionType.JOY} size="lg" />
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="font-bold text-xl text-foreground mb-2">Analyzing emotions...</h3>
-                        <p className="text-sm text-muted-foreground mb-4">Analyzing UX & emotional triggers</p>
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-2xl font-black text-primary">{analysisProgress}%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
+            <div className={`w-full h-full relative ${(report?.isPreview && !user) ? 'overflow-hidden' : ''}`}>
               
               {report?.isPreview && !user && report?.screenshot ? (
                 <>

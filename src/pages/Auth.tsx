@@ -22,6 +22,31 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // User is already logged in, redirect to home
+        navigate('/', { replace: true });
+      } else {
+        setCheckingSession(false);
+      }
+    };
+    
+    checkSession();
+
+    // Also listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        navigate('/', { replace: true });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const handlePendingAnalysis = async (userId: string, userEmail: string, userName?: string) => {
     const pendingAnalysisStr = localStorage.getItem('pendingAnalysis');
@@ -155,6 +180,18 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking session
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/30 flex items-center justify-center">
+        <div className="text-center">
+          <img src="/lem-logo.svg" alt="LEM" className="w-16 h-16 mx-auto mb-4 animate-pulse" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/30 flex items-center justify-center p-4 relative overflow-hidden">

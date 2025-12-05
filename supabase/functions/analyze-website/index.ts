@@ -312,22 +312,20 @@ serve(async (req) => {
       }
       
       try {
-        // Get full page screenshot with response_type=image to get actual image data
-        const apiFlashUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${API_FLASH_KEY}&url=${encodeURIComponent(url)}&format=png&width=1280&full_page=true&quality=70&delay=3`;
-        console.log("Fetching full-page screenshot...");
+        // Get full page screenshot - use response_type=json to get URL instead of binary data
+        // This avoids base64 encoding issues with large images
+        const apiFlashUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${API_FLASH_KEY}&url=${encodeURIComponent(url)}&format=png&width=1280&full_page=true&quality=70&delay=3&response_type=json`;
+        console.log("Fetching full-page screenshot URL...");
         const screenshotResponse = await fetch(apiFlashUrl);
         
         if (!screenshotResponse.ok) {
           throw new Error(`API Flash returned ${screenshotResponse.status}`);
         }
         
-        // Convert to base64
-        const imageBuffer = await screenshotResponse.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-        const dataUrl = `data:image/png;base64,${base64}`;
+        const screenshotData = await screenshotResponse.json();
+        console.log("Full-page screenshot captured successfully:", screenshotData.url ? "URL received" : "No URL");
         
-        console.log("Full-page screenshot captured successfully");
-        return new Response(JSON.stringify({ screenshot: dataUrl }), {
+        return new Response(JSON.stringify({ screenshot: screenshotData.url || null }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       } catch (e) {

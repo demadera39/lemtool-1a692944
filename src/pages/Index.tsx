@@ -258,7 +258,7 @@ const Index = () => {
         onLogout={async () => { await signOut(); setUser(null); setCurrentView('landing'); }}
         onNavigateToAnalysis={() => {}}
         onNavigateToTest={(p) => { setTestProject(p); setCurrentView('participant'); }}
-        onNewAnalysis={() => { setHasStarted(false); setReport(null); setMarkers([]); }}
+        onNewAnalysis={() => { setCurrentView('landing'); setHasStarted(false); setReport(null); setMarkers([]); setUrl(''); setValidUrl(''); setPreviewScreenshot(null); }}
       />
     );
   }

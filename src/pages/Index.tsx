@@ -47,10 +47,13 @@ const Index = () => {
           isAdmin: false
         };
         setUser(newUser);
+        // Show dashboard for logged-in users
+        setCurrentView('dashboard');
         setTimeout(() => checkSubscription(session.user.id), 0);
         loadUserRole(session.user.id);
       } else {
         setUser(null);
+        setCurrentView('landing');
         setRemainingAnalyses({ monthly: 0, pack: 0, monthlyLimit: 10 });
       }
     });
@@ -64,6 +67,8 @@ const Index = () => {
           isAdmin: false
         };
         setUser(newUser);
+        // Show dashboard for logged-in users
+        setCurrentView('dashboard');
         setTimeout(() => checkSubscription(session.user.id), 0);
         loadUserRole(session.user.id);
       }

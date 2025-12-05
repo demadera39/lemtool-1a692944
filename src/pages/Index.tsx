@@ -321,7 +321,7 @@ const Index = () => {
       <>
         <PremiumUpgradeModal open={showPremiumUpgradeModal} onOpenChange={setShowPremiumUpgradeModal} />
         <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
-        <LandingHero onAnalyze={handleHeroAnalyze} isAnalyzing={isAnalyzing} user={user} />
+        <LandingHero onAnalyze={handleHeroAnalyze} isAnalyzing={isAnalyzing} />
       </>
     );
   }

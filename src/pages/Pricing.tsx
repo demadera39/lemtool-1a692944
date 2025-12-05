@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Check, ArrowLeft } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { toast } from 'sonner';
+import Header from '@/components/Header';
+import EmotionToken from '@/components/EmotionToken';
+import { EmotionType } from '@/types';
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -16,13 +19,11 @@ const Pricing = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // Store intended purchase and redirect to auth
         localStorage.setItem('pendingPurchase', type);
         navigate('/auth');
         return;
       }
 
-      // User is logged in, proceed to checkout
       await initiateCheckout(type);
     } catch (error) {
       console.error('Purchase error:', error);
@@ -49,64 +50,61 @@ const Pricing = () => {
       toast.error('Failed to start checkout');
     }
   };
-  return <div className="min-h-screen bg-gradient-to-br from-orange-50 to-gray-50 relative overflow-hidden">
-      {/* Decorative emotion stickers using real emotion images */}
-      <div className="absolute top-10 right-10 w-20 h-20 opacity-20 rotate-12">
-        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/joy.png" alt="Joy" className="w-full h-full" />
-      </div>
-      <div className="absolute bottom-20 left-10 w-16 h-16 opacity-15 -rotate-12">
-        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/interest.png" alt="Interest" className="w-full h-full" />
-      </div>
-      <div className="absolute top-1/3 left-1/4 w-12 h-12 opacity-10">
-        <img src="https://zuuapuzwnghgdkskkvhc.supabase.co/storage/v1/object/public/LEMemotions/satisfaction.png" alt="Satisfaction" className="w-full h-full" />
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/30 relative overflow-hidden">
+      {/* Floating emotions background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 right-[10%] opacity-10 animate-float-drift" style={{ animationDuration: '7s' }}>
+          <EmotionToken emotion={EmotionType.JOY} size="lg" />
+        </div>
+        <div className="absolute bottom-32 left-[8%] opacity-10 animate-float-drift" style={{ animationDelay: '2s', animationDuration: '8s' }}>
+          <EmotionToken emotion={EmotionType.SATISFACTION} size="lg" />
+        </div>
+        <div className="absolute top-1/3 left-[5%] opacity-10 animate-float-drift" style={{ animationDelay: '1s', animationDuration: '6s' }}>
+          <EmotionToken emotion={EmotionType.FASCINATION} size="lg" />
+        </div>
       </div>
       
-      <header className="bg-white border-b border-gray-200 shadow-sm relative z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            <ArrowLeft size={18} className="mr-2" />
-            Back to LEMtool
-          </Button>
-        </div>
-      </header>
+      <Header />
 
-      <main className="max-w-6xl mx-auto px-6 py-16">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-black text-gray-900 mb-4">
+      <main className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+        <div className="text-center mb-16 animate-fade-in">
+          <h1 className="text-5xl font-black text-foreground mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-muted-foreground">
             Choose a monthly plan or buy one-time packs that never expire
           </p>
         </div>
 
         <div className="grid md:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {/* Free Tier */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
+          <div className="bg-card rounded-2xl border-2 border-border p-8 shadow-lg animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 mb-2">Free</h2>
+              <h2 className="text-2xl font-black text-foreground mb-2">Free</h2>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-gray-900">€0</span>
+                <span className="text-5xl font-black text-foreground">€0</span>
               </div>
-              <p className="text-gray-500 text-sm mt-1">One-time only</p>
+              <p className="text-muted-foreground text-sm mt-1">One-time only</p>
             </div>
 
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700"><strong>3 analyses</strong> to try the tool</span>
+                <span className="text-foreground/80"><strong>3 analyses</strong> to try</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">AI emotion markers</span>
+                <span className="text-foreground/80">AI emotion markers</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">Full analysis reports</span>
+                <span className="text-foreground/80">Full analysis reports</span>
               </li>
               <li className="flex items-start gap-3">
-                <Check size={20} className="text-gray-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-400">No participant testing</span>
+                <Check size={20} className="text-muted-foreground flex-shrink-0 mt-0.5" />
+                <span className="text-muted-foreground">No participant testing</span>
               </li>
             </ul>
 
@@ -116,50 +114,46 @@ const Pricing = () => {
           </div>
 
           {/* Starter Pack */}
-          <div className="bg-gradient-to-br from-lem-orange to-orange-600 rounded-2xl border-2 border-lem-orange p-8 shadow-2xl relative">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-1 rounded-full text-sm font-bold text-lem-orange border-2 border-lem-orange">
+          <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl border-2 border-primary p-8 shadow-2xl relative animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-card px-4 py-1 rounded-full text-sm font-bold text-primary border-2 border-primary">
               Most Popular
             </div>
 
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-white mb-2">Starter</h2>
+              <h2 className="text-2xl font-black text-primary-foreground mb-2">Starter</h2>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-white">€9.99</span>
-                <span className="text-orange-100 text-lg">/month</span>
+                <span className="text-5xl font-black text-primary-foreground">€9.99</span>
+                <span className="text-primary-foreground/70 text-lg">/month</span>
               </div>
-              <p className="text-orange-100 text-sm mt-1">Best value • €1.00/analysis</p>
+              <p className="text-primary-foreground/70 text-sm mt-1">Best value • €1.00/analysis</p>
             </div>
 
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
-                <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium"><strong>10 analyses/month</strong></span>
+                <Check size={20} className="text-primary-foreground flex-shrink-0 mt-0.5" />
+                <span className="text-primary-foreground font-medium"><strong>10 analyses/month</strong></span>
               </li>
               <li className="flex items-start gap-3">
-                <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium">AI emotion markers</span>
+                <Check size={20} className="text-primary-foreground flex-shrink-0 mt-0.5" />
+                <span className="text-primary-foreground font-medium">AI emotion markers</span>
               </li>
               <li className="flex items-start gap-3">
-                <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium">Full analysis reports</span>
+                <Check size={20} className="text-primary-foreground flex-shrink-0 mt-0.5" />
+                <span className="text-primary-foreground font-medium">Full analysis reports</span>
               </li>
               <li className="flex items-start gap-3">
-                <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium">Participant testing</span>
+                <Check size={20} className="text-primary-foreground flex-shrink-0 mt-0.5" />
+                <span className="text-primary-foreground font-medium">Participant testing</span>
               </li>
               <li className="flex items-start gap-3">
-                <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium">20% off Pro Packs</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check size={20} className="text-white flex-shrink-0 mt-0.5" />
-                <span className="text-white font-medium">AI vs Human comparison</span>
+                <Check size={20} className="text-primary-foreground flex-shrink-0 mt-0.5" />
+                <span className="text-primary-foreground font-medium">20% off Pro Packs</span>
               </li>
             </ul>
 
             <Button 
               onClick={() => handlePurchase('starter')} 
-              className="w-full bg-white text-lem-orange hover:bg-gray-50"
+              className="w-full bg-card text-primary hover:bg-card/90"
               disabled={isLoading}
             >
               {isLoading ? 'Loading...' : 'Start Subscription'}
@@ -167,38 +161,37 @@ const Pricing = () => {
           </div>
 
           {/* Pro Pack */}
-          <div className="bg-white rounded-2xl border-2 border-lem-orange p-8 shadow-lg">
+          <div className="bg-card rounded-2xl border-2 border-primary/50 p-8 shadow-lg animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 mb-2">Pro Pack</h2>
+              <h2 className="text-2xl font-black text-foreground mb-2">Pro Pack</h2>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-gray-900">€24.99</span>
+                <span className="text-5xl font-black text-foreground">€24.99</span>
               </div>
-              <p className="text-gray-500 text-sm mt-1">20 analyses • Never expire</p>
+              <p className="text-muted-foreground text-sm mt-1">20 analyses • Never expire</p>
             </div>
 
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700"><strong>20 analyses</strong> one-time</span>
+                <span className="text-foreground/80"><strong>20 analyses</strong> one-time</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">Great for bulk projects</span>
+                <span className="text-foreground/80">Great for bulk projects</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">All premium features</span>
+                <span className="text-foreground/80">All premium features</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">No recurring charges</span>
+                <span className="text-foreground/80">No recurring charges</span>
               </li>
             </ul>
 
             <Button 
               onClick={() => handlePurchase('pro')} 
-              variant="default" 
-              className="w-full"
+              className="w-full bg-primary hover:bg-primary/90"
               disabled={isLoading}
             >
               {isLoading ? 'Loading...' : 'Buy Pro Pack'}
@@ -206,31 +199,31 @@ const Pricing = () => {
           </div>
 
           {/* Top-up Pack */}
-          <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 shadow-lg">
+          <div className="bg-card rounded-2xl border-2 border-border p-8 shadow-lg animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-gray-900 mb-2">Top-up</h2>
+              <h2 className="text-2xl font-black text-foreground mb-2">Top-up</h2>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-gray-900">€4.99</span>
+                <span className="text-5xl font-black text-foreground">€4.99</span>
               </div>
-              <p className="text-gray-500 text-sm mt-1">5 analyses • Never expire</p>
+              <p className="text-muted-foreground text-sm mt-1">5 analyses • Never expire</p>
             </div>
 
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700"><strong>5 analyses</strong> one-time</span>
+                <span className="text-foreground/80"><strong>5 analyses</strong> one-time</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">Perfect for occasional use</span>
+                <span className="text-foreground/80">Perfect for occasional use</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">All premium features</span>
+                <span className="text-foreground/80">All premium features</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">Stack with other packs</span>
+                <span className="text-foreground/80">Stack with other packs</span>
               </li>
             </ul>
 
@@ -245,38 +238,40 @@ const Pricing = () => {
           </div>
         </div>
 
-        <div className="mt-16 text-center">
-          <h3 className="text-2xl font-black text-gray-900 mb-8">
+        <div className="mt-16 text-center animate-fade-in" style={{ animationDelay: '0.5s' }}>
+          <h3 className="text-2xl font-black text-foreground mb-8">
             Frequently Asked Questions
           </h3>
           <div className="max-w-2xl mx-auto space-y-6 text-left">
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <h4 className="font-bold text-gray-900 mb-2">
+            <div className="bg-card rounded-lg p-6 border border-border">
+              <h4 className="font-bold text-foreground mb-2">
                 What's the difference between Starter and packs?
               </h4>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Starter is a monthly subscription (€9.99/month for 10 analyses, best value at €1.00 each). Pro Pack and Top-up packs are one-time purchases that never expire—buy once, use anytime.
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <h4 className="font-bold text-gray-900 mb-2">
+            <div className="bg-card rounded-lg p-6 border border-border">
+              <h4 className="font-bold text-foreground mb-2">
                 Can I buy multiple packs?
               </h4>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Yes! All one-time packs (Pro Pack and Top-up) stack together and never expire. Use them at your own pace.
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <h4 className="font-bold text-gray-900 mb-2">
+            <div className="bg-card rounded-lg p-6 border border-border">
+              <h4 className="font-bold text-foreground mb-2">
                 How does participant testing work?
               </h4>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Premium users can generate invite links for participants to place emotion markers and provide feedback on your UI, which you can then compare with AI insights.
               </p>
             </div>
           </div>
         </div>
       </main>
-    </div>;
+    </div>
+  );
 };
+
 export default Pricing;

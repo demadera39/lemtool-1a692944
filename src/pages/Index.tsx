@@ -138,10 +138,16 @@ const Index = () => {
       setReport(null);
       setActiveLayer('emotions');
       
-      // Load preview screenshot immediately - use same URL format as geminiService (wait/8)
-      const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-      console.log('Setting preview URL:', previewUrl);
-      setPreviewScreenshot(previewUrl);
+      // Load preview screenshot as blob URL to avoid CORS issues
+      const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
+      try {
+        const response = await fetch(screenshotUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        setPreviewScreenshot(blobUrl);
+      } catch (e) {
+        console.warn('Preview screenshot failed:', e);
+      }
 
       try {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
@@ -183,10 +189,16 @@ const Index = () => {
     setReport(null);
     setActiveLayer('emotions');
     
-    // Load preview screenshot immediately for logged in users too (same URL as geminiService)
-    const previewUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
-    console.log('Setting preview URL:', previewUrl);
-    setPreviewScreenshot(previewUrl);
+    // Load preview screenshot as blob URL to avoid CORS issues
+    const screenshotUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${targetUrl}`;
+    try {
+      const previewResponse = await fetch(screenshotUrl);
+      const blob = await previewResponse.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      setPreviewScreenshot(blobUrl);
+    } catch (e) {
+      console.warn('Preview screenshot failed:', e);
+    }
 
     try {
       const result = await analyzeWebsite(targetUrl, (progress, message) => {

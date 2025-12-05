@@ -39,7 +39,7 @@ const Index = () => {
   const [showPremiumUpgradeModal, setShowPremiumUpgradeModal] = useState(false);
   const [userRole, setUserRole] = useState<'free' | 'premium' | 'admin' | null>(null);
 
-  // Smooth progress interpolation effect
+  // Smooth progress simulation - keeps moving even without updates
   useEffect(() => {
     if (!isAnalyzing) {
       setDisplayProgress(0);
@@ -49,13 +49,33 @@ const Index = () => {
     
     const interval = setInterval(() => {
       setDisplayProgress(prev => {
-        // Gradually approach target, but never exceed it
-        if (prev >= targetProgress) return prev;
-        // Move 1-2% per tick for smooth animation
-        const step = Math.max(1, (targetProgress - prev) * 0.1);
-        return Math.min(prev + step, targetProgress);
+        // If we've reached 100, stop
+        if (prev >= 100) return 100;
+        
+        // If target is 100 (analysis complete), quickly reach it
+        if (targetProgress >= 100) {
+          return Math.min(prev + 5, 100);
+        }
+        
+        // Simulate continuous progress that slows down as it gets higher
+        // This creates a natural "almost done but taking longer" feel
+        const maxSimulated = 95; // Never exceed 95% through simulation
+        const baseSpeed = 0.3; // Base speed per 200ms tick
+        
+        // Slow down as we get higher
+        const slowdownFactor = 1 - (prev / 150); // More slowdown as progress increases
+        const simulatedStep = baseSpeed * Math.max(0.1, slowdownFactor);
+        
+        // If target is ahead, move faster toward it
+        if (targetProgress > prev) {
+          const catchUpStep = (targetProgress - prev) * 0.15;
+          return Math.min(prev + Math.max(simulatedStep, catchUpStep), maxSimulated);
+        }
+        
+        // Otherwise just creep forward slowly
+        return Math.min(prev + simulatedStep, maxSimulated);
       });
-    }, 100);
+    }, 200);
     
     return () => clearInterval(interval);
   }, [isAnalyzing, targetProgress]);

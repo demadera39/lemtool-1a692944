@@ -75,6 +75,22 @@ const Auth = () => {
     }
   };
 
+  const retryWithBackoff = async <T,>(
+    fn: () => Promise<T>,
+    retries = 2,
+    delay = 1000
+  ): Promise<T> => {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (retries > 0 && error.message?.includes('fetch')) {
+        await new Promise(r => setTimeout(r, delay));
+        return retryWithBackoff(fn, retries - 1, delay * 2);
+      }
+      throw error;
+    }
+  };
+
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -86,18 +102,20 @@ const Auth = () => {
 
     try {
       if (mode === 'signup') {
-        const { data: signUpData, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: name },
-            emailRedirectTo: `${window.location.origin}/`
-          }
-        });
+        const { data: signUpData, error } = await retryWithBackoff(() =>
+          supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { full_name: name },
+              emailRedirectTo: `${window.location.origin}/`
+            }
+          })
+        );
 
         if (error) throw error;
         
-        if (signUpData.session) {
+        if (signUpData?.session) {
           toast.success('Welcome! Your account has been created.');
           await handlePendingAnalysis(signUpData.session.user.id, email, name);
           await handlePendingPurchase();
@@ -109,16 +127,17 @@ const Auth = () => {
           setMode('login');
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+        const { data, error } = await retryWithBackoff(() =>
+          supabase.auth.signInWithPassword({
+            email,
+            password
+          })
+        );
 
         if (error) throw error;
         
-        if (data.user) {
+        if (data?.user) {
           toast.success('Welcome back!');
-          // Handle pending actions in background, don't block navigation
           handlePendingAnalysis(data.user.id, data.user.email!, data.user.user_metadata?.full_name);
           handlePendingPurchase();
           navigate('/');
@@ -128,9 +147,10 @@ const Auth = () => {
       console.error('Auth error:', error);
       const message = error.message?.includes('fetch') 
         ? 'Network error. Please check your connection and try again.'
+        : error.message === 'Invalid login credentials'
+        ? 'Invalid email or password.'
         : error.message || 'Authentication failed';
       toast.error(message);
-      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }

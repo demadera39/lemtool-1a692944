@@ -439,20 +439,20 @@ const Index = () => {
         {/* Full-screen analysis loading overlay */}
         {isAnalyzing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Scrolling background when available */}
+            {/* Full-width scrolling background */}
             {previewScreenshot && (
               <div className="absolute inset-0 overflow-hidden">
-                <div className="animate-gentle-scroll w-full blur-[2px] opacity-80">
+                <div className="animate-gentle-scroll min-w-full blur-[2px] opacity-80">
                   <img 
                     src={previewScreenshot} 
                     alt="Website preview" 
-                    className="w-full h-auto object-cover"
+                    className="min-w-full w-screen h-auto"
                   />
                 </div>
               </div>
             )}
             {/* Semi-transparent overlay */}
-            <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px]" />
+            <div className="absolute inset-0 bg-background/30" />
             {/* Loading card */}
             <div className="relative z-10 bg-card rounded-3xl p-10 shadow-2xl border border-border flex flex-col items-center max-w-md">
               <div className="relative w-28 h-28 flex items-center justify-center mb-6">

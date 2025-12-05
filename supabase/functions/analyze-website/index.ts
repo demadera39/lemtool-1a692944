@@ -305,17 +305,29 @@ serve(async (req) => {
       const API_FLASH_KEY = Deno.env.get("API_FLASH_KEY");
       
       if (!API_FLASH_KEY) {
+        console.log("No API_FLASH_KEY, returning null screenshot");
         return new Response(JSON.stringify({ screenshot: null }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
       
       try {
-        const apiFlashUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${API_FLASH_KEY}&url=${encodeURIComponent(url)}&format=png&width=1280&height=800&quality=80&response_type=json`;
+        // Get full page screenshot with response_type=image to get actual image data
+        const apiFlashUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${API_FLASH_KEY}&url=${encodeURIComponent(url)}&format=png&width=1280&full_page=true&quality=70&delay=3`;
+        console.log("Fetching full-page screenshot...");
         const screenshotResponse = await fetch(apiFlashUrl);
-        const screenshotData = await screenshotResponse.json();
         
-        return new Response(JSON.stringify({ screenshot: screenshotData.url || null }), {
+        if (!screenshotResponse.ok) {
+          throw new Error(`API Flash returned ${screenshotResponse.status}`);
+        }
+        
+        // Convert to base64
+        const imageBuffer = await screenshotResponse.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+        const dataUrl = `data:image/png;base64,${base64}`;
+        
+        console.log("Full-page screenshot captured successfully");
+        return new Response(JSON.stringify({ screenshot: dataUrl }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       } catch (e) {

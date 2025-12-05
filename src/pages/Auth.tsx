@@ -109,26 +109,28 @@ const Auth = () => {
           setMode('login');
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
 
         if (error) throw error;
         
-        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
-        if (loggedInUser) {
-          await handlePendingAnalysis(loggedInUser.id, loggedInUser.email!, loggedInUser.user_metadata?.full_name);
-        }
-        
-        toast.success('Welcome back!');
-        await handlePendingPurchase();
-        if (!localStorage.getItem('pendingPurchase')) {
+        if (data.user) {
+          toast.success('Welcome back!');
+          // Handle pending actions in background, don't block navigation
+          handlePendingAnalysis(data.user.id, data.user.email!, data.user.user_metadata?.full_name);
+          handlePendingPurchase();
           navigate('/');
         }
       }
     } catch (error: any) {
-      toast.error(error.message || 'Authentication failed');
+      console.error('Auth error:', error);
+      const message = error.message?.includes('fetch') 
+        ? 'Network error. Please check your connection and try again.'
+        : error.message || 'Authentication failed';
+      toast.error(message);
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }

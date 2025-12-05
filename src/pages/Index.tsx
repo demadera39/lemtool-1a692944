@@ -24,7 +24,8 @@ const Index = () => {
   const [testProject, setTestProject] = useState<Project | null>(null);
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [targetProgress, setTargetProgress] = useState(0);
+  const [displayProgress, setDisplayProgress] = useState(0);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [report, setReport] = useState<any>(null);
   const [hasStarted, setHasStarted] = useState(false);
@@ -37,6 +38,27 @@ const Index = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPremiumUpgradeModal, setShowPremiumUpgradeModal] = useState(false);
   const [userRole, setUserRole] = useState<'free' | 'premium' | 'admin' | null>(null);
+
+  // Smooth progress interpolation effect
+  useEffect(() => {
+    if (!isAnalyzing) {
+      setDisplayProgress(0);
+      setTargetProgress(0);
+      return;
+    }
+    
+    const interval = setInterval(() => {
+      setDisplayProgress(prev => {
+        // Gradually approach target, but never exceed it
+        if (prev >= targetProgress) return prev;
+        // Move 1-2% per tick for smooth animation
+        const step = Math.max(1, (targetProgress - prev) * 0.1);
+        return Math.min(prev + step, targetProgress);
+      });
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, [isAnalyzing, targetProgress]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -133,7 +155,7 @@ const Index = () => {
       setValidUrl(targetUrl);
       setHasStarted(true);
       setIsAnalyzing(true);
-      setAnalysisProgress(0);
+      setTargetProgress(0);
       setMarkers([]);
       setReport(null);
       setActiveLayer('emotions');
@@ -147,7 +169,7 @@ const Index = () => {
 
       try {
         const result = await analyzeWebsite(targetUrl, (progress, message) => {
-          setAnalysisProgress(progress);
+          setTargetProgress(progress);
         });
         // Keep more emotion markers for preview display (teaser showing richness of analysis)
         const emotionMarkers = result.markers.filter(m => m.layer === 'emotions' && m.emotion).slice(0, 25);
@@ -180,7 +202,7 @@ const Index = () => {
     setValidUrl(targetUrl);
     setHasStarted(true);
     setIsAnalyzing(true);
-    setAnalysisProgress(0);
+    setTargetProgress(0);
     setMarkers([]);
     setReport(null);
     setActiveLayer('emotions');
@@ -194,7 +216,7 @@ const Index = () => {
 
     try {
       const result = await analyzeWebsite(targetUrl, (progress, message) => {
-        setAnalysisProgress(progress);
+        setTargetProgress(progress);
       });
       setMarkers(result.markers);
       setReport(result.report);
@@ -280,13 +302,13 @@ const Index = () => {
         setValidUrl(targetUrl);
         setHasStarted(true);
         setIsAnalyzing(true);
-        setAnalysisProgress(0);
+        setTargetProgress(0);
         setMarkers([]);
         setReport(null);
         setActiveLayer('emotions');
 
         analyzeWebsite(targetUrl, (progress) => {
-          setAnalysisProgress(progress);
+          setTargetProgress(progress);
         }).then(result => {
           const emotionMarkers = result.markers.filter(m => m.layer === 'emotions' && m.emotion).slice(0, 25);
           setMarkers(emotionMarkers);
@@ -316,13 +338,13 @@ const Index = () => {
         setValidUrl(targetUrl);
         setHasStarted(true);
         setIsAnalyzing(true);
-        setAnalysisProgress(0);
+        setTargetProgress(0);
         setMarkers([]);
         setReport(null);
         setActiveLayer('emotions');
 
         analyzeWebsite(targetUrl, (progress) => {
-          setAnalysisProgress(progress);
+          setTargetProgress(progress);
         }).then(async result => {
           setMarkers(result.markers);
           setReport(result.report);
@@ -475,7 +497,7 @@ const Index = () => {
                     strokeLinecap="round"
                     style={{ 
                       strokeDasharray: 251.2, 
-                      strokeDashoffset: 251.2 - (analysisProgress / 100) * 251.2, 
+                      strokeDashoffset: 251.2 - (displayProgress / 100) * 251.2, 
                       transition: 'stroke-dashoffset 0.5s ease' 
                     }}
                   />
@@ -488,7 +510,7 @@ const Index = () => {
                 <h3 className="font-bold text-xl text-foreground mb-2">Analyzing emotions...</h3>
                 <p className="text-sm text-muted-foreground mb-4">Analyzing UX & emotional triggers</p>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-2xl font-black text-primary">{analysisProgress}%</span>
+                  <span className="text-2xl font-black text-primary">{Math.round(displayProgress)}%</span>
                 </div>
               </div>
             </div>
@@ -558,7 +580,7 @@ const Index = () => {
                     activeLayer={activeLayer} 
                     setActiveLayer={setActiveLayer} 
                     screenshot={report?.screenshot}
-                    analysisProgress={analysisProgress}
+                    analysisProgress={displayProgress}
                   />
                 </div>
               )}

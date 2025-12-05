@@ -271,9 +271,14 @@ const Index = () => {
       let targetUrl = inputUrl.trim();
       if (!targetUrl.match(/^https?:\/\//i)) targetUrl = 'https://' + targetUrl;
       
-      // Load preview screenshot immediately
-      const previewUrl = `https://image.thum.io/get/width/1200/crop/2000/maxAge/0/${encodeURIComponent(targetUrl)}`;
-      setPreviewScreenshot(previewUrl);
+      // Fetch full-page screenshot via edge function for background preview
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-website`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: targetUrl, screenshotOnly: true })
+      }).then(res => res.json()).then(data => {
+        if (data.screenshot) setPreviewScreenshot(data.screenshot);
+      }).catch(() => console.warn('Preview screenshot failed'));
       
       if (!user) {
         // Anonymous preview mode

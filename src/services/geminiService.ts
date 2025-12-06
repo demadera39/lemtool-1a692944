@@ -15,11 +15,11 @@ function generateId(): string {
 // Helper to fetch a screenshot as base64
 async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
   try {
-    // Use maxheight parameter to capture tall pages (up to 10000px)
-    // This ensures we get the full page content for long pages like apple.com
-    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/maxheight/8000/fullpage/wait/8/noanimate/${url}`;
+    // Use maxheight parameter to capture very tall pages (up to 15000px)
+    // Increased wait time to 12 seconds for heavy sites like apple.com
+    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/maxheight/15000/fullpage/wait/12/noanimate/${url}`;
     
-    console.log('Capturing screenshot with maxheight/8000:', url);
+    console.log('Capturing full-page screenshot with maxheight/15000:', url);
     
     const response = await fetch(screenshotServiceUrl);
     if (!response.ok) throw new Error('Screenshot fetch failed');
@@ -33,6 +33,10 @@ async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
         const img = new Image();
         img.onload = () => {
           console.log(`Screenshot captured: ${img.width}x${img.height}px`);
+          // Warn if page seems truncated (less than 2000px for known long pages)
+          if (img.height < 2000) {
+            console.warn('Screenshot may be truncated - height is under 2000px');
+          }
         };
         img.src = base64;
         resolve(base64);

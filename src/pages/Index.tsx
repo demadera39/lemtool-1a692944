@@ -13,7 +13,7 @@ import { Marker, EmotionType, User, LayerType, Project } from '@/types';
 import { analyzeWebsite } from '@/services/geminiService';
 import { supabase, signOut, createProject, getProjectById, ensureProfile } from '@/services/supabaseService';
 import { getUserRole, canCreateAnalysis, incrementAnalysisCount, getRemainingAnalyses } from '@/services/userRoleService';
-import { Search, AlertCircle, X, Lock, User as UserIcon, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { Search, AlertCircle, X, Lock, User as UserIcon, LogOut, Settings as SettingsIcon, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -50,6 +50,7 @@ const Index = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPremiumUpgradeModal, setShowPremiumUpgradeModal] = useState(false);
   const [userRole, setUserRole] = useState<'free' | 'premium' | 'admin' | null>(null);
+  const [reportPanelOpen, setReportPanelOpen] = useState(true);
 
   // Smooth progress simulation - keeps moving even without updates
   useEffect(() => {
@@ -632,10 +633,37 @@ const Index = () => {
             </div>
           </div>
 
-          <div className={`w-96 h-full shadow-xl z-20 bg-card border-l border-border flex-shrink-0 transition-all duration-500 ease-out ${
-            report && !isAnalyzing && !(report?.isPreview && !user) ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'
+          {/* Report Panel Toggle Button - Fixed when panel is closed */}
+          {report && !isAnalyzing && !(report?.isPreview && !user) && !reportPanelOpen && (
+            <button 
+              onClick={() => setReportPanelOpen(true)}
+              className="fixed right-4 top-1/2 -translate-y-1/2 z-30 bg-card border border-border rounded-l-xl p-3 shadow-lg hover:bg-muted transition-colors"
+              title="Open Report Panel"
+            >
+              <PanelRightClose size={20} className="text-foreground" />
+            </button>
+          )}
+
+          {/* Slide-in Report Panel - Wider */}
+          <div className={`h-full shadow-2xl z-20 bg-card border-l border-border flex-shrink-0 transition-all duration-300 ease-out ${
+            report && !isAnalyzing && !(report?.isPreview && !user) && reportPanelOpen 
+              ? 'w-[480px] translate-x-0 opacity-100' 
+              : 'w-0 translate-x-full opacity-0 pointer-events-none overflow-hidden'
           }`}>
-            <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} screenshot={report?.screenshot} />
+            {/* Panel Header with Close Button */}
+            <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+              <span className="font-bold text-foreground">Analysis Report</span>
+              <button 
+                onClick={() => setReportPanelOpen(false)}
+                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                title="Close Report Panel"
+              >
+                <PanelRightOpen size={18} />
+              </button>
+            </div>
+            <div className="h-[calc(100%-53px)] overflow-hidden">
+              <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} screenshot={report?.screenshot} />
+            </div>
           </div>
         </div>
       </div>

@@ -74,10 +74,6 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
   return (
     <div className="h-full flex flex-col overflow-hidden bg-card">
       <div className="p-5 border-b border-border flex-shrink-0">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="text-primary" size={20} />
-          <h2 className="text-xl font-bold text-foreground">Analysis Report</h2>
-        </div>
         {currentUrl && (
           <p className="text-xs text-muted-foreground truncate mb-4 bg-muted px-3 py-1.5 rounded-lg">{currentUrl}</p>
         )}

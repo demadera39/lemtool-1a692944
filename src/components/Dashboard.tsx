@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Project, TestSession } from '../types';
-import { getProjects, getProjectSessions, deleteProject, archiveProject, getProjectFull } from '../services/supabaseService';
+import { getProjects, getProjectSessions, deleteProject, archiveProject, getProjectFull, getProjectSessionCounts } from '../services/supabaseService';
 import { getRemainingAnalyses, getUserRole } from '../services/userRoleService';
 import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown, FileText, Trash2, Archive, ArchiveRestore, Bot, Shield } from 'lucide-react';
 import { Button } from './ui/button';
@@ -78,18 +78,11 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
       setProjects(data);
       setIsLoadingProjects(false);
       
-      // Load session counts in background (don't block UI)
-      const sessionCounts: Record<string, number> = {};
-      Promise.all(
-        data.map(async (project) => {
-          try {
-            const sessions = await getProjectSessions(project.id);
-            sessionCounts[project.id] = sessions.length;
-          } catch (e) {
-            sessionCounts[project.id] = 0;
-          }
-        })
-      ).then(() => setProjectSessions(sessionCounts));
+      // Load all session counts in one query (much faster than per-project)
+      if (data.length > 0) {
+        const counts = await getProjectSessionCounts(data.map(p => p.id));
+        setProjectSessions(counts);
+      }
     } catch (error) {
       console.error('Error loading projects:', error);
       setIsLoadingProjects(false);

@@ -260,6 +260,35 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                     </ul>
                   </CardContent>
                 </Card>
+
+                {/* Personas Section */}
+                {report.personas && report.personas.length > 0 && (
+                  <Card className="border-border bg-card/50">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Users className="text-primary" size={18} />
+                        Target Personas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {report.personas.map((persona, idx) => (
+                        <div key={idx} className="border border-border rounded-lg p-3 bg-muted/30">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h4 className="font-bold text-sm text-foreground">{persona.name}</h4>
+                              <p className="text-xs text-muted-foreground">{persona.role}</p>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {persona.techLiteracy} Tech
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2 italic">"{persona.quote}"</p>
+                          <p className="text-xs text-muted-foreground">{persona.goals}</p>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
               </>
             )}
 

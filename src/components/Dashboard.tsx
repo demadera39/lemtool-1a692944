@@ -49,6 +49,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Filter projects by search (client-side since we already loaded them)
   const filteredProjects = useMemo(() => {
@@ -92,10 +93,11 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
     
     try {
       const offset = reset ? 0 : projects.length;
-      const { projects: newProjects, hasMore: more } = await getProjects(user.id, showArchived, 4, offset);
+      const { projects: newProjects, hasMore: more, totalCount: total } = await getProjects(user.id, showArchived, 4, offset);
       
       if (reset) {
         setProjects(newProjects);
+        setTotalCount(total);
       } else {
         setProjects(prev => [...prev, ...newProjects]);
       }
@@ -317,7 +319,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
         <div className="mb-6 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-1">Your Projects</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-1">Your Projects <span className="text-muted-foreground font-normal text-xl">({totalCount})</span></h2>
               <p className="text-muted-foreground">Manage your website analyses and participant testing sessions</p>
             </div>
             <Button

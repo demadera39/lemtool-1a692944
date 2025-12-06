@@ -93,6 +93,24 @@ const Index = () => {
   }, [isAnalyzing, targetProgress]);
 
   useEffect(() => {
+    // Check for test parameter FIRST - this takes priority over auth state
+    const params = new URLSearchParams(window.location.search);
+    const testId = params.get('test');
+    let isTestMode = false;
+    
+    if (testId) {
+      isTestMode = true;
+      getProjectById(testId).then(p => {
+        if (p) {
+          setTestProject(p);
+          setCurrentView('participant');
+        } else {
+          toast.error('Project not found');
+          isTestMode = false;
+        }
+      });
+    }
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         const newUser = {
@@ -102,13 +120,17 @@ const Index = () => {
           isAdmin: false
         };
         setUser(newUser);
-        // Show dashboard for logged-in users
-        setCurrentView('dashboard');
+        // Only show dashboard if NOT in test mode
+        if (!isTestMode) {
+          setCurrentView('dashboard');
+        }
         setTimeout(() => checkSubscription(session.user.id), 0);
         loadUserRole(session.user.id);
       } else {
         setUser(null);
-        setCurrentView('landing');
+        if (!isTestMode) {
+          setCurrentView('landing');
+        }
         setRemainingAnalyses({ monthly: 0, pack: 0, monthlyLimit: 10 });
       }
     });
@@ -122,23 +144,14 @@ const Index = () => {
           isAdmin: false
         };
         setUser(newUser);
-        // Show dashboard for logged-in users
-        setCurrentView('dashboard');
+        // Only show dashboard if NOT in test mode
+        if (!isTestMode) {
+          setCurrentView('dashboard');
+        }
         setTimeout(() => checkSubscription(session.user.id), 0);
         loadUserRole(session.user.id);
       }
     });
-
-    const params = new URLSearchParams(window.location.search);
-    const testId = params.get('test');
-    if (testId) {
-      getProjectById(testId).then(p => {
-        if (p) {
-          setTestProject(p);
-          setCurrentView('participant');
-        }
-      });
-    }
 
     return () => subscription.unsubscribe();
   }, []);

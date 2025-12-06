@@ -79,7 +79,19 @@ export async function getProjects(
   includeArchived: boolean = false,
   limit: number = 4,
   offset: number = 0
-): Promise<{ projects: Project[]; hasMore: boolean }> {
+): Promise<{ projects: Project[]; hasMore: boolean; totalCount: number }> {
+  // Get total count first
+  let countQuery = supabase
+    .from('projects')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId);
+  
+  if (!includeArchived) {
+    countQuery = countQuery.eq('archived', false);
+  }
+  
+  const { count } = await countQuery;
+
   // Only select minimal fields needed for list view - avoid loading large JSON
   let query = supabase
     .from('projects')
@@ -104,7 +116,8 @@ export async function getProjects(
   
   return {
     projects,
-    hasMore: (data || []).length > limit
+    hasMore: (data || []).length > limit,
+    totalCount: count || 0
   };
 }
 

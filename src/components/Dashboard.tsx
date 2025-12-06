@@ -45,25 +45,20 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [projectSessions, setProjectSessions] = useState<Record<string, number>>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(4);
+  const [hasMore, setHasMore] = useState(false);
 
-  // Filter and paginate projects
+  // Filter projects by search (client-side since we already loaded them)
   const filteredProjects = useMemo(() => {
     if (!searchQuery.trim()) return projects;
     const query = searchQuery.toLowerCase();
     return projects.filter(p => p.url.toLowerCase().includes(query));
   }, [projects, searchQuery]);
 
-  const visibleProjects = useMemo(() => {
-    return filteredProjects.slice(0, visibleCount);
-  }, [filteredProjects, visibleCount]);
-
-  const hasMore = visibleCount < filteredProjects.length;
-
   useEffect(() => {
-    loadProjects();
+    loadProjects(true);
     loadUserRole();
   }, [user, showArchived]);
 
@@ -87,21 +82,35 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
     }
   }, [selectedProject]);
 
-  const loadProjects = async () => {
-    setIsLoadingProjects(true);
+  const loadProjects = async (reset: boolean = false) => {
+    if (reset) {
+      setIsLoadingProjects(true);
+      setProjects([]);
+    } else {
+      setIsLoadingMore(true);
+    }
+    
     try {
-      const data = await getProjects(user.id, showArchived);
-      setProjects(data);
-      setIsLoadingProjects(false);
+      const offset = reset ? 0 : projects.length;
+      const { projects: newProjects, hasMore: more } = await getProjects(user.id, showArchived, 4, offset);
       
-      // Load all session counts in one query (much faster than per-project)
-      if (data.length > 0) {
-        const counts = await getProjectSessionCounts(data.map(p => p.id));
-        setProjectSessions(counts);
+      if (reset) {
+        setProjects(newProjects);
+      } else {
+        setProjects(prev => [...prev, ...newProjects]);
+      }
+      setHasMore(more);
+      
+      // Load session counts for new projects
+      if (newProjects.length > 0) {
+        const counts = await getProjectSessionCounts(newProjects.map(p => p.id));
+        setProjectSessions(prev => ({ ...prev, ...counts }));
       }
     } catch (error) {
       console.error('Error loading projects:', error);
+    } finally {
       setIsLoadingProjects(false);
+      setIsLoadingMore(false);
     }
   };
 
@@ -328,10 +337,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
             <Input
               placeholder="Search projects by URL..."
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setVisibleCount(4); // Reset pagination on search
-              }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -386,7 +392,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
         ) : (
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {visibleProjects.map((project) => (
+              {filteredProjects.map((project) => (
               <div key={project.id} className="bg-card rounded-xl border border-border shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 overflow-hidden group">
                 <div className="relative">
                   {project.screenshot && (
@@ -500,14 +506,15 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
             </div>
             
             {/* Load more button */}
-            {hasMore && (
+            {hasMore && !searchQuery && (
               <div className="flex justify-center pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => setVisibleCount(prev => prev + 4)}
+                  onClick={() => loadProjects(false)}
+                  disabled={isLoadingMore}
                   className="min-w-[200px]"
                 >
-                  Load more ({filteredProjects.length - visibleCount} remaining)
+                  {isLoadingMore ? 'Loading...' : 'Load more'}
                 </Button>
               </div>
             )}

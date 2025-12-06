@@ -74,14 +74,19 @@ export const signOut = async () => {
   }
 };
 
-export async function getProjects(userId: string, includeArchived: boolean = false): Promise<Project[]> {
+export async function getProjects(
+  userId: string, 
+  includeArchived: boolean = false,
+  limit: number = 4,
+  offset: number = 0
+): Promise<{ projects: Project[]; hasMore: boolean }> {
   // Only select minimal fields needed for list view - avoid loading large JSON
   let query = supabase
     .from('projects')
     .select('id, created_at, user_id, url, archived, screenshot, report')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-    .limit(50); // Limit to prevent loading too many projects
+    .range(offset, offset + limit); // Fetch one extra to check if there's more
   
   if (!includeArchived) {
     query = query.eq('archived', false);
@@ -90,11 +95,17 @@ export async function getProjects(userId: string, includeArchived: boolean = fal
   const { data, error } = await query;
   
   if (error) throw error;
-  return (data || []).map(p => ({
+  
+  const projects = (data || []).slice(0, limit).map(p => ({
     ...p,
     report: p.report as any as AnalysisReport,
     markers: [] as Marker[]
   }));
+  
+  return {
+    projects,
+    hasMore: (data || []).length > limit
+  };
 }
 
 // Get full project with markers (for detail view)

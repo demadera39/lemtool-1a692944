@@ -153,24 +153,28 @@ const LoadingOverlay = ({ progress = 0 }: { progress?: number }) => {
   );
 };
 
-const AdaptiveWireframe = ({ structure }: { structure: LayoutSection[] }) => {
-  const totalHeight = structure.reduce((acc, section) => acc + section.estimatedHeight, 0) || 3000;
+const AdaptiveWireframe = ({ structure, screenshot, imgNaturalSize }: { structure: LayoutSection[], screenshot?: string, imgNaturalSize: { width: number, height: number } }) => {
+  // Use screenshot dimensions if available, otherwise fall back to layout structure
+  const totalHeight = imgNaturalSize.height > 0 
+    ? imgNaturalSize.height 
+    : structure.reduce((acc, section) => acc + section.estimatedHeight, 0) || 3000;
+  
   return (
-    <div className="w-full min-h-screen bg-muted relative">
+    <div className="w-full relative bg-muted/50" style={{ height: `${totalHeight}px` }}>
+      {/* Show layout sections if available */}
       {structure.map((section, i) => {
         const heightPx = section.estimatedHeight;
         const prevHeight = structure.slice(0, i).reduce((acc, s) => acc + s.estimatedHeight, 0);
         return (
           <div 
             key={i} 
-            className="absolute left-0 right-0 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center" 
+            className="absolute left-0 right-0 border-2 border-dashed border-muted-foreground/20 flex items-center justify-center" 
             style={{ top: `${prevHeight}px`, height: `${heightPx}px`, backgroundColor: section.backgroundColorHint === 'dark' ? 'hsl(var(--muted))' : 'hsl(var(--background))' }}
           >
-            <span className="text-lg font-bold text-muted-foreground uppercase tracking-wider opacity-50">{section.type}</span>
+            <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider opacity-40">{section.type}</span>
           </div>
         )
       })}
-      <div style={{ height: `${totalHeight}px` }} />
     </div>
   )
 };
@@ -518,9 +522,11 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
           })()}
 
           {showSchematic ? (
-            <div className="w-full min-h-screen relative">
-              <AdaptiveWireframe structure={layoutStructure || []} />
-              <div className="absolute inset-0 z-10 pointer-events-none">{filteredMarkers.filter(m => !m.isArea).map(renderMarker)}</div>
+            <div className="relative w-full overflow-y-auto max-h-[75vh] rounded-2xl border border-border shadow-xl">
+              <div className="relative w-full" style={{ height: imgNaturalSize.height > 0 ? `${imgNaturalSize.height}px` : 'auto' }}>
+                <AdaptiveWireframe structure={layoutStructure || []} screenshot={screenshot} imgNaturalSize={imgNaturalSize} />
+                <div className="absolute inset-0 z-10 pointer-events-none">{filteredMarkers.filter(m => !m.isArea).map(renderMarker)}</div>
+              </div>
             </div>
           ) : viewMode === 'presentation' && screenshot ? (
             <div className="w-full h-full relative bg-foreground/5">

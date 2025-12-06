@@ -348,8 +348,9 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
                             <button
                               key={marker.id}
                               onClick={() => {
+                                // Switch layer in the canvas but stay on Areas tab
                                 setActiveLayer(marker.layer);
-                                setShowAreaView(false);
+                                // Scroll to the marker in the canvas
                                 onScrollToMarker?.(marker.id, marker.y);
                               }}
                               className="w-full text-left p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/60 transition-colors group"

@@ -42,6 +42,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [projectSessions, setProjectSessions] = useState<Record<string, number>>({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
 
   useEffect(() => {
     loadProjects();
@@ -69,18 +70,22 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   }, [selectedProject]);
 
   const loadProjects = async () => {
-    const data = await getProjects(user.id, showArchived);
-    setProjects(data);
-    
-    // Load session counts for each project
-    const sessionCounts: Record<string, number> = {};
-    await Promise.all(
-      data.map(async (project) => {
-        const sessions = await getProjectSessions(project.id);
-        sessionCounts[project.id] = sessions.length;
-      })
-    );
-    setProjectSessions(sessionCounts);
+    setIsLoadingProjects(true);
+    try {
+      const data = await getProjects(user.id, showArchived);
+      setProjects(data);
+      
+      // Load session counts in background (don't block UI)
+      const sessionCounts: Record<string, number> = {};
+      Promise.all(
+        data.map(async (project) => {
+          const sessions = await getProjectSessions(project.id);
+          sessionCounts[project.id] = sessions.length;
+        })
+      ).then(() => setProjectSessions(sessionCounts));
+    } finally {
+      setIsLoadingProjects(false);
+    }
   };
 
   const loadSessions = async (pid: string) => {
@@ -297,7 +302,24 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
           </Button>
         </div>
 
-        {projects.length === 0 ? (
+        {isLoadingProjects ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden animate-pulse">
+                <div className="w-full h-44 bg-muted" />
+                <div className="p-5 space-y-3">
+                  <div className="h-5 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-1/2" />
+                  <div className="h-3 bg-muted rounded w-1/3" />
+                  <div className="flex gap-2 mt-4">
+                    <div className="h-9 bg-muted rounded flex-1" />
+                    <div className="h-9 bg-muted rounded w-16" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : projects.length === 0 ? (
           <div className="bg-card rounded-2xl border-2 border-dashed border-border p-16 text-center">
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center">
               <Layout size={32} className="text-muted-foreground" />

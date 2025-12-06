@@ -77,7 +77,7 @@ export const signOut = async () => {
 export async function getProjects(userId: string, includeArchived: boolean = false): Promise<Project[]> {
   const query = supabase
     .from('projects')
-    .select('*')
+    .select('id, created_at, user_id, url, archived, screenshot, report')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   
@@ -91,8 +91,27 @@ export async function getProjects(userId: string, includeArchived: boolean = fal
   return (data || []).map(p => ({
     ...p,
     report: p.report as any as AnalysisReport,
-    markers: p.markers as any as Marker[]
+    markers: [] as Marker[] // Don't load markers for list view - they're large
   }));
+}
+
+// Get full project with markers (for detail view)
+export async function getProjectFull(projectId: string): Promise<Project | null> {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', projectId)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching project:', error);
+    return null;
+  }
+  return {
+    ...data,
+    report: data.report as any as AnalysisReport,
+    markers: data.markers as any as Marker[]
+  };
 }
 
 export const createProject = async (

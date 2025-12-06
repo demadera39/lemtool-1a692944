@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Project, TestSession } from '../types';
-import { getProjects, getProjectSessions, deleteProject, archiveProject } from '../services/supabaseService';
+import { getProjects, getProjectSessions, deleteProject, archiveProject, getProjectFull } from '../services/supabaseService';
 import { getRemainingAnalyses, getUserRole } from '../services/userRoleService';
 import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown, FileText, Trash2, Archive, ArchiveRestore, Bot, Shield } from 'lucide-react';
 import { Button } from './ui/button';
@@ -44,6 +44,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [projectSessions, setProjectSessions] = useState<Record<string, number>>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [isLoadingProject, setIsLoadingProject] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -386,12 +387,18 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                         size="sm"
                         variant="outline"
                         className="flex-1"
-                        onClick={() => {
-                          setSelectedProject(project);
-                          setViewMode('detail');
+                        onClick={async () => {
+                          setIsLoadingProject(true);
+                          const fullProject = await getProjectFull(project.id);
+                          if (fullProject) {
+                            setSelectedProject(fullProject);
+                            setViewMode('detail');
+                          }
+                          setIsLoadingProject(false);
                         }}
+                        disabled={isLoadingProject}
                       >
-                        View
+                        {isLoadingProject ? 'Loading...' : 'View'}
                       </Button>
                       <Button
                         size="sm"
@@ -405,13 +412,19 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                     <Button
                       size="sm"
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                      onClick={() => {
-                        setSelectedProject(project);
-                        setViewMode('fullreport');
+                      onClick={async () => {
+                        setIsLoadingProject(true);
+                        const fullProject = await getProjectFull(project.id);
+                        if (fullProject) {
+                          setSelectedProject(fullProject);
+                          setViewMode('fullreport');
+                        }
+                        setIsLoadingProject(false);
                       }}
+                      disabled={isLoadingProject}
                     >
                       <FileText size={14} className="mr-2" />
-                      Full Report
+                      {isLoadingProject ? 'Loading...' : 'Full Report'}
                     </Button>
                     <div className="flex gap-2">
                       <Button

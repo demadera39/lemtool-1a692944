@@ -12,14 +12,46 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
 
-// Helper to fetch a screenshot as base64
+// Helper to fetch a screenshot as base64 - tries API Flash first, then thum.io as fallback
 async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
+  // Strategy 1: Use API Flash via edge function (better for protected sites like apple.com)
   try {
-    // Use maxheight parameter to capture very tall pages (up to 15000px)
-    // Increased wait time to 12 seconds for heavy sites like apple.com
-    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/maxheight/15000/fullpage/wait/12/noanimate/${url}`;
+    console.log('Trying API Flash via edge function for:', url);
+    const { data, error } = await supabase.functions.invoke('analyze-website', {
+      body: { url, screenshotOnly: true }
+    });
     
-    console.log('Capturing full-page screenshot with maxheight/15000:', url);
+    if (!error && data?.screenshot) {
+      console.log('API Flash returned screenshot URL:', data.screenshot.substring(0, 50) + '...');
+      
+      // Fetch the image from the URL and convert to base64
+      const imgResponse = await fetch(data.screenshot);
+      if (imgResponse.ok) {
+        const blob = await imgResponse.blob();
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = reader.result as string;
+            const img = new Image();
+            img.onload = () => {
+              console.log(`API Flash screenshot: ${img.width}x${img.height}px`);
+            };
+            img.src = base64;
+            resolve(base64);
+          };
+          reader.readAsDataURL(blob);
+        });
+      }
+    }
+    console.log('API Flash failed or returned no screenshot, trying thum.io...');
+  } catch (e) {
+    console.warn("API Flash failed:", e);
+  }
+  
+  // Strategy 2: Fallback to thum.io
+  try {
+    const screenshotServiceUrl = `https://image.thum.io/get/width/1200/maxheight/15000/fullpage/wait/12/noanimate/${url}`;
+    console.log('Capturing with thum.io fallback:', url);
     
     const response = await fetch(screenshotServiceUrl);
     if (!response.ok) throw new Error('Screenshot fetch failed');
@@ -29,11 +61,9 @@ async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
-        // Log the image dimensions for debugging
         const img = new Image();
         img.onload = () => {
-          console.log(`Screenshot captured: ${img.width}x${img.height}px`);
-          // Warn if page seems truncated (less than 2000px for known long pages)
+          console.log(`Thum.io screenshot: ${img.width}x${img.height}px`);
           if (img.height < 2000) {
             console.warn('Screenshot may be truncated - height is under 2000px');
           }
@@ -44,7 +74,7 @@ async function getWebsiteScreenshotBase64(url: string): Promise<string | null> {
       reader.readAsDataURL(blob);
     });
   } catch (e) {
-    console.warn("Screenshot capture failed:", e);
+    console.warn("Thum.io capture failed:", e);
     return null;
   }
 }

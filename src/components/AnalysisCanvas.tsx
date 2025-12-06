@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Marker, EmotionType, LayerType, LayoutSection } from '../types';
 import EmotionToken from './EmotionToken';
 import { EMOTIONS } from '../constants';
@@ -17,6 +17,11 @@ interface AnalysisCanvasProps {
   interactionMode?: 'read_only' | 'place_marker' | 'select_area';
   onCanvasClick?: (x: number, y: number) => void;
   onAreaSelect?: (x: number, y: number, width: number, height: number) => void;
+}
+
+export interface AnalysisCanvasHandle {
+  scrollToPercent: (yPercent: number) => void;
+  setActiveMarkerId: (id: string | null) => void;
 }
 
 const LayerIconRenderer: React.FC<{ layer: LayerType; type?: string }> = ({ layer, type }) => {
@@ -179,10 +184,10 @@ const AdaptiveWireframe = ({ structure, screenshot, imgNaturalSize }: { structur
   )
 };
 
-const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
+const AnalysisCanvas = forwardRef<AnalysisCanvasHandle, AnalysisCanvasProps>(({
   imgUrl, markers, setMarkers, isAnalyzing, activeLayer, setActiveLayer, layoutStructure, screenshot, analysisProgress = 0,
   interactionMode = 'read_only', onCanvasClick, onAreaSelect
-}) => {
+}, ref) => {
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
   const [selectedEmotionMarker, setSelectedEmotionMarker] = useState<Marker | null>(null);
   const [showSchematic, setShowSchematic] = useState(false);
@@ -200,6 +205,30 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imgNaturalSize, setImgNaturalSize] = useState({ width: 0, height: 0 });
   const [containerWidth, setContainerWidth] = useState(0);
+
+  // Expose scroll method via ref
+  useImperativeHandle(ref, () => ({
+    scrollToPercent: (yPercent: number) => {
+      if (scrollWrapperRef.current) {
+        const scrollHeight = scrollWrapperRef.current.scrollHeight;
+        const clientHeight = scrollWrapperRef.current.clientHeight;
+        const targetScroll = (yPercent / 100) * scrollHeight - clientHeight / 2;
+        scrollWrapperRef.current.scrollTo({
+          top: Math.max(0, targetScroll),
+          behavior: 'smooth'
+        });
+      }
+    },
+    setActiveMarkerId: (id: string | null) => {
+      setActiveMarkerId(id);
+      if (id) {
+        const marker = markers.find(m => m.id === id);
+        if (marker && marker.layer === 'emotions' && marker.emotion) {
+          setSelectedEmotionMarker(marker);
+        }
+      }
+    }
+  }), [markers]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -562,6 +591,6 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default AnalysisCanvas;

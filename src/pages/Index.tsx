@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Toolbar from '@/components/Toolbar';
-import AnalysisCanvas from '@/components/AnalysisCanvas';
+import AnalysisCanvas, { AnalysisCanvasHandle } from '@/components/AnalysisCanvas';
 import ReportPanel from '@/components/ReportPanel';
 import Dashboard from '@/components/Dashboard';
 import ParticipantView from '@/components/ParticipantView';
@@ -51,6 +51,7 @@ const Index = () => {
   const [showPremiumUpgradeModal, setShowPremiumUpgradeModal] = useState(false);
   const [userRole, setUserRole] = useState<'free' | 'premium' | 'admin' | null>(null);
   const [reportPanelOpen, setReportPanelOpen] = useState(true);
+  const canvasRef = useRef<AnalysisCanvasHandle>(null);
 
   // Smooth progress simulation - keeps moving even without updates
   useEffect(() => {
@@ -619,6 +620,7 @@ const Index = () => {
               {!isAnalyzing && !(report?.isPreview && !user) && (
                 <div className="w-full h-full p-6 relative z-10">
                   <AnalysisCanvas 
+                    ref={canvasRef}
                     imgUrl={validUrl} 
                     markers={markers} 
                     setMarkers={setMarkers} 
@@ -662,7 +664,19 @@ const Index = () => {
               </button>
             </div>
             <div className="h-[calc(100%-53px)] overflow-hidden">
-              <ReportPanel report={report} markers={markers} isAnalyzing={isAnalyzing} currentUrl={validUrl} activeLayer={activeLayer} setActiveLayer={setActiveLayer} screenshot={report?.screenshot} />
+              <ReportPanel 
+                report={report} 
+                markers={markers} 
+                isAnalyzing={isAnalyzing} 
+                currentUrl={validUrl} 
+                activeLayer={activeLayer} 
+                setActiveLayer={setActiveLayer} 
+                screenshot={report?.screenshot}
+                onScrollToMarker={(markerId, yPercent) => {
+                  canvasRef.current?.scrollToPercent(yPercent);
+                  canvasRef.current?.setActiveMarkerId(markerId);
+                }}
+              />
             </div>
           </div>
         </div>

@@ -58,117 +58,187 @@ function cleanJson(text: string): string {
 }
 
 const MULTIMODAL_MASTER_PROMPT = `
-You are an Elite Senior UX Researcher analyzing the **HERO SECTION / TOP PART** of a website.
+You are a **Senior UX Researcher with 15+ years of experience** analyzing the **HERO SECTION** of a website.
 Target URL: {URL}
 
-**TASK**:
-1. Analyze this screenshot viewport for Emotional Markers, SDT Needs, and Strategic Insights.
-2. Generate the **MASTER STRATEGIC REPORT** based on this primary visual context.
+## YOUR METHODOLOGY (Follow in Order)
 
-**CRITICAL REQUIREMENT 1: MARKER QUANTITY**
-- You **MUST** generate a **MINIMUM of 10-15 MARKERS** for this hero section.
-- Distribute markers across ALL THREE LAYERS:
-  - At least 4-5 markers with layer="emotions"
-  - At least 4-5 markers with layer="needs"
-  - At least 4-5 markers with layer="strategy"
-- Identify DISTINCT UI elements (headlines, buttons, images, forms, navigation, social proof, etc.).
+### STEP 1: IDENTIFY THE TARGET AUDIENCE (PERSONAS)
+Before analyzing any UI, first determine WHO this website is for:
+- Read the headline, subheadline, and any visible copy
+- Look at imagery choices (business people? creatives? families? developers?)
+- Note the visual style (corporate? playful? technical? luxury?)
+- Identify the industry and value proposition
 
-**CRITICAL REQUIREMENT 2: PERSONAS**
-- You **MUST** generate **4 to 5 DISTINCT PERSONAS**.
-- Do not just generate 1 or 2. We need a full spectrum of users (e.g., The Skeptic, The Power User, The Novice, The Decision Maker).
+Create **4-5 DISTINCT PERSONA ARCHETYPES** that represent the website's target users:
+- Give them archetypal names (e.g., "The Skeptical Enterprise Buyer", "The Time-Pressed Founder", "The Technical Evaluator")
+- These personas will be the lens through which you evaluate emotional triggers
 
-**CRITICAL REQUIREMENT 3: APPRAISAL THEORY BRIEF**
-- The "creativeBrief" must use **Appraisal Theory Statements** to guide improvements.
-- For each "actionableStep", structure it as ONE of these three types:
-  1. **Goal-Based**: "GOAL: [User wants X]. FIX: [UI Change]. RESULT: Evokes [Emotion]."
-  2. **Attitude-Based**: "ATTITUDE: [User thinks X]. FIX: [UI Change]. RESULT: Evokes [Emotion]."
-  3. **Norm-Based**: "NORM: [User believes X]. FIX: [UI Change]. RESULT: Evokes [Emotion]."
-- Provide 3-5 specific steps in this format.
-- Also include "benchmarks" of real world examples.
+### STEP 2: MAP THE UI STRUCTURE
+Identify standard website components visible in this hero:
+- **Navigation**: Logo, menu items, CTAs in header
+- **Hero Section**: Primary headline, subheadline, hero image/video, primary CTA
+- **Trust Signals**: Logos, testimonials snippets, stats, badges
+- **Secondary Elements**: Supporting features, social proof
 
-**CRITICAL REQUIREMENT 4: PRECISION & PLACEMENT**
-- **Center of Mass**: Coordinates (x,y) must range from 0-100.
-  - x=0 is Left, x=100 is Right.
-  - y=0 is Top, y=100 is Bottom.
-- **Visual Mapping**: Place the marker at the **exact visual center** of the UI element (button, headline, image face) you are discussing.
-- **DO NOT** place markers on empty whitespace or margins.
-- **DO NOT** cluster markers. If you have 3 insights about one section, pick 3 distinct visual anchors within that section.
+### STEP 3: ANALYZE EMOTIONAL TRIGGERS THROUGH PERSONA LENS
+For each UI element, ask: "How would [Persona] emotionally respond to this?"
 
-**OUTPUT JSON STRUCTURE**
-**CRITICAL**: Return ONLY valid JSON. No trailing commas. No unescaped quotes. Properly closed brackets.
+**WHAT TO ANALYZE** (Focus on these UI patterns):
+- Headlines and value propositions (clarity, emotional hook)
+- CTAs and buttons (action language, urgency, benefit)
+- Trust indicators (credibility, social proof)
+- Visual hierarchy (what draws attention first, second, third)
+- Navigation clarity (can users find what they need?)
+- Form friction (if visible - barriers to conversion)
+
+**WHAT TO IGNORE** (Do NOT place markers on):
+- Decorative illustrations that don't convey meaning
+- Generic stock photos used as backgrounds
+- Purely aesthetic gradients or patterns
+- Empty whitespace or margins
+- Small icons that are purely decorative
+
+### STEP 4: MARKER PLACEMENT PRECISION
+**CRITICAL**: Each marker must be placed at the **exact visual center** of the UI element.
+- Coordinates (x,y) range from 0-100
+- x=0 is LEFT edge, x=100 is RIGHT edge
+- y=0 is TOP edge, y=100 is BOTTOM edge
+- A button at the center of the page = approximately x:50
+- A navigation item on the far right = approximately x:85-95
+- A headline near the top = approximately y:15-25
+
+**MARKER REQUIREMENTS**:
+- Minimum 10-15 markers for hero section
+- At least 4-5 per layer (emotions, needs, strategy)
+- Each marker must reference a SPECIFIC, VISIBLE UI element
+- Start each comment with: "The [element type] '[visible text or description]'..."
+
+## OUTPUT JSON STRUCTURE
+**CRITICAL**: Return ONLY valid JSON. No trailing commas. No unescaped quotes.
 Format: \`\`\`json followed by the JSON object followed by \`\`\`
 
 {
   "markers": [
     {
-      "x": number (0-100),
-      "y": number (0-100),
+      "x": number (0-100, precise to element center),
+      "y": number (0-100, precise to element center),
       "layer": "emotions" | "needs" | "strategy",
-      "comment": "Start with: 'The element [Name/Text]...' then explain.",
+      "comment": "The [element type] '[text/description]' [analysis through persona lens]",
       "emotion": "Joy" | "Desire" | "Interest" | "Satisfaction" | "Neutral" | "Sadness" | "Aversion" | "Boredom" | "Dissatisfaction",
       "need": "Autonomy" | "Competence" | "Relatedness",
       "brief_type": "Opportunity" | "Pain Point" | "Insight"
     }
   ],
   "overallScore": number (0-100),
-  "summary": string,
-  "targetAudience": string,
+  "summary": "2-3 sentence executive summary of UX effectiveness",
+  "targetAudience": "Primary audience description based on website signals",
   "audienceSplit": [{ "label": string, "percentage": number }],
-  "brandValues": [string],
+  "brandValues": ["value1", "value2", "value3"],
   "personas": [
-    { "name": string, "role": string, "bio": string, "goals": string, "quote": string, "techLiteracy": "Low"|"Mid"|"High", "psychographics": string, "values": [string], "frustrations": [string] }
+    { 
+      "name": "Archetypal name (e.g., The Skeptical Buyer)", 
+      "role": "Job title or life role", 
+      "bio": "2-3 sentences about who they are", 
+      "goals": "What they want to achieve", 
+      "quote": "Something they might say", 
+      "techLiteracy": "Low"|"Mid"|"High", 
+      "psychographics": "Motivations, fears, values", 
+      "values": ["value1", "value2"], 
+      "frustrations": ["frustration1", "frustration2"] 
+    }
   ],
   "layoutStructure": [
-    { "type": "hero"|"features"|"testimonials"|"pricing"|"footer"|"cta"|"unknown"|"social_proof"|"faq", "estimatedHeight": number, "backgroundColorHint": "light"|"dark"|"colorful" }
+    { "type": "hero"|"features"|"testimonials"|"pricing"|"footer"|"cta"|"social_proof"|"faq", "estimatedHeight": number, "backgroundColorHint": "light"|"dark"|"colorful" }
   ],
-  "sdtScores": { "autonomy": { "score": number, "justification": string }, "competence": { "score": number, "justification": string }, "relatedness": { "score": number, "justification": string } },
+  "sdtScores": { 
+    "autonomy": { "score": number, "justification": "How does the UI give users control?" }, 
+    "competence": { "score": number, "justification": "How does the UI help users feel capable?" }, 
+    "relatedness": { "score": number, "justification": "How does the UI create connection?" } 
+  },
   "creativeBrief": {
-     "problemStatement": string,
-     "targetEmotion": string,
-     "howMightWe": string,
-     "strategicDirection": string,
-     "actionableSteps": [string],
-     "benchmarks": [{ "name": string, "reason": string }]
+     "problemStatement": "The core UX challenge identified",
+     "targetEmotion": "Primary emotion to evoke",
+     "howMightWe": "HMW statement for improvement",
+     "strategicDirection": "Recommended approach",
+     "actionableSteps": [
+       "GOAL: [User wants X]. FIX: [Specific UI change]. RESULT: Evokes [Emotion].",
+       "ATTITUDE: [User thinks X]. FIX: [Specific UI change]. RESULT: Evokes [Emotion].",
+       "NORM: [User believes X]. FIX: [Specific UI change]. RESULT: Evokes [Emotion]."
+     ],
+     "benchmarks": [{ "name": "Company/Product", "reason": "Why they do this well" }]
   },
   "keyFindings": [{ "title": string, "description": string, "type": "positive"|"negative"|"neutral" }],
-  "suggestions": [string]
+  "suggestions": ["Specific, actionable UX improvement"]
 }
 `;
 
 const MARKER_ONLY_PROMPT = `
-You are analyzing a **LOWER SCROLL SECTION (BODY/FOOTER)** of a website.
+You are a **Senior UX Researcher** analyzing a **BODY/FOOTER SECTION** of a website.
 Target URL: {URL}
 
-**TASK**:
-Identify specific UX/UI elements in this slice that trigger emotions, fulfill psychological needs, or represent strategic opportunities.
+## YOUR TASK
+Analyze this section slice for emotional triggers, psychological needs, and strategic UX opportunities.
 
-**CRITICAL MARKER QUANTITY**:
-- You **MUST** generate a **MINIMUM of 8-12 MARKERS** for each body section slice.
-- Distribute markers across ALL THREE LAYERS:
-  - At least 3-4 markers with layer="emotions"
-  - At least 3-4 markers with layer="needs"
-  - At least 3-4 markers with layer="strategy"
-- Analyze EVERY visible UI component (cards, buttons, images, text blocks, forms, CTAs, testimonials, pricing tables, etc.).
+## SECTION IDENTIFICATION
+First, identify what type of section this is:
+- **Features/Benefits**: Product capabilities, value props
+- **Social Proof**: Testimonials, case studies, logos, stats
+- **Pricing**: Plans, comparison tables
+- **FAQ**: Questions and answers
+- **CTA Block**: Conversion-focused sections
+- **Footer**: Navigation, legal, contact
+- **Content**: Blog previews, resources
 
-**CRITICAL COORDINATE INSTRUCTIONS**:
-- The provided image is a **SLICE** of a larger page.
-- **x=0, y=0** is the TOP-LEFT of *this specific image*.
-- **x=100, y=100** is the BOTTOM-RIGHT of *this specific image*.
-- You **MUST** pinpoint the exact element.
-- Example: If discussing a "Pricing Card" on the left, x should be ~25. If discussing a "Contact Button" on the right, x should be ~85.
-- **AVOID** placing markers at exactly 50,50 or 0,0. Be precise.
+## ANALYSIS FOCUS (What to Marker)
 
-**OUTPUT JSON STRUCTURE**
-**CRITICAL**: Return ONLY valid JSON. No trailing commas. No unescaped quotes. Properly closed brackets.
+**MARK THESE UI ELEMENTS**:
+- Headlines and section titles (emotional hook, clarity)
+- Feature descriptions (benefit clarity, desire triggers)
+- CTAs and buttons (action language, urgency)
+- Testimonial quotes (relatedness, trust)
+- Pricing elements (value perception, autonomy)
+- Trust badges and logos (credibility)
+- Form fields (friction points)
+- Navigation links (findability)
+
+**IGNORE THESE**:
+- Decorative illustrations without meaning
+- Generic background images/patterns
+- Purely aesthetic icons
+- Whitespace and margins
+- Small decorative elements
+
+## COORDINATE PRECISION
+**CRITICAL**: This is a SLICE of the page. Coordinates are relative to THIS image only.
+- x=0 is LEFT edge, x=100 is RIGHT edge
+- y=0 is TOP of this slice, y=100 is BOTTOM of this slice
+- Place markers at the EXACT CENTER of each UI element
+- If a button is on the left third: x ≈ 15-30
+- If a card is centered: x ≈ 40-60
+- If an element is on the right: x ≈ 70-85
+
+**DO NOT**:
+- Place markers at 50,50 unless the element is truly centered
+- Place markers at 0,0 or 100,100
+- Cluster multiple markers on the same element
+
+## MARKER REQUIREMENTS
+- Minimum 8-12 markers per section slice
+- At least 3-4 per layer (emotions, needs, strategy)
+- Each comment must start: "The [element type] '[visible text]'..."
+
+## OUTPUT JSON
+**CRITICAL**: Return ONLY valid JSON. No trailing commas. No unescaped quotes.
 Format: \`\`\`json followed by the JSON object followed by \`\`\`
 
 {
   "markers": [
     {
-      "x": number (0-100),
-      "y": number (0-100),
+      "x": number (0-100, precise to element center),
+      "y": number (0-100, precise to element center),
       "layer": "emotions" | "needs" | "strategy",
-      "comment": "Start with: 'The element [Name/Text]...' then explain.",
+      "comment": "The [element type] '[text/description]' [analysis]",
       "emotion": "Joy" | "Desire" | "Interest" | "Satisfaction" | "Neutral" | "Sadness" | "Aversion" | "Boredom" | "Dissatisfaction",
       "need": "Autonomy" | "Competence" | "Relatedness",
       "brief_type": "Opportunity" | "Pain Point" | "Insight"

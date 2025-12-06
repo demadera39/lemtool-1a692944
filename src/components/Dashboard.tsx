@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { User, Project, TestSession } from '../types';
 import { getProjects, getProjectSessions, deleteProject, archiveProject, getProjectFull, getProjectSessionCounts } from '../services/supabaseService';
 import { getRemainingAnalyses, getUserRole } from '../services/userRoleService';
-import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown, FileText, Trash2, Archive, ArchiveRestore, Bot, Shield } from 'lucide-react';
+import { Plus, Layout, Users, LogOut, ExternalLink, Calendar, Crown, FileText, Trash2, Archive, ArchiveRestore, Bot, Shield, Search } from 'lucide-react';
+import { Input } from './ui/input';
 import { Button } from './ui/button';
 import AnalysisCanvas from './AnalysisCanvas';
 import ReportPanel from './ReportPanel';
@@ -45,6 +46,21 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(4);
+
+  // Filter and paginate projects
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery.trim()) return projects;
+    const query = searchQuery.toLowerCase();
+    return projects.filter(p => p.url.toLowerCase().includes(query));
+  }, [projects, searchQuery]);
+
+  const visibleProjects = useMemo(() => {
+    return filteredProjects.slice(0, visibleCount);
+  }, [filteredProjects, visibleCount]);
+
+  const hasMore = visibleCount < filteredProjects.length;
 
   useEffect(() => {
     loadProjects();
@@ -289,20 +305,36 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground mb-1">Your Projects</h2>
-            <p className="text-muted-foreground">Manage your website analyses and participant testing sessions</p>
+        <div className="mb-6 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground mb-1">Your Projects</h2>
+              <p className="text-muted-foreground">Manage your website analyses and participant testing sessions</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowArchived(!showArchived)}
+              className="flex items-center gap-2"
+            >
+              {showArchived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+              {showArchived ? 'Show Active' : 'Show Archived'}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowArchived(!showArchived)}
-            className="flex items-center gap-2"
-          >
-            {showArchived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
-            {showArchived ? 'Show Active' : 'Show Archived'}
-          </Button>
+          
+          {/* Search bar */}
+          <div className="relative max-w-md">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search projects by URL..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setVisibleCount(4); // Reset pagination on search
+              }}
+              className="pl-10"
+            />
+          </div>
         </div>
 
         {isLoadingProjects ? (
@@ -340,9 +372,21 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
               </Button>
             )}
           </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="bg-card rounded-2xl border-2 border-dashed border-border p-16 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center">
+              <Search size={32} className="text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-bold text-foreground mb-2">No projects found</h3>
+            <p className="text-muted-foreground mb-4">No projects match "{searchQuery}"</p>
+            <Button variant="outline" onClick={() => setSearchQuery('')}>
+              Clear search
+            </Button>
+          </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {visibleProjects.map((project) => (
               <div key={project.id} className="bg-card rounded-xl border border-border shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 overflow-hidden group">
                 <div className="relative">
                   {project.screenshot && (
@@ -452,7 +496,21 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                   </div>
                 </div>
               </div>
-            ))}
+              ))}
+            </div>
+            
+            {/* Load more button */}
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setVisibleCount(prev => prev + 4)}
+                  className="min-w-[200px]"
+                >
+                  Load more ({filteredProjects.length - visibleCount} remaining)
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </main>

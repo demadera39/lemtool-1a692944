@@ -93,32 +93,55 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Check for PAID active subscriptions only - not trialing or incomplete
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
       limit: 1,
     });
-    const hasActiveSub = subscriptions.data.length > 0;
     
+    // Double-check the subscription has actually been paid
+    let hasActiveSub = false;
     let subscriptionData = null;
-    if (hasActiveSub) {
+    
+    if (subscriptions.data.length > 0) {
       const subscription = subscriptions.data[0];
-      // Safely extract and validate timestamps
-      const periodStart = subscription.current_period_start;
-      const periodEnd = subscription.current_period_end;
       
-      logStep("Active subscription found", { 
-        subscriptionId: subscription.id, 
-        periodStart,
-        periodEnd 
+      // Verify this is a real paid subscription by checking:
+      // 1. Status is 'active' (not 'trialing', 'incomplete', etc.)
+      // 2. The subscription has at least one successful invoice payment
+      const invoices = await stripe.invoices.list({
+        subscription: subscription.id,
+        status: 'paid',
+        limit: 1,
       });
       
-      subscriptionData = {
-        id: subscription.id,
-        status: subscription.status,
-        start: periodStart ? new Date(periodStart * 1000).toISOString() : null,
-        end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
-      };
+      const hasPaidInvoice = invoices.data.length > 0;
+      
+      if (hasPaidInvoice) {
+        hasActiveSub = true;
+        const periodStart = subscription.current_period_start;
+        const periodEnd = subscription.current_period_end;
+        
+        logStep("Active PAID subscription found", { 
+          subscriptionId: subscription.id, 
+          periodStart,
+          periodEnd,
+          paidInvoices: invoices.data.length
+        });
+        
+        subscriptionData = {
+          id: subscription.id,
+          status: subscription.status,
+          start: periodStart ? new Date(periodStart * 1000).toISOString() : null,
+          end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+        };
+      } else {
+        logStep("Subscription found but NO paid invoice - treating as unpaid", { 
+          subscriptionId: subscription.id,
+          status: subscription.status
+        });
+      }
     } else {
       logStep("No active subscription found");
     }
@@ -140,10 +163,10 @@ serve(async (req) => {
       logStep("Found analysis pack purchases", { totalAnalyses: totalPackAnalyses });
     }
 
-    // Get current role to preserve admin status
+    // Get current role to preserve admin status and existing limits
     const { data: currentRole } = await supabaseClient
       .from('user_roles')
-      .select('pack_analyses_remaining, role')
+      .select('pack_analyses_remaining, role, monthly_analyses_limit')
       .eq('user_id', user.id)
       .maybeSingle();
     
@@ -155,6 +178,10 @@ serve(async (req) => {
 
     // Preserve admin role, otherwise set based on subscription
     const newRole = isAdmin ? 'admin' : (hasActiveSub ? 'premium' : 'free');
+    
+    // Only give 10 monthly analyses if they have a PAID active subscription or are admin
+    // Free users keep their existing limit (from signup trigger: 3 initial, then 1 after reset)
+    const newMonthlyLimit = (hasActiveSub || isAdmin) ? 10 : (currentRole?.monthly_analyses_limit || 1);
 
     const { error: updateError } = await supabaseClient
       .from('user_roles')
@@ -166,7 +193,7 @@ serve(async (req) => {
         subscription_status: subscriptionData?.status || null,
         subscription_start: subscriptionData?.start || null,
         subscription_end: subscriptionData?.end || null,
-        monthly_analyses_limit: hasActiveSub || isAdmin ? 10 : 0,
+        monthly_analyses_limit: newMonthlyLimit,
         pack_analyses_remaining: newPackAnalyses,
       }, { onConflict: 'user_id' });
     
@@ -175,7 +202,11 @@ serve(async (req) => {
       throw updateError;
     }
 
-    logStep("Successfully updated user role");
+    logStep("Successfully updated user role", { 
+      role: newRole, 
+      monthlyLimit: newMonthlyLimit,
+      hasActiveSub 
+    });
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,

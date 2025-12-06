@@ -169,7 +169,39 @@ Format: \`\`\`json followed by the JSON object followed by \`\`\`
      "benchmarks": [{ "name": "Company/Product", "reason": "Why they do this well" }]
   },
   "keyFindings": [{ "title": string, "description": string, "type": "positive"|"negative"|"neutral" }],
-  "suggestions": ["Specific, actionable UX improvement"]
+  "suggestions": ["Specific, actionable UX improvement"],
+  "recommendations": {
+    "design": [
+      {
+        "title": "Short recommendation title",
+        "priority": "high" | "medium" | "low",
+        "current": "What the current design does wrong",
+        "recommendation": "Specific change to make",
+        "rationale": "Why this improves emotional response",
+        "example": "Reference to a site/brand that does this well (optional)"
+      }
+    ],
+    "copy": [
+      {
+        "title": "Short recommendation title",
+        "priority": "high" | "medium" | "low",
+        "current": "Current copy issue or missed opportunity",
+        "recommendation": "Specific copy change or rewrite suggestion",
+        "rationale": "How this impacts user perception/emotion",
+        "example": "Reference example (optional)"
+      }
+    ],
+    "ux": [
+      {
+        "title": "Short recommendation title",
+        "priority": "high" | "medium" | "low",
+        "current": "Current interaction/flow issue",
+        "recommendation": "Specific UX improvement",
+        "rationale": "How this reduces friction or increases engagement",
+        "example": "Reference example (optional)"
+      }
+    ]
+  }
 }
 `;
 

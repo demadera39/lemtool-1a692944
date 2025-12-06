@@ -429,14 +429,18 @@ serve(async (req) => {
       console.log(`✓ Hero analysis complete (${usedModel})`);
     }
 
-    // 2. Analyze remaining slices in parallel (BODY) - Use fast, efficient model
-    const bodyPromises = slices.slice(1).map(async (slice: string, sliceIndex: number) => {
+    // 2. Analyze remaining slices in BATCHES to avoid rate limiting
+    // Process 4 slices at a time with retry logic
+    const BATCH_SIZE = 4;
+    const MAX_RETRIES = 2;
+    const bodySlices = slices.slice(1);
+    const bodyResponses: any[] = [];
+    
+    async function analyzeSliceWithRetry(slice: string, sliceIndex: number, attempt: number = 1): Promise<any> {
       const sliceParts = [
         { inline_data: { mime_type: "image/png", data: slice } },
         { text: MARKER_ONLY_PROMPT.replace(/{URL}/g, url) }
       ];
-      
-      console.log(`🔍 Analyzing body slice ${sliceIndex + 1} of ${slices.length - 1}...`);
       
       try {
         let response;
@@ -464,20 +468,48 @@ serve(async (req) => {
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!text) {
-          console.warn(`⚠️ Body slice ${sliceIndex + 1} returned empty response`);
+          if (attempt < MAX_RETRIES) {
+            console.warn(`⚠️ Body slice ${sliceIndex + 1} empty, retrying (attempt ${attempt + 1})...`);
+            await new Promise(r => setTimeout(r, 1000 * attempt)); // Exponential backoff
+            return analyzeSliceWithRetry(slice, sliceIndex, attempt + 1);
+          }
+          console.warn(`⚠️ Body slice ${sliceIndex + 1} returned empty after ${MAX_RETRIES} attempts`);
           return { candidates: [{ content: { parts: [{ text: '{"markers":[]}' }] } }] };
         }
         
         console.log(`✓ Body slice ${sliceIndex + 1} analyzed, text length: ${text.length}`);
         return data;
       } catch (error) {
-        console.error(`❌ Failed to analyze body slice ${sliceIndex + 1}:`, error);
+        if (attempt < MAX_RETRIES) {
+          console.warn(`❌ Body slice ${sliceIndex + 1} failed, retrying (attempt ${attempt + 1})...`);
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+          return analyzeSliceWithRetry(slice, sliceIndex, attempt + 1);
+        }
+        console.error(`❌ Failed to analyze body slice ${sliceIndex + 1} after ${MAX_RETRIES} attempts:`, error);
         return { candidates: [{ content: { parts: [{ text: '{"markers":[]}' }] } }] };
       }
-    });
-
-    const bodyResponses = await Promise.all(bodyPromises);
+    }
+    
+    // Process slices in batches
+    for (let i = 0; i < bodySlices.length; i += BATCH_SIZE) {
+      const batch = bodySlices.slice(i, i + BATCH_SIZE);
+      console.log(`🔍 Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(bodySlices.length / BATCH_SIZE)} (slices ${i + 1}-${Math.min(i + BATCH_SIZE, bodySlices.length)})...`);
+      
+      const batchPromises = batch.map((slice: string, batchIdx: number) => 
+        analyzeSliceWithRetry(slice, i + batchIdx)
+      );
+      
+      const batchResults = await Promise.all(batchPromises);
+      bodyResponses.push(...batchResults);
+      
+      // Small delay between batches to avoid rate limiting
+      if (i + BATCH_SIZE < bodySlices.length) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+    
     console.log(`Received ${bodyResponses.length} body slice responses`);
+
 
     // 3. Process master result with retry logic
     let parsedMaster;

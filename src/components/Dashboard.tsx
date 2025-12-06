@@ -44,7 +44,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [projectSessions, setProjectSessions] = useState<Record<string, number>>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
-  const [isLoadingProject, setIsLoadingProject] = useState(false);
+  const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -388,17 +388,17 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                         variant="outline"
                         className="flex-1"
                         onClick={async () => {
-                          setIsLoadingProject(true);
+                          setLoadingProjectId(project.id);
                           const fullProject = await getProjectFull(project.id);
                           if (fullProject) {
                             setSelectedProject(fullProject);
                             setViewMode('detail');
                           }
-                          setIsLoadingProject(false);
+                          setLoadingProjectId(null);
                         }}
-                        disabled={isLoadingProject}
+                        disabled={loadingProjectId === project.id}
                       >
-                        {isLoadingProject ? 'Loading...' : 'View'}
+                        {loadingProjectId === project.id ? 'Loading...' : 'View'}
                       </Button>
                       <Button
                         size="sm"
@@ -413,18 +413,18 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                       size="sm"
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                       onClick={async () => {
-                        setIsLoadingProject(true);
+                        setLoadingProjectId(project.id);
                         const fullProject = await getProjectFull(project.id);
                         if (fullProject) {
                           setSelectedProject(fullProject);
                           setViewMode('fullreport');
                         }
-                        setIsLoadingProject(false);
+                        setLoadingProjectId(null);
                       }}
-                      disabled={isLoadingProject}
+                      disabled={loadingProjectId === project.id}
                     >
                       <FileText size={14} className="mr-2" />
-                      {isLoadingProject ? 'Loading...' : 'Full Report'}
+                      {loadingProjectId === project.id ? 'Loading...' : 'Full Report'}
                     </Button>
                     <div className="flex gap-2">
                       <Button

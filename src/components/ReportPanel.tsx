@@ -96,13 +96,13 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
           </div>
         )}
 
-        <div className="flex gap-1 bg-muted/50 p-1 rounded-xl overflow-x-auto">
+        <div className="grid grid-cols-4 gap-1 bg-muted/50 p-1 rounded-xl">
           <button
             onClick={() => {
               setActiveLayer('emotions');
               setShowAreaView(false);
             }}
-            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+            className={`px-2 py-2 text-xs font-semibold rounded-lg transition-all text-center ${
               activeLayer === 'emotions' && !showAreaView
                 ? 'bg-card text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -115,20 +115,20 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
               setActiveLayer('needs');
               setShowAreaView(false);
             }}
-            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+            className={`px-2 py-2 text-xs font-semibold rounded-lg transition-all text-center ${
               activeLayer === 'needs' && !showAreaView
                 ? 'bg-card text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Psych Needs
+            Needs
           </button>
           <button
             onClick={() => {
               setActiveLayer('strategy');
               setShowAreaView(false);
             }}
-            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+            className={`px-2 py-2 text-xs font-semibold rounded-lg transition-all text-center ${
               activeLayer === 'strategy' && !showAreaView
                 ? 'bg-card text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -138,13 +138,13 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
           </button>
           <button
             onClick={() => setShowAreaView(true)}
-            className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+            className={`px-2 py-2 text-xs font-semibold rounded-lg transition-all text-center ${
               showAreaView
                 ? 'bg-card text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Area View
+            Areas
           </button>
         </div>
       </div>

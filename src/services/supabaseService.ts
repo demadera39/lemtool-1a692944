@@ -75,14 +75,16 @@ export const signOut = async () => {
 };
 
 export async function getProjects(userId: string, includeArchived: boolean = false): Promise<Project[]> {
-  const query = supabase
+  // Only select minimal fields needed for list view - avoid loading large JSON
+  let query = supabase
     .from('projects')
     .select('id, created_at, user_id, url, archived, screenshot, report')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(50); // Limit to prevent loading too many projects
   
   if (!includeArchived) {
-    query.eq('archived', false);
+    query = query.eq('archived', false);
   }
   
   const { data, error } = await query;
@@ -91,7 +93,7 @@ export async function getProjects(userId: string, includeArchived: boolean = fal
   return (data || []).map(p => ({
     ...p,
     report: p.report as any as AnalysisReport,
-    markers: [] as Marker[] // Don't load markers for list view - they're large
+    markers: [] as Marker[]
   }));
 }
 
@@ -170,6 +172,28 @@ export const getProjectSessions = async (projectId: string): Promise<TestSession
     ...s,
     markers: s.markers as any as Marker[]
   }));
+};
+
+// Get session counts for multiple projects in one query
+export const getProjectSessionCounts = async (projectIds: string[]): Promise<Record<string, number>> => {
+  if (projectIds.length === 0) return {};
+  
+  const { data, error } = await supabase
+    .from('test_sessions')
+    .select('project_id')
+    .in('project_id', projectIds);
+  
+  if (error) {
+    console.error('Error fetching session counts:', error);
+    return {};
+  }
+  
+  // Count sessions per project
+  const counts: Record<string, number> = {};
+  (data || []).forEach(s => {
+    counts[s.project_id] = (counts[s.project_id] || 0) + 1;
+  });
+  return counts;
 };
 
 export const submitTestSession = async (

@@ -245,6 +245,62 @@ const FullReportView = ({
           </Card>
         </div>
 
+        {/* Personas Section */}
+        {project.report.personas && project.report.personas.length > 0 && (
+          <Card className="mb-6 pdf-no-break">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="text-lem-orange" size={20} />
+                Target Personas
+              </CardTitle>
+              <p className="text-sm text-gray-500">User archetypes identified from website content and design</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {project.report.personas.map((persona, idx) => (
+                  <div key={idx} className="border border-gray-200 rounded-xl p-4 bg-gray-50 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="font-bold text-gray-900">{persona.name}</h4>
+                        <p className="text-sm text-gray-600">{persona.role}</p>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {persona.techLiteracy} Tech
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-3 italic border-l-2 border-lem-orange pl-3">
+                      "{persona.quote}"
+                    </p>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase">Goals</p>
+                        <p className="text-sm text-gray-700">{persona.goals}</p>
+                      </div>
+                      {persona.frustrations && persona.frustrations.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 uppercase">Frustrations</p>
+                          <ul className="text-sm text-gray-700 list-disc list-inside">
+                            {persona.frustrations.slice(0, 2).map((f, i) => (
+                              <li key={i}>{f}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {persona.values && persona.values.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {persona.values.map((v, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">{v}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Visual Overview with Markers */}
         {project.screenshot && <Card className="mb-6 pdf-no-break">
             <CardHeader>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Project, TestSession, Marker, LayerType } from '@/types';
+import { Project, TestSession, Marker, LayerType, Recommendation } from '@/types';
 import { Button } from './ui/button';
-import { ArrowLeft, Download, Share2, Users, Heart, Brain, Lightbulb, Grid3x3, MapPin, Map, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Users, Heart, Brain, Lightbulb, Grid3x3, MapPin, Map, AlertTriangle, Palette, Type, MousePointer, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
@@ -11,6 +11,56 @@ import EmotionToken from './EmotionToken';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
+// Recommendation Card Component
+const RecommendationCard = ({ rec, color }: { rec: Recommendation; color: 'purple' | 'blue' | 'green' }) => {
+  const priorityColors = {
+    high: 'bg-red-100 text-red-700 border-red-200',
+    medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    low: 'bg-gray-100 text-gray-600 border-gray-200'
+  };
+  
+  const accentColors = {
+    purple: 'border-purple-200 bg-purple-50',
+    blue: 'border-blue-200 bg-blue-50',
+    green: 'border-green-200 bg-green-50'
+  };
+
+  return (
+    <div className={`border rounded-lg p-4 ${accentColors[color]}`}>
+      <div className="flex items-start justify-between mb-3">
+        <h4 className="font-bold text-gray-900">{rec.title}</h4>
+        <Badge className={`text-xs ${priorityColors[rec.priority]}`}>
+          {rec.priority} priority
+        </Badge>
+      </div>
+      <div className="space-y-3">
+        <div>
+          <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Current Issue</p>
+          <p className="text-sm text-gray-700">{rec.current}</p>
+        </div>
+        <div className="flex items-start gap-2">
+          <ChevronRight size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Recommendation</p>
+            <p className="text-sm text-gray-900 font-medium">{rec.recommendation}</p>
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Why This Matters</p>
+          <p className="text-sm text-gray-600">{rec.rationale}</p>
+        </div>
+        {rec.example && (
+          <div className="border-t border-gray-200 pt-2 mt-2">
+            <p className="text-xs text-gray-500">
+              <span className="font-semibold">Example: </span>{rec.example}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 interface FullReportViewProps {
   project: Project;
   sessions: TestSession[];
@@ -299,6 +349,67 @@ const FullReportView = ({
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Categorized Recommendations */}
+        {project.report.recommendations && (
+          <div className="mb-6 space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Detailed Recommendations</h2>
+            
+            {/* Design Recommendations */}
+            {project.report.recommendations.design && project.report.recommendations.design.length > 0 && (
+              <Card className="pdf-no-break border-l-4 border-l-purple-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="text-purple-500" size={20} />
+                    Design Recommendations
+                  </CardTitle>
+                  <p className="text-sm text-gray-500">Visual design, layout, colors, typography, and imagery improvements</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {project.report.recommendations.design.map((rec, idx) => (
+                    <RecommendationCard key={idx} rec={rec} color="purple" />
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Copy Recommendations */}
+            {project.report.recommendations.copy && project.report.recommendations.copy.length > 0 && (
+              <Card className="pdf-no-break border-l-4 border-l-blue-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Type className="text-blue-500" size={20} />
+                    Copy Recommendations
+                  </CardTitle>
+                  <p className="text-sm text-gray-500">Headlines, messaging, tone of voice, and persuasive writing improvements</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {project.report.recommendations.copy.map((rec, idx) => (
+                    <RecommendationCard key={idx} rec={rec} color="blue" />
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* UX Recommendations */}
+            {project.report.recommendations.ux && project.report.recommendations.ux.length > 0 && (
+              <Card className="pdf-no-break border-l-4 border-l-green-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MousePointer className="text-green-500" size={20} />
+                    UX & Interaction Recommendations
+                  </CardTitle>
+                  <p className="text-sm text-gray-500">User flows, navigation, interactions, and usability improvements</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {project.report.recommendations.ux.map((rec, idx) => (
+                    <RecommendationCard key={idx} rec={rec} color="green" />
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
 
         {/* Visual Overview with Markers */}

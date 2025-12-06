@@ -74,6 +74,21 @@ export interface SDTScores {
   relatedness: { score: number; justification: string };
 }
 
+export interface Recommendation {
+  title: string;
+  priority: 'high' | 'medium' | 'low';
+  current: string;
+  recommendation: string;
+  rationale: string;
+  example?: string;
+}
+
+export interface Recommendations {
+  design: Recommendation[];
+  copy: Recommendation[];
+  ux: Recommendation[];
+}
+
 export interface CreativeBrief {
   problemStatement: string;
   targetEmotion: string;
@@ -102,6 +117,7 @@ export interface AnalysisReport {
     type: 'positive' | 'negative' | 'neutral';
   }[];
   suggestions: string[];
+  recommendations?: Recommendations;
   layoutStructure: LayoutSection[];
   sdtScores: SDTScores;
   creativeBrief: CreativeBrief;

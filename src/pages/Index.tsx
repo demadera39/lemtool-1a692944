@@ -51,6 +51,7 @@ const Index = () => {
   const [showPremiumUpgradeModal, setShowPremiumUpgradeModal] = useState(false);
   const [userRole, setUserRole] = useState<'free' | 'premium' | 'admin' | null>(null);
   const [reportPanelOpen, setReportPanelOpen] = useState(true);
+  const [showAreaView, setShowAreaView] = useState(false);
   const canvasRef = useRef<AnalysisCanvasHandle>(null);
 
   // Smooth progress simulation - keeps moving even without updates
@@ -672,6 +673,8 @@ const Index = () => {
                 activeLayer={activeLayer} 
                 setActiveLayer={setActiveLayer} 
                 screenshot={report?.screenshot}
+                showAreaView={showAreaView}
+                setShowAreaView={setShowAreaView}
                 onScrollToMarker={(markerId, yPercent) => {
                   canvasRef.current?.scrollToPercent(yPercent);
                   canvasRef.current?.setActiveMarkerId(markerId);

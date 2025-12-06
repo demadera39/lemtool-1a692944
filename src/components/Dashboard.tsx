@@ -34,6 +34,7 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
   const [sessions, setSessions] = useState<TestSession[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'detail' | 'fullreport'>('list');
   const [activeLayer, setActiveLayer] = useState<'emotions' | 'needs' | 'strategy'>('emotions');
+  const [showAreaView, setShowAreaView] = useState(false);
   const [showAI, setShowAI] = useState(true);
   const [showHumans, setShowHumans] = useState(true);
   const [remainingAnalyses, setRemainingAnalyses] = useState<{ monthly: number; pack: number; monthlyLimit: number }>({ monthly: 0, pack: 0, monthlyLimit: 10 });
@@ -228,6 +229,8 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
                 activeLayer={activeLayer}
                 setActiveLayer={setActiveLayer}
                 screenshot={selectedProject.screenshot}
+                showAreaView={showAreaView}
+                setShowAreaView={setShowAreaView}
               />
             </div>
           </div>

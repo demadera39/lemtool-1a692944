@@ -14,14 +14,14 @@ interface ReportPanelProps {
   setActiveLayer: (layer: LayerType) => void;
   screenshot?: string;
   onScrollToMarker?: (markerId: string, yPercent: number) => void;
+  showAreaView: boolean;
+  setShowAreaView: (show: boolean) => void;
 }
 
-const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, setActiveLayer, screenshot, onScrollToMarker }: ReportPanelProps) => {
+const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, setActiveLayer, screenshot, onScrollToMarker, showAreaView, setShowAreaView }: ReportPanelProps) => {
   const emotionMarkers = markers.filter(m => m.layer === 'emotions');
   const needsMarkers = markers.filter(m => m.layer === 'needs');
   const strategyMarkers = markers.filter(m => m.layer === 'strategy');
-  
-  const [showAreaView, setShowAreaView] = useState(false);
 
   if (isAnalyzing) {
     return (
@@ -107,10 +107,7 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
           </button>
           <button
             type="button"
-            onClick={() => {
-              console.log('Areas tab clicked, setting showAreaView to true');
-              setShowAreaView(true);
-            }}
+            onClick={() => setShowAreaView(true)}
             className={`px-2 py-2 text-xs font-semibold rounded-lg transition-all text-center ${
               showAreaView
                 ? 'bg-card text-primary shadow-sm'

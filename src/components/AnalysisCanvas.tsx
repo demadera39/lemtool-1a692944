@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Marker, EmotionType, LayerType, LayoutSection } from '../types';
 import EmotionToken from './EmotionToken';
 import { EMOTIONS } from '../constants';
-import { X, MousePointer2, Layers, ExternalLink, Brain, Lightbulb, Heart, Zap, AlertTriangle, Info, Camera, MonitorPlay, Presentation, ChevronRight, ChevronLeft, User as UserIcon, Bot, Sparkles } from 'lucide-react';
+import { X, MousePointer2, Layers, ExternalLink, Brain, Lightbulb, Heart, Zap, AlertTriangle, Info, Camera, MonitorPlay, Presentation, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, User as UserIcon, Bot, Sparkles, PanelTopClose, PanelTopOpen } from 'lucide-react';
 
 interface AnalysisCanvasProps {
   imgUrl: string;
@@ -183,6 +183,7 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   const [selectedEmotionMarker, setSelectedEmotionMarker] = useState<Marker | null>(null);
   const [showSchematic, setShowSchematic] = useState(false);
   const [viewMode, setViewMode] = useState<'snapshot' | 'live' | 'presentation'>('snapshot');
+  const [toolbarExpanded, setToolbarExpanded] = useState(true);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -406,42 +407,78 @@ const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
     <div className="w-full h-full flex flex-col relative bg-muted/30">
       {isAnalyzing && <LoadingOverlay progress={analysisProgress} />}
 
-      {/* Modern Header Bar */}
+      {/* Expandable Toolbar */}
       {interactionMode === 'read_only' && (
-        <div className="bg-card/80 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 py-3 z-30 flex-shrink-0">
-          {/* Layer Tabs */}
-          <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-2xl">
-            <LayerToggleButton layer="emotions" label="Emotions" icon={<Heart size={16} />} count={emotionCount} />
-            <LayerToggleButton layer="needs" label="Psych Needs" icon={<Brain size={16} />} count={needsCount} />
-            <LayerToggleButton layer="strategy" label="Strategy" icon={<Lightbulb size={16} />} count={strategyCount} />
-          </div>
-
-          {/* View Controls */}
-          <div className="flex items-center gap-3">
-            {screenshot && (
-              <div className="flex bg-muted/50 rounded-xl p-1">
-                <button onClick={() => { setViewMode('presentation'); setCurrentSlide(0); }}
-                  className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${viewMode === 'presentation' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                  <Presentation size={14}/> Slides
-                </button>
-                <button onClick={() => setViewMode('snapshot')}
-                  className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${viewMode === 'snapshot' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                  <Camera size={14}/> Full Page
-                </button>
-                <button onClick={() => setViewMode('live')}
-                  className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${viewMode === 'live' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                  <MonitorPlay size={14}/> Live
-                </button>
+        <div className={`bg-card/95 backdrop-blur-xl border-b border-border z-30 flex-shrink-0 transition-all duration-300 ${toolbarExpanded ? 'max-h-96' : 'max-h-14'} overflow-hidden`}>
+          {/* Toggle Button Row */}
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border/50">
+            <button 
+              onClick={() => setToolbarExpanded(!toolbarExpanded)}
+              className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {toolbarExpanded ? <PanelTopClose size={16} /> : <PanelTopOpen size={16} />}
+              <span>{toolbarExpanded ? 'Collapse Toolbar' : 'Expand Toolbar'}</span>
+              {!toolbarExpanded && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-2">
+                  {emotionCount + needsCount + strategyCount} markers
+                </span>
+              )}
+            </button>
+            
+            {/* Compact view when collapsed */}
+            {!toolbarExpanded && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Heart size={12} className="text-primary" /> {emotionCount}
+                  <Brain size={12} className="text-blue-500 ml-2" /> {needsCount}
+                  <Lightbulb size={12} className="text-yellow-500 ml-2" /> {strategyCount}
+                </div>
               </div>
             )}
-            <button onClick={() => setShowSchematic(!showSchematic)} 
-              className={`px-3 py-2 text-xs rounded-xl font-semibold flex items-center gap-1.5 transition-all ${showSchematic ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:text-foreground'}`}>
-              <Layers size={14}/> Schematic
-            </button>
-            <a href={imgUrl} target="_blank" rel="noreferrer" 
-              className="px-3 py-2 text-xs rounded-xl font-semibold bg-muted/50 text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-all">
-              <ExternalLink size={14}/> Open
-            </a>
+          </div>
+
+          {/* Expanded Content */}
+          <div className={`px-4 py-3 space-y-3 ${toolbarExpanded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}>
+            {/* Layer Tabs - Full Width */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Analysis Layers</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <LayerToggleButton layer="emotions" label="Emotions" icon={<Heart size={16} />} count={emotionCount} />
+                <LayerToggleButton layer="needs" label="Psych Needs" icon={<Brain size={16} />} count={needsCount} />
+                <LayerToggleButton layer="strategy" label="Strategy" icon={<Lightbulb size={16} />} count={strategyCount} />
+              </div>
+            </div>
+
+            {/* View Controls - Full Width */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">View Options</p>
+              <div className="flex flex-wrap items-center gap-2">
+                {screenshot && (
+                  <>
+                    <button onClick={() => { setViewMode('presentation'); setCurrentSlide(0); }}
+                      className={`px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all ${viewMode === 'presentation' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-muted-foreground hover:text-foreground'}`}>
+                      <Presentation size={14}/> Slides
+                    </button>
+                    <button onClick={() => setViewMode('snapshot')}
+                      className={`px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all ${viewMode === 'snapshot' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-muted-foreground hover:text-foreground'}`}>
+                      <Camera size={14}/> Full Page
+                    </button>
+                    <button onClick={() => setViewMode('live')}
+                      className={`px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all ${viewMode === 'live' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-muted-foreground hover:text-foreground'}`}>
+                      <MonitorPlay size={14}/> Live
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setShowSchematic(!showSchematic)} 
+                  className={`px-3 py-2 text-xs rounded-xl font-semibold flex items-center gap-1.5 transition-all ${showSchematic ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:text-foreground'}`}>
+                  <Layers size={14}/> Schematic
+                </button>
+                <a href={imgUrl} target="_blank" rel="noreferrer" 
+                  className="px-3 py-2 text-xs rounded-xl font-semibold bg-muted/50 text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-all">
+                  <ExternalLink size={14}/> Open Site
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       )}

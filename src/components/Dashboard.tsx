@@ -74,16 +74,22 @@ const Dashboard = ({ user, onLogout, onNavigateToTest, onNewAnalysis }: Dashboar
     try {
       const data = await getProjects(user.id, showArchived);
       setProjects(data);
+      setIsLoadingProjects(false);
       
       // Load session counts in background (don't block UI)
       const sessionCounts: Record<string, number> = {};
       Promise.all(
         data.map(async (project) => {
-          const sessions = await getProjectSessions(project.id);
-          sessionCounts[project.id] = sessions.length;
+          try {
+            const sessions = await getProjectSessions(project.id);
+            sessionCounts[project.id] = sessions.length;
+          } catch (e) {
+            sessionCounts[project.id] = 0;
+          }
         })
       ).then(() => setProjectSessions(sessionCounts));
-    } finally {
+    } catch (error) {
+      console.error('Error loading projects:', error);
       setIsLoadingProjects(false);
     }
   };

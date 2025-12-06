@@ -789,6 +789,40 @@ serve(async (req) => {
       demographics: p.demographics || "",
     })) : [];
 
+    // 10. Parse recommendations with proper structure
+    const recommendations = parsedMaster.recommendations ? {
+      design: Array.isArray(parsedMaster.recommendations.design) 
+        ? parsedMaster.recommendations.design.map((r: any) => ({
+            title: r.title || 'Design Improvement',
+            priority: r.priority || 'medium',
+            current: r.current || '',
+            recommendation: r.recommendation || '',
+            rationale: r.rationale || '',
+            example: r.example || undefined
+          }))
+        : [],
+      copy: Array.isArray(parsedMaster.recommendations.copy)
+        ? parsedMaster.recommendations.copy.map((r: any) => ({
+            title: r.title || 'Copy Improvement',
+            priority: r.priority || 'medium',
+            current: r.current || '',
+            recommendation: r.recommendation || '',
+            rationale: r.rationale || '',
+            example: r.example || undefined
+          }))
+        : [],
+      ux: Array.isArray(parsedMaster.recommendations.ux)
+        ? parsedMaster.recommendations.ux.map((r: any) => ({
+            title: r.title || 'UX Improvement',
+            priority: r.priority || 'medium',
+            current: r.current || '',
+            recommendation: r.recommendation || '',
+            rationale: r.rationale || '',
+            example: r.example || undefined
+          }))
+        : []
+    } : undefined;
+
     const report = {
       overallScore: parsedMaster.overallScore || 70,
       summary: parsedMaster.summary || "Analysis complete",
@@ -804,6 +838,7 @@ serve(async (req) => {
         type: f.type || 'neutral'
       })),
       suggestions: parsedMaster.suggestions || [],
+      recommendations: recommendations,
       layoutStructure: Array.isArray(parsedMaster.layoutStructure) && parsedMaster.layoutStructure.length > 0
         ? parsedMaster.layoutStructure
         : [{ type: 'unknown', estimatedHeight: 3000, backgroundColorHint: 'light' }],

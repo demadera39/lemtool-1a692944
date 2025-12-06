@@ -282,7 +282,7 @@ const ReportPanel = ({ report, markers, isAnalyzing, currentUrl, activeLayer, se
               </Card>
             )}
 
-            {activeLayer === 'strategy' && strategyMarkers.length > 0 && (
+            {activeLayer === 'strategy' && strategyMarkers.length > 0 && !showAreaView && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
